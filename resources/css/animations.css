@@ -1,0 +1,237 @@
+/* Futuristic Motion System - Digital Command Center */
+
+/* Futuristic scan line */
+@keyframes scanLine {
+    0% { transform: translateY(-100%); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { transform: translateY(400%); opacity: 0; }
+}
+
+/* Neon flicker for active states */
+@keyframes neonFlicker {
+    0%, 95%, 100% { opacity: 1; }
+    96% { opacity: 0.8; }
+    97% { opacity: 1; }
+    98% { opacity: 0.85; }
+}
+
+/* Ambient particle motion */
+@keyframes particleFloat1 {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); opacity: 0.3; }
+    33% { transform: translate(20px, -30px) rotate(120deg); opacity: 0.7; }
+    66% { transform: translate(-15px, -20px) rotate(240deg); opacity: 0.4; }
+}
+
+@keyframes particleFloat2 {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); opacity: 0.2; }
+    33% { transform: translate(-25px, -15px) rotate(-120deg); opacity: 0.6; }
+    66% { transform: translate(10px, -35px) rotate(-240deg); opacity: 0.3; }
+}
+
+/* Animated gradient border */
+@keyframes gradientBorderRotate {
+    from { --border-angle: 0deg; }
+    to { --border-angle: 360deg; }
+}
+
+/* Data stream decorative lines */
+@keyframes dataStream {
+    0% { transform: translateY(0); opacity: 0; }
+    5% { opacity: 1; }
+    95% { opacity: 1; }
+    100% { transform: translateY(-100vh); opacity: 0; }
+}
+
+/* Morphing hero blobs */
+@keyframes morphBlob {
+    0%, 100% { border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; }
+    34% { border-radius: 70% 30% 50% 50% / 30% 30% 70% 70%; }
+    67% { border-radius: 100% 60% 60% 100% / 100% 100% 60% 60%; }
+}
+
+/* Content reveal */
+@keyframes clipReveal {
+    from { clip-path: inset(0 100% 0 0); }
+    to { clip-path: inset(0 0% 0 0); }
+}
+
+/* Spring scale in */
+@keyframes springIn {
+    0% { transform: scale(0.8); opacity: 0; }
+    60% { transform: scale(1.04); opacity: 1; }
+    80% { transform: scale(0.98); }
+    100% { transform: scale(1); }
+}
+
+/* Status pulse */
+@keyframes glowPulse {
+    0%, 100% { box-shadow: 0 0 8px currentColor; opacity: 1; }
+    50% { box-shadow: 0 0 20px currentColor, 0 0 40px currentColor; opacity: 0.85; }
+}
+
+/* Clock blink */
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+/* Indeterminate progress */
+@keyframes progressIndeterminate {
+    0% { left: -35%; right: 100%; }
+    60% { left: 100%; right: -90%; }
+    100% { left: 100%; right: -90%; }
+}
+
+/* Toast enter/exit stacking */
+@keyframes toastSlideIn {
+    from { transform: translateX(calc(100% + 24px)) scale(0.95); opacity: 0; }
+    to { transform: translateX(0) scale(1); opacity: 1; }
+}
+
+@keyframes toastSlideOut {
+    from { transform: translateX(0) scale(1); opacity: 1; max-height: 200px; }
+    to { transform: translateX(calc(100% + 24px)) scale(0.95); opacity: 0; max-height: 0; }
+}
+
+@keyframes toastPushDown {
+    from { transform: translateY(0); }
+    to { transform: translateY(var(--push-offset, 80px)); }
+}
+
+/* SVG stroke animations */
+@keyframes checkDraw {
+    from { stroke-dashoffset: 100; }
+    to { stroke-dashoffset: 0; }
+}
+
+@keyframes checkmark {
+    from { stroke-dashoffset: 100; }
+    to { stroke-dashoffset: 0; }
+}
+
+@keyframes xDraw {
+    from { stroke-dashoffset: 50; opacity: 0; }
+    to { stroke-dashoffset: 0; opacity: 1; }
+}
+
+/* Ripple click surface */
+@keyframes rippleExpand {
+    from { transform: scale(0); opacity: 0.4; }
+    to { transform: scale(4); opacity: 0; }
+}
+
+/* Number transition */
+@keyframes flipNumber {
+    0% { transform: rotateX(-90deg); opacity: 0; }
+    100% { transform: rotateX(0deg); opacity: 1; }
+}
+
+/* Compatibility keyframes used by existing classes */
+@keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeScaleIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(59,130,246,0.4); }
+    50% { box-shadow: 0 0 0 8px rgba(59,130,246,0); }
+}
+
+@keyframes pulseGlowGreen {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.4); }
+    50% { box-shadow: 0 0 0 8px rgba(16,185,129,0); }
+}
+
+@keyframes pulseGlowRed {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); }
+    50% { box-shadow: 0 0 0 8px rgba(239,68,68,0); }
+}
+
+@keyframes shimmer {
+    from { background-position: -200% center; }
+    to { background-position: 200% center; }
+}
+
+@keyframes spinSmooth {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes countUp {
+    from { transform: translateY(100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes waveMove {
+    0% { transform: translateX(0) translateY(0); }
+    50% { transform: translateX(-25px) translateY(-10px); }
+    100% { transform: translateX(0) translateY(0); }
+}
+
+@keyframes slideInRight {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideOutRight {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(100%); opacity: 0; }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-6px); }
+    20%, 40%, 60%, 80% { transform: translateX(6px); }
+}
+
+@keyframes slideDown {
+    from { transform: translateY(-16px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(-12px); }
+}
+
+/* Shared utility helpers */
+.stagger-1 { animation-delay: 60ms; }
+.stagger-2 { animation-delay: 120ms; }
+.stagger-3 { animation-delay: 180ms; }
+.stagger-4 { animation-delay: 240ms; }
+.stagger-5 { animation-delay: 300ms; }
+.stagger-6 { animation-delay: 360ms; }
+
+.skeleton {
+    background: linear-gradient(
+        90deg,
+        rgba(255,255,255,0.04) 25%,
+        rgba(255,255,255,0.08) 50%,
+        rgba(255,255,255,0.04) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.8s ease-in-out infinite;
+    border-radius: var(--radius, 6px);
+}
+
+.toast-enter {
+    animation: toastSlideIn 0.35s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+
+.toast-leave {
+    animation: toastSlideOut 0.25s ease-in forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
