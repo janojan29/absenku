@@ -1,5 +1,4 @@
-<x-layouts::app.sidebar :title="$title ?? null">
-    <<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         <meta charset="utf-8">
@@ -76,7 +75,3 @@
         @livewireScripts
     </body>
 </html>
-x:main>
-        {{ $slot }}
-    </flux:main>
-</x-layouts::app.sidebar>

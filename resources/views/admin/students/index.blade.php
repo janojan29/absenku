@@ -42,6 +42,36 @@
             </form>
         </div>
 
+        {{-- Bulk Class Update --}}
+        <div class="card animate-fade-slide-up">
+            <form method="POST" action="{{ route('admin.students.bulk-class') }}" class="filter-panel filter-form">
+                @csrf
+                <div class="flex flex-row items-end gap-3">
+                    <div class="flex-1 min-w-[220px]">
+                        <label class="text-xs text-bw-400 font-semibold uppercase tracking-wider">Kelas Asal</label>
+                        <select name="from_class_room_id" class="form-select h-[42px] mt-1" required>
+                            <option value="">Pilih kelas asal</option>
+                            @foreach ($classes as $class)
+                                <option value="{{ $class->id }}">{{ $class->name }} — {{ $class->jurusan ?? '-' }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="flex-1 min-w-[220px]">
+                        <label class="text-xs text-bw-400 font-semibold uppercase tracking-wider">Kelas Tujuan</label>
+                        <select name="to_class_room_id" class="form-select h-[42px] mt-1" required>
+                            <option value="">Pilih kelas tujuan</option>
+                            @foreach ($classes as $class)
+                                <option value="{{ $class->id }}">{{ $class->name }} — {{ $class->jurusan ?? '-' }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="min-w-[160px]">
+                        <button type="submit" class="btn-primary btn-ripple h-[42px] px-6">Pindahkan Semua</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
         {{-- Table --}}
         <div class="table-wrapper animate-fade-slide-up stagger-1">
             <div class="overflow-x-auto">

@@ -41,9 +41,17 @@
                             <label for="password" class="block text-sm font-medium text-gray-700 mb-1">
                                 Password <span class="text-red-500">*</span>
                             </label>
-                            <input type="password" id="password" name="password" 
-                                class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                placeholder="Minimal 8 karakter" required>
+                            <div class="relative">
+                                <input type="password" id="password" name="password" 
+                                    class="w-full px-4 py-2 pr-11 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    placeholder="Minimal 8 karakter" required>
+                                <button type="button" onclick="togglePasswordVisibility('password', this)" class="password-toggle-btn absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-indigo-600 transition-colors" aria-label="Lihat password">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                    </svg>
+                                </button>
+                            </div>
                             @error('password')
                                 <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                             @enderror
@@ -54,9 +62,17 @@
                             <label for="password_confirmation" class="block text-sm font-medium text-gray-700 mb-1">
                                 Konfirmasi Password <span class="text-red-500">*</span>
                             </label>
-                            <input type="password" id="password_confirmation" name="password_confirmation" 
-                                class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                placeholder="Ulangi password" required>
+                            <div class="relative">
+                                <input type="password" id="password_confirmation" name="password_confirmation" 
+                                    class="w-full px-4 py-2 pr-11 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    placeholder="Ulangi password" required>
+                                <button type="button" onclick="togglePasswordVisibility('password_confirmation', this)" class="password-toggle-btn absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-indigo-600 transition-colors" aria-label="Lihat konfirmasi password">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                    </svg>
+                                </button>
+                            </div>
                             @error('password_confirmation')
                                 <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                             @enderror
@@ -162,6 +178,18 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            const togglePasswordVisibility = function (inputId, button) {
+                const input = document.getElementById(inputId);
+                if (!input) return;
+
+                const isPassword = input.type === 'password';
+                input.type = isPassword ? 'text' : 'password';
+                button.setAttribute('aria-label', isPassword ? 'Sembunyikan password' : 'Lihat password');
+                button.classList.toggle('text-indigo-600', isPassword);
+            };
+
+            window.togglePasswordVisibility = togglePasswordVisibility;
+
             const jurusanSelect = document.getElementById('jurusan');
             const classSelect = document.getElementById('class_room_id');
             if (!jurusanSelect || !classSelect) return;

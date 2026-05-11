@@ -227,11 +227,21 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                             <div>
                                 <label class="block text-xs font-semibold text-navy-600 uppercase tracking-wider mb-1.5">Password Baru</label>
-                                <input type="password" name="password" id="editPassword" class="form-input-clean w-full" placeholder="Minimal 8 karakter">
+                                <div class="relative">
+                                    <input type="password" name="password" id="editPassword" class="form-input-clean w-full pr-10" placeholder="Minimal 8 karakter" autocomplete="new-password">
+                                    <button type="button" onclick="togglePasswordField('editPassword', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-bw-400 hover:text-navy-500 transition-colors" aria-label="Lihat password">
+                                        <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
+                                    </button>
+                                </div>
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-navy-600 uppercase tracking-wider mb-1.5">Konfirmasi Password</label>
-                                <input type="password" name="password_confirmation" id="editPasswordConfirmation" class="form-input-clean w-full" placeholder="Ulangi password">
+                                <div class="relative">
+                                    <input type="password" name="password_confirmation" id="editPasswordConfirmation" class="form-input-clean w-full pr-10" placeholder="Ulangi password" autocomplete="new-password">
+                                    <button type="button" onclick="togglePasswordField('editPasswordConfirmation', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-bw-400 hover:text-navy-500 transition-colors" aria-label="Lihat konfirmasi password">
+                                        <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -304,6 +314,18 @@
             document.getElementById('editRoleHidden').value = document.getElementById('editRole').value;
         }
 
+        function togglePasswordField(inputId, trigger) {
+            const input = document.getElementById(inputId);
+            if (!input) {
+                return;
+            }
+
+            const showPassword = input.type === 'password';
+            input.type = showPassword ? 'text' : 'password';
+            trigger.setAttribute('aria-label', showPassword ? 'Sembunyikan password' : 'Lihat password');
+            trigger.classList.toggle('text-navy-500', showPassword);
+        }
+
         function updateFieldsVisibility() {
             const role = document.getElementById('editRole').value;
             const studentFields = document.getElementById('studentFields');
@@ -312,20 +334,32 @@
             const nameInput = document.getElementById('editName');
             const whatsappInput = document.getElementById('editWhatsapp');
 
-            const isProtected = ['admin', 'petugas_piket'].includes(role);
+            const isRestrictedProfile = ['petugas_piket'].includes(role);
+            const isLockedRole = ['admin', 'petugas_piket'].includes(role);
 
-            nameInput.disabled = isProtected;
-            whatsappInput.disabled = isProtected;
-            roleSelect.disabled = isProtected;
+            nameInput.disabled = isRestrictedProfile;
+            whatsappInput.disabled = isRestrictedProfile;
+            roleSelect.disabled = isLockedRole;
 
-            studentFields.classList.toggle('hidden', isProtected || role !== 'siswa');
-            teacherFields.classList.toggle('hidden', isProtected || !['guru', 'guru_walikelas'].includes(role));
+            studentFields.classList.toggle('hidden', isRestrictedProfile || role !== 'siswa');
+            teacherFields.classList.toggle('hidden', isRestrictedProfile || !['guru', 'guru_walikelas'].includes(role));
 
             const classInput = document.getElementById('editClassRoom');
-            if (classInput) classInput.required = !isProtected && role === 'siswa';
+            if (classInput) classInput.required = !isRestrictedProfile && role === 'siswa';
             
             const waliKelasInput = document.getElementById('editWaliKelas');
-            if (waliKelasInput) waliKelasInput.required = !isProtected && role === 'guru_walikelas';
+            if (waliKelasInput) waliKelasInput.required = !isRestrictedProfile && role === 'guru_walikelas';
+
+            const passwordInput = document.getElementById('editPassword');
+            const passwordConfirmationInput = document.getElementById('editPasswordConfirmation');
+            if (passwordInput) {
+                passwordInput.disabled = isRestrictedProfile;
+                passwordInput.type = 'password';
+            }
+            if (passwordConfirmationInput) {
+                passwordConfirmationInput.disabled = isRestrictedProfile;
+                passwordConfirmationInput.type = 'password';
+            }
         }
     </script>
 </x-app-layout>

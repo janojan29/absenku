@@ -45,10 +45,7 @@
     $progressPercent = $total ? min(100, round(($value / max($total, 1)) * 100)) : null;
 @endphp
 
-<div
-    {{ $attributes->merge(['class' => 'card card-hover']) }}
-    x-data="counter({{ (int)$value }})"
->
+<div {{ $attributes->merge(['class' => 'card card-hover']) }}>
     {{-- Top Row: Icon + Trend --}}
     <div class="flex items-start justify-between mb-4">
         {{-- Icon Container --}}
@@ -104,8 +101,8 @@
     </div>
 
     {{-- Value --}}
-    <div class="text-display-md text-navy-900 tabular-nums mb-1" x-text="current">
-        {{ $value }}
+    <div class="text-display-md text-navy-900 tabular-nums mb-1">
+        {{ (int) $value }}
     </div>
 
     {{-- Label --}}
