@@ -21,7 +21,7 @@
         <link rel="apple-touch-icon" sizes="192x192" href="{{ asset('icon-192.png') }}">
 
         <!-- Scripts & Styles -->
-        @vite(['resources/css/app.css', 'resources/css/animations.css', 'resources/js/app.js'])
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
 
         @livewireStyles
     </head>
