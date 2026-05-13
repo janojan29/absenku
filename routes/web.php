@@ -113,6 +113,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/students/{user}/edit', [StudentController::class, 'edit'])->name('admin.students.edit');
         Route::post('/students', [StudentController::class, 'store'])->name('admin.students.store');
         Route::patch('/students/{user}', [StudentController::class, 'update'])->name('admin.students.update');
+        Route::post('/students/bulk-class', [StudentController::class, 'bulkUpdateClass'])->name('admin.students.bulk-class');
 
         Route::get('/teachers', [TeacherController::class, 'index'])->name('admin.teachers.index');
         Route::get('/teachers/create', [TeacherController::class, 'create'])->name('admin.teachers.create');
