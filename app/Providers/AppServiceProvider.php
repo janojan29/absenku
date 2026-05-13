@@ -2,11 +2,11 @@
 
 namespace App\Providers;
 
-use Carbon\CarbonImmutable;
-use Illuminate\Support\Facades\Date;
-use Illuminate\Support\Facades\DB;
+use App\Services\WhatsApp\FonnteWhatsAppClient;
+use App\Services\WhatsApp\NullWhatsAppClient;
+use App\Services\WhatsApp\WhatsAppClient;
+use Illuminate\Support\Str;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -15,7 +15,23 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(WhatsAppClient::class, function () {
+            $driver = config('whatsapp.driver', 'null');
+
+            if ($driver === 'fonnte') {
+                $token = (string) config('whatsapp.fonnte.token');
+                if (! Str::of($token)->trim()->isEmpty()) {
+                    return new FonnteWhatsAppClient(
+                        token: $token,
+                        baseUrl: (string) config('whatsapp.fonnte.base_url', 'https://api.fonnte.com'),
+                        timeoutSeconds: (int) config('whatsapp.fonnte.timeout', 20),
+                        connectTimeoutSeconds: (int) config('whatsapp.fonnte.connect_timeout', 10)
+                    );
+                }
+            }
+
+            return new NullWhatsAppClient();
+        });
     }
 
     /**
@@ -23,28 +39,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        $this->configureDefaults();
-    }
-
-    /**
-     * Configure default behaviors for production-ready applications.
-     */
-    protected function configureDefaults(): void
-    {
-        Date::use(CarbonImmutable::class);
-
-        DB::prohibitDestructiveCommands(
-            app()->isProduction(),
-        );
-
-        Password::defaults(fn (): ?Password => app()->isProduction()
-            ? Password::min(12)
-                ->mixedCase()
-                ->letters()
-                ->numbers()
-                ->symbols()
-                ->uncompromised()
-            : null,
-        );
+        //
     }
 }
