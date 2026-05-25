@@ -1,8 +1,61 @@
 @import 'tailwindcss';
 @import './animations.css';
 
+@source "../views/**/*.blade.php";
+@source "../js/**/*.js";
+
 [x-cloak] {
     display: none !important;
+}
+
+/* ═══════════════════════════════════════════════
+   TAILWIND v4 — REGISTER CUSTOM COLORS
+   ═══════════════════════════════════════════════ */
+
+@theme {
+    /* Space / Navy palette */
+    --color-space-950: #04070f;
+    --color-space-900: #070d1a;
+    --color-space-850: #0a1120;
+    --color-space-800: #0d1529;
+    --color-space-750: #101b33;
+    --color-space-700: #14213d;
+
+    /* Navy aliases */
+    --color-navy-950: #04070f;
+    --color-navy-900: #070d1a;
+    --color-navy-800: #0d1529;
+    --color-navy-700: #14213d;
+    --color-navy-600: #1a3a6b;
+    --color-navy-500: #1d4ed8;
+    --color-navy-400: #3b82f6;
+    --color-navy-300: #60a5fa;
+    --color-navy-200: #93c5fd;
+    --color-navy-100: #dbeafe;
+
+    /* Electric */
+    --color-electric-600: #1a3a6b;
+    --color-electric-500: #1d4ed8;
+    --color-electric-400: #3b82f6;
+    --color-electric-300: #60a5fa;
+    --color-electric-200: #93c5fd;
+    --color-electric-100: #dbeafe;
+
+    /* Surface / Broken White */
+    --color-surface-50: #f8f9fc;
+    --color-surface-100: #f1f3f9;
+    --color-surface-200: #e4e8f4;
+    --color-surface-300: #d1d8ed;
+
+    /* BW aliases */
+    --color-bw-50: #f8f9fc;
+    --color-bw-100: #f1f3f9;
+    --color-bw-200: #e4e8f4;
+    --color-bw-300: #d1d8ed;
+    --color-bw-400: #94a3b8;
+
+    /* Layout tokens */
+    --topbar-height: 64px;
 }
 
 /* ═══════════════════════════════════════════════
@@ -101,7 +154,7 @@
         --bw-100: var(--surface-100);
         --bw-200: var(--surface-200);
         --bw-300: var(--surface-300);
-        --bw-400: rgba(248,249,252,0.40);
+        --bw-400: #94a3b8;
         --accent-success: var(--status-present);
         --accent-warning: var(--status-late);
         --accent-danger: var(--status-absent);
@@ -1086,6 +1139,23 @@
 /* ── Utility Layer ───────────────────────────── */
 
 @layer utilities {
+    .text-display-sm {
+        font-family: var(--font-display);
+        font-size: 1.5rem;
+        font-weight: 800;
+        line-height: 1.2;
+        letter-spacing: -0.02em;
+    }
+
+    .text-display-md {
+        font-family: var(--font-display);
+        font-size: 2rem;
+        font-weight: 800;
+        line-height: 1.15;
+        letter-spacing: -0.025em;
+    }
+
+
     .touch-target {
         padding: 8px;
         margin: -8px;

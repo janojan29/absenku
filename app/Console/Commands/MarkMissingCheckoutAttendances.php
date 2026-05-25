@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Events\AttendanceUpdated;
 use App\Jobs\SendWhatsAppMessage;
 use App\Models\Attendance;
+use App\Models\LeaveRequest;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 
@@ -34,6 +35,17 @@ class MarkMissingCheckoutAttendances extends Command
             ->chunkById(200, function ($attendances) use ($date, &$updated) {
                 foreach ($attendances as $attendance) {
                     if ($attendance->status === 'absent') {
+                        continue;
+                    }
+
+                    $hasApprovedLeave = LeaveRequest::query()
+                        ->where('user_id', $attendance->user_id)
+                        ->whereDate('date', $date)
+                        ->whereIn('type', ['absent', 'early_leave'])
+                        ->where('status', 'approved')
+                        ->exists();
+
+                    if ($hasApprovedLeave) {
                         continue;
                     }
 

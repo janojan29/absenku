@@ -22,6 +22,13 @@ class AttendanceService
         $setting = SchoolSetting::singleton();
         $today = Carbon::today();
 
+        $hasApprovedLeaveToday = LeaveRequest::query()
+            ->where('user_id', $user->id)
+            ->whereDate('date', $today)
+            ->whereIn('type', ['absent', 'early_leave'])
+            ->where('status', 'approved')
+            ->exists();
+
         $hasApprovedAbsentLeave = LeaveRequest::query()
             ->where('user_id', $user->id)
             ->whereDate('date', $today)
@@ -66,11 +73,11 @@ class AttendanceService
         }
 
         $status = $now->greaterThan($lateAt) ? 'late' : 'present';
-        $lateMinutes = $status === 'late' ? (int) $now->diffInMinutes($start) : null;
+        $lateMinutes = $status === 'late' ? (int) abs($now->diffInMinutes($start)) : null;
 
         $alreadyCheckedIn = false;
 
-        DB::transaction(function () use ($user, $today, $meters, $status, $lateMinutes, $latitude, $longitude, &$alreadyCheckedIn) {
+        DB::transaction(function () use ($user, $today, $meters, $status, $lateMinutes, $latitude, $longitude, $hasApprovedLeaveToday, &$alreadyCheckedIn) {
             $attendance = Attendance::query()->firstOrCreate(
                 ['user_id' => $user->id, 'date' => $today->toDateString()],
             );
@@ -94,7 +101,7 @@ class AttendanceService
                 event(new AttendanceUpdated($attendance->fresh(), $classRoomId));
             }
 
-            if ($status === 'late') {
+            if ($status === 'late' && ! $hasApprovedLeaveToday) {
                 $message = 'Informasi: ' . $user->name . ' terlambat absen masuk pada ' . now()->format('d/m/Y H:i') . '. (Status: TERLAMBAT)';
                 $parentWa = $user->studentProfile?->parent_phone_wa ?: $user->studentProfile?->parent_whatsapp_number;
                 if (! empty($parentWa)) {

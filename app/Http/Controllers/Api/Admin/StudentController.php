@@ -1,28 +1,27 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\UserResource;
 use App\Models\ClassRoom;
 use App\Models\StudentProfile;
 use App\Models\User;
-use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
 use Illuminate\Support\Facades\Hash;
 
 class StudentController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request): JsonResponse
     {
         $q = trim((string) $request->query('q', ''));
 
         $students = User::query()
             ->role('siswa')
-            ->with(['studentProfile.classRoom'])
+            ->with(['studentProfile.classRoom', 'roles'])
             ->when($q !== '', function ($query) use ($q) {
                 $like = '%' . $q . '%';
-
                 $query->where(function ($subQuery) use ($like) {
                     $subQuery
                         ->where('name', 'like', $like)
@@ -43,66 +42,22 @@ class StudentController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        $classes = ClassRoom::query()
-            ->orderBy('jurusan')
-            ->orderBy('name')
-            ->get();
-
-        return view('admin.students.index', [
-            'students' => $students,
-            'q' => $q,
-            'classes' => $classes,
+        return response()->json([
+            'data' => $students->getCollection()
+                ->map(fn ($item) => (new UserResource($item))->toArray($request))
+                ->values(),
+            'meta' => [
+                'pagination' => [
+                    'current_page' => $students->currentPage(),
+                    'last_page' => $students->lastPage(),
+                    'per_page' => $students->perPage(),
+                    'total' => $students->total(),
+                ],
+            ],
         ]);
     }
 
-    public function edit(User $user): View|RedirectResponse
-    {
-        if (! $user->hasRole('siswa')) {
-            return redirect()->route('admin.students.index')->withErrors([
-                'student' => 'User ini bukan role siswa.',
-            ]);
-        }
-
-        $user->load(['studentProfile.classRoom']);
-
-        $classes = ClassRoom::query()
-            ->orderBy('jurusan')
-            ->orderBy('name')
-            ->get();
-
-        $jurusans = $classes
-            ->pluck('jurusan')
-            ->filter()
-            ->unique()
-            ->values();
-
-        return view('admin.students.edit', [
-            'student' => $user,
-            'classes' => $classes,
-            'jurusans' => $jurusans,
-        ]);
-    }
-
-    public function create(): View
-    {
-        $classes = ClassRoom::query()
-            ->orderBy('jurusan')
-            ->orderBy('name')
-            ->get();
-
-        $jurusans = $classes
-            ->pluck('jurusan')
-            ->filter()
-            ->unique()
-            ->values();
-
-        return view('admin.students.create', [
-            'classes' => $classes,
-            'jurusans' => $jurusans,
-        ]);
-    }
-
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -116,9 +71,12 @@ class StudentController extends Controller
 
         $selectedClass = ClassRoom::query()->findOrFail((int) $data['class_room_id']);
         if ((string) $selectedClass->jurusan !== (string) $data['jurusan']) {
-            return back()->withInput()->withErrors([
-                'class_room_id' => 'Kelas tidak sesuai dengan jurusan yang dipilih.',
-            ]);
+            return response()->json([
+                'message' => 'Validation failed.',
+                'errors' => [
+                    'class_room_id' => ['Kelas tidak sesuai dengan jurusan yang dipilih.'],
+                ],
+            ], 422);
         }
 
         $data['jurusan'] = $selectedClass->jurusan;
@@ -126,18 +84,14 @@ class StudentController extends Controller
         $generatedEmailLocalPart = preg_replace('/[^A-Za-z0-9]/', '', (string) $data['nis']);
         $generatedEmail = strtolower($generatedEmailLocalPart) . '@sekolah.local';
 
-        // Create user
         $user = User::create([
             'name' => $data['name'],
             'email' => $generatedEmail,
             'password' => Hash::make($data['password']),
             'whatsapp_number' => $data['whatsapp_number'] ?? null,
         ]);
-
-        // Assign siswa role
         $user->assignRole('siswa');
 
-        // Create student profile
         StudentProfile::create([
             'user_id' => $user->id,
             'class_room_id' => $data['class_room_id'],
@@ -146,13 +100,21 @@ class StudentController extends Controller
             'parent_phone_wa' => $data['parent_phone_wa'] ?? null,
         ]);
 
-        return redirect()->route('admin.students.index')->with('status', 'Siswa baru berhasil ditambahkan.');
+        $user->load(['roles', 'studentProfile.classRoom']);
+
+        return response()->json([
+            'data' => [
+                'student' => (new UserResource($user))->toArray($request),
+            ],
+        ]);
     }
 
-    public function update(Request $request, User $user): RedirectResponse
+    public function update(Request $request, User $user): JsonResponse
     {
         if (! $user->hasRole('siswa')) {
-            return back()->withErrors(['student' => 'User ini bukan role siswa.']);
+            return response()->json([
+                'message' => 'User ini bukan role siswa.',
+            ], 422);
         }
 
         $data = $request->validate([
@@ -164,9 +126,12 @@ class StudentController extends Controller
 
         $selectedClass = ClassRoom::query()->findOrFail((int) $data['class_room_id']);
         if ((string) $selectedClass->jurusan !== (string) $data['jurusan']) {
-            return back()->withInput()->withErrors([
-                'class_room_id' => 'Kelas tidak sesuai dengan jurusan yang dipilih.',
-            ]);
+            return response()->json([
+                'message' => 'Validation failed.',
+                'errors' => [
+                    'class_room_id' => ['Kelas tidak sesuai dengan jurusan yang dipilih.'],
+                ],
+            ], 422);
         }
 
         $data['jurusan'] = $selectedClass->jurusan;
@@ -181,6 +146,12 @@ class StudentController extends Controller
             ]
         );
 
-        return redirect()->route('admin.students.index')->with('status', 'Profil siswa diperbarui.');
+        $user->load(['roles', 'studentProfile.classRoom']);
+
+        return response()->json([
+            'data' => [
+                'student' => (new UserResource($user))->toArray($request),
+            ],
+        ]);
     }
 }

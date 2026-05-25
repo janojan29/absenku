@@ -70,38 +70,43 @@
             </div>
 
             {{-- Right Panel — Login Form --}}
-            <div class="flex-1 flex items-center justify-center bg-bw-50 relative">
-                {{-- Mobile gradient header --}}
-                <div class="lg:hidden absolute top-0 left-0 right-0 h-40" style="background: linear-gradient(135deg, #0d1b2a 0%, #1e4d8c 100%); border-radius: 0 0 40px 40px;">
-                    <div class="flex items-center justify-center h-full">
-                        <div class="text-center">
-                            <div class="w-12 h-12 mx-auto mb-2 rounded-xl bg-white/10 flex items-center justify-center">
-                                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <div class="flex-1 flex items-center justify-center relative" style="background: #ffffff;">
+                @unless($hideAuthHeader ?? false)
+                    {{-- Mobile gradient header --}}
+                    <div class="lg:hidden absolute top-0 left-0 right-0 h-40" style="background: linear-gradient(135deg, #0d1b2a 0%, #1e4d8c 100%); border-radius: 0 0 40px 40px;">
+                        <div class="flex items-center justify-center h-full">
+                            <div class="text-center">
+                                <div class="w-12 h-12 mx-auto mb-2 rounded-xl bg-white/10 flex items-center justify-center">
+                                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342" />
+                                    </svg>
+                                </div>
+                                <h1 class="text-white font-bold text-lg">Absensi Digital</h1>
+                            </div>
+                        </div>
+                    </div>
+                @endunless
+
+                {{-- Main Content / Form Container --}}
+                <div class="w-full max-w-md p-6 sm:p-12 relative z-10 mt-32 lg:mt-0 bg-white lg:bg-transparent rounded-3xl lg:rounded-none shadow-xl lg:shadow-none mx-4 sm:mx-0">
+                    @unless($hideAuthHeader ?? false)
+                        {{-- Desktop Logo --}}
+                        <div class="hidden lg:block text-center mb-10">
+                            <div class="w-14 h-14 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-navy-500 to-navy-600 flex items-center justify-center shadow-glow">
+                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342" />
                                 </svg>
                             </div>
-                            <h1 class="text-white font-bold text-lg">Absensi Digital</h1>
+                            <h2 class="text-2xl font-bold text-navy-900">Selamat Datang</h2>
+                            <p class="text-bw-400 text-sm mt-1">Masuk ke akun Anda</p>
                         </div>
-                    </div>
-                </div>
 
-                <div class="w-full max-w-md px-6 sm:px-10 lg:px-12 pt-48 lg:pt-0">
-                    {{-- Desktop Logo --}}
-                    <div class="hidden lg:block text-center mb-10">
-                        <div class="w-14 h-14 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-navy-500 to-navy-600 flex items-center justify-center shadow-glow">
-                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342" />
-                            </svg>
+                        {{-- Mobile heading (below gradient) --}}
+                        <div class="lg:hidden text-center mb-8">
+                            <h2 class="text-2xl font-bold text-navy-900">Masuk ke Akun</h2>
+                            <p class="text-bw-400 text-sm mt-1">Gunakan NISN, NIP, atau email Anda</p>
                         </div>
-                        <h2 class="text-2xl font-bold text-navy-900">Selamat Datang</h2>
-                        <p class="text-bw-400 text-sm mt-1">Masuk ke akun Anda</p>
-                    </div>
-
-                    {{-- Mobile heading (below gradient) --}}
-                    <div class="lg:hidden text-center mb-8">
-                        <h2 class="text-2xl font-bold text-navy-900">Masuk ke Akun</h2>
-                        <p class="text-bw-400 text-sm mt-1">Gunakan NISN, NIP, atau email Anda</p>
-                    </div>
+                    @endunless
 
                     {{ $slot }}
                 </div>

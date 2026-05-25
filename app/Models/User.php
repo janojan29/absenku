@@ -33,6 +33,8 @@ class User extends Authenticatable
         'current_team_id',
         'role',
         'whatsapp_number',
+        'whatsapp_otp',
+        'whatsapp_otp_expires_at',
     ];
 
     /**
@@ -53,6 +55,7 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'whatsapp_otp_expires_at' => 'datetime',
     ];
 
     public function studentProfile(): HasOne

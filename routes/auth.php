@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\EmailVerificationPromptController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
+use App\Http\Controllers\Auth\PasswordAssistanceController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
@@ -16,6 +17,21 @@ Route::middleware('guest')->group(function () {
                 ->name('login');
 
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
+
+    Route::get('forgot-password', [PasswordAssistanceController::class, 'create'])
+                ->name('password.request');
+
+    Route::post('forgot-password', [PasswordAssistanceController::class, 'verify'])
+                ->name('password.verify');
+
+    Route::post('forgot-password/verify-otp', [PasswordAssistanceController::class, 'verifyOtp'])
+                ->name('password.verify-otp');
+
+    Route::post('forgot-password/resend-otp', [PasswordAssistanceController::class, 'resendOtp'])
+                ->name('password.resend-otp');
+
+    Route::post('forgot-password/reset', [PasswordAssistanceController::class, 'update'])
+                ->name('password.custom.update');
 });
 
 Route::middleware('auth')->group(function () {
