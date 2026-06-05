@@ -1,4 +1,5 @@
 <x-app-layout>
+    <x-slot name="title">Import Data Siswa</x-slot>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-surface-50 leading-tight">
             {{ __('Import Data Siswa') }}

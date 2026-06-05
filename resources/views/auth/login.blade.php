@@ -1,4 +1,5 @@
 <x-guest-layout>
+    <x-slot name="title">Login AbsenKu</x-slot>
     <form
         method="POST"
         action="{{ route('login', [], false) }}"
@@ -102,7 +103,17 @@
 
             @if (Route::has('password.request'))
                 <a class="text-sm text-navy-500 hover:text-navy-700 font-medium transition-colors duration-150"
-                   href="{{ route('password.request') }}">
+                   href="{{ route('password.request') }}"
+                   @click.prevent="
+                       let identifier = document.getElementById('login_identifier').value.trim();
+                       if (identifier.toLowerCase().includes('admin')) {
+                           window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'Untuk reset password admin, silakan hubungi operator.', type: 'error' } }));
+                       } else if (identifier.toLowerCase().includes('piket')) {
+                           window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'Untuk reset password petugas piket, silakan hubungi admin.', type: 'error' } }));
+                       } else {
+                           window.location.href = '{{ route('password.request') }}' + (identifier ? '?identifier=' + encodeURIComponent(identifier) : '');
+                       }
+                   ">
                     Lupa password?
                 </a>
             @endif

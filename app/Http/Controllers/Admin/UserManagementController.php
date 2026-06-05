@@ -119,23 +119,16 @@ class UserManagementController extends Controller
 
         $currentRole = $user->getRoleNames()->first();
 
-        // Admin & Petugas Piket: hanya boleh ubah password (tidak boleh edit role/nama/dll)
-        if (in_array($currentRole, ['admin', 'petugas_piket'], true)) {
-            if ($role !== $currentRole) {
+        // Admin: tidak boleh diubah lewat UI sama sekali (password harus via seeder)
+        if ($currentRole === 'admin' || $role === 'admin') {
+            if ($currentRole === 'admin' && $role === 'admin') {
                 return back()->withErrors([
-                    'role' => 'Role admin/petugas piket tidak bisa diubah.',
+                    'role' => 'Data dan password admin hanya dapat diubah melalui database seeder.',
                 ]);
             }
-
-            $data = $request->validate([
-                'password' => ['required', 'string', 'min:8', 'confirmed'],
+            return back()->withErrors([
+                'role' => 'Role admin tidak dapat diubah.',
             ]);
-
-            $user->update([
-                'password' => Hash::make($data['password']),
-            ]);
-
-            return back()->with('status', 'Password berhasil diperbarui.');
         }
 
         if ($role === 'petugas_piket') {
@@ -148,7 +141,9 @@ class UserManagementController extends Controller
 
         // Base validation rules for all users
         $validationRules = [
+            'name' => ['required', 'string', 'max:255'],
             'whatsapp_number' => ['nullable', 'string', 'max:30'],
+            'password' => ['nullable', 'string', 'min:8', 'confirmed'],
         ];
 
         // Add role-specific validation
@@ -173,9 +168,16 @@ class UserManagementController extends Controller
         $data = $request->validate($validationRules);
 
         // Update user basic info
-        $user->update([
+        $updateData = [
+            'name' => $data['name'],
             'whatsapp_number' => $data['whatsapp_number'] ?? null,
-        ]);
+        ];
+
+        if (!empty($data['password'])) {
+            $updateData['password'] = Hash::make($data['password']);
+        }
+
+        $user->update($updateData);
 
         // Update role
         $user->syncRoles([$role]);

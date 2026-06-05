@@ -59,6 +59,7 @@ new #[Title('Pengaturan Keamanan')] class extends Component {
 
         Auth::user()->update([
             'password' => $validated['password'],
+            'must_change_password' => false,
         ]);
 
         $this->reset('current_password', 'password', 'password_confirmation');
@@ -90,6 +91,28 @@ new #[Title('Pengaturan Keamanan')] class extends Component {
     @include('partials.settings-heading')
 
     <flux:heading class="sr-only">{{ __('Pengaturan Keamanan') }}</flux:heading>
+
+    @if(Auth::user()->hasDefaultPassword() || empty(Auth::user()->whatsapp_number))
+        @if(Auth::user()->hasAnyRole(['siswa', 'guru', 'guru_walikelas']))
+            <div class="mb-6 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 flex items-start gap-3 shadow-sm">
+                <svg class="w-5 h-5 shrink-0 mt-0.5 text-amber-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                </svg>
+                <div>
+                    <h3 class="font-bold text-amber-900">Ubah Password & Nomor WhatsApp Wajib</h3>
+                    <p class="text-sm mt-1">
+                        @if(empty(Auth::user()->whatsapp_number) && Auth::user()->hasDefaultPassword())
+                            Anda diwajibkan mengubah password default di bawah dan mengisi nomor WhatsApp di menu <flux:link :href="route('profile.edit')">Profil</flux:link> sebelum dapat mengakses halaman lainnya.
+                        @elseif(empty(Auth::user()->whatsapp_number))
+                            Anda diwajibkan mengisi nomor WhatsApp di menu <flux:link :href="route('profile.edit')">Profil</flux:link> sebelum dapat mengakses halaman lainnya.
+                        @else
+                            Anda diwajibkan mengubah password default Anda di bawah sebelum dapat mengakses halaman lainnya.
+                        @endif
+                    </p>
+                </div>
+            </div>
+        @endif
+    @endif
 
     <x-pages::settings.layout :heading="__('Ubah password')" :subheading="__('Pastikan akun Anda menggunakan password yang panjang dan acak agar tetap aman')">
         <form method="POST" wire:submit="updatePassword" class="mt-6 space-y-6">

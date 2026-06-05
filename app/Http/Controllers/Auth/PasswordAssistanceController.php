@@ -27,6 +27,22 @@ class PasswordAssistanceController extends Controller
             ]);
         }
 
+        $identifier = $request->query('identifier');
+        if ($identifier) {
+            $userCheck = User::query()
+                ->where('email', $identifier)
+                ->orWhereHas('teacher', fn($q) => $q->where('nip', $identifier))
+                ->orWhereHas('studentProfile', fn($q) => $q->where('nis', $identifier))
+                ->first();
+            if ($userCheck) {
+                if ($userCheck->hasRole('admin')) {
+                    $request->session()->now('error', 'Untuk reset password admin, silakan hubungi operator sekolah.');
+                } elseif ($userCheck->hasRole('petugas_piket')) {
+                    $request->session()->now('error', 'Untuk reset password petugas piket, silakan hubungi administrator sekolah.');
+                }
+            }
+        }
+
         $verifiedUser = null;
         $userId = $request->session()->get('password_reset_user_id');
         $otpSentAt = $request->session()->get('password_reset_otp_sent_at');
@@ -69,6 +85,18 @@ class PasswordAssistanceController extends Controller
         if (! $user) {
             return back()->withErrors([
                 'email' => 'Email tidak ditemukan.',
+            ])->withInput();
+        }
+
+        if ($user->hasRole('admin')) {
+            return back()->withErrors([
+                'email' => 'Untuk reset password admin, silakan hubungi operator sekolah.',
+            ])->withInput();
+        }
+
+        if ($user->hasRole('petugas_piket')) {
+            return back()->withErrors([
+                'email' => 'Untuk reset password petugas piket, silakan hubungi administrator sekolah.',
             ])->withInput();
         }
 

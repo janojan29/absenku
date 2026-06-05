@@ -16,7 +16,7 @@ class CreateAdminSeeder extends Seeder
 
         // Email tetap dipakai secara internal untuk kebutuhan unik di tabel users,
         // tetapi login di aplikasi menggunakan NIP/NISN.
-        $admin = User::firstOrCreate(
+        $admin = User::updateOrCreate(
             ['email' => 'admin@sekolah.local'],
             [
                 'name' => 'Admin Sekolah',

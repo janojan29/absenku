@@ -42,7 +42,7 @@ class RbacSeeder extends Seeder
         ];
 
         foreach ($adminUsers as $au) {
-            $adminUser = User::query()->firstOrCreate(
+            $adminUser = User::query()->updateOrCreate(
                 ['email' => $au['email']],
                 [
                     'name' => $au['name'],
@@ -61,7 +61,7 @@ class RbacSeeder extends Seeder
         ];
 
         foreach ($picketUsers as $pu) {
-            $user = User::query()->firstOrCreate(
+            $user = User::query()->updateOrCreate(
                 ['email' => $pu['email']],
                 [
                     'name' => $pu['name'],

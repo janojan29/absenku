@@ -1,4 +1,5 @@
 <x-app-layout>
+    <x-slot name="title">Tambah Siswa Baru</x-slot>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-surface-50 leading-tight">
             {{ __('Tambah Siswa Baru') }}

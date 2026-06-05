@@ -26,6 +26,10 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
+        if ($request->user()->hasAnyRole(['admin', 'petugas_piket'])) {
+            return back()->withErrors(['whatsapp_number' => 'Tidak diizinkan mengubah profil untuk peran ini.']);
+        }
+
         $request->user()->fill($request->validated());
 
         if ($request->user()->isDirty('email')) {

@@ -1,4 +1,5 @@
 <x-guest-layout>
+    <x-slot name="title">Verifikasi Email</x-slot>
     <div class="mb-4 text-sm text-gray-600">
         {{ __('Terima kasih telah mendaftar! Sebelum memulai, bisakah Anda memverifikasi alamat email Anda dengan mengklik tautan yang baru saja kami kirimkan? Jika Anda tidak menerima email tersebut, kami akan dengan senang hati mengirimkan yang baru.') }}
     </div>

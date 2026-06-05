@@ -35,6 +35,7 @@ class User extends Authenticatable
         'whatsapp_number',
         'whatsapp_otp',
         'whatsapp_otp_expires_at',
+        'must_change_password',
     ];
 
     /**
@@ -56,6 +57,7 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'whatsapp_otp_expires_at' => 'datetime',
+        'must_change_password' => 'boolean',
     ];
 
     public function studentProfile(): HasOne
@@ -66,5 +68,21 @@ class User extends Authenticatable
     public function teacher(): HasOne
     {
         return $this->hasOne(Teacher::class);
+    }
+
+    /**
+     * Check if the user is using their default password.
+     */
+    public function hasDefaultPassword(): bool
+    {
+        if ($this->hasRole('siswa')) {
+            return \Illuminate\Support\Facades\Hash::check('siswa123', $this->password);
+        }
+
+        if ($this->hasRole('guru') || $this->hasRole('guru_walikelas')) {
+            return \Illuminate\Support\Facades\Hash::check('guru1234', $this->password);
+        }
+
+        return false;
     }
 }

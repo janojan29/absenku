@@ -334,7 +334,7 @@
             const nameInput = document.getElementById('editName');
             const whatsappInput = document.getElementById('editWhatsapp');
 
-            const isRestrictedProfile = ['petugas_piket'].includes(role);
+            const isRestrictedProfile = ['admin'].includes(role);
             const isLockedRole = ['admin', 'petugas_piket'].includes(role);
 
             nameInput.disabled = isRestrictedProfile;

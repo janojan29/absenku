@@ -1,4 +1,25 @@
 <x-guest-layout :hide-auth-header="true">
+    <x-slot name="title">Lupa Password</x-slot>
+    @php
+        $isPiket = false;
+        $isAdmin = false;
+        $requestIdentifier = request()->query('identifier');
+        if ($requestIdentifier) {
+            $userCheck = \App\Models\User::query()
+                ->where('email', $requestIdentifier)
+                ->orWhereHas('teacher', fn($q) => $q->where('nip', $requestIdentifier))
+                ->orWhereHas('studentProfile', fn($q) => $q->where('nis', $requestIdentifier))
+                ->first();
+            if ($userCheck) {
+                if ($userCheck->hasRole('admin')) {
+                    $isAdmin = true;
+                } elseif ($userCheck->hasRole('petugas_piket')) {
+                    $isPiket = true;
+                }
+            }
+        }
+    @endphp
+
     <form
         method="POST"
         action="{{ $otpVerified ? route('password.custom.update') : ($otpSentAt ? route('password.verify-otp') : route('password.verify')) }}"
@@ -12,6 +33,18 @@
                 {{ $otpVerified ? 'Buat password baru untuk akun Anda.' : ($otpSentAt ? 'Verifikasi kode OTP.' : 'Verifikasi data terlebih dahulu.') }}
             </p>
         </div>
+
+        @if ($isAdmin)
+            <div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 text-center">
+                <div class="font-semibold">{{ __('Perhatian!') }}</div>
+                <div class="mt-1 text-xs text-red-700">{{ __('Untuk reset password admin, silakan hubungi operator sekolah.') }}</div>
+            </div>
+        @elseif ($isPiket)
+            <div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 text-center">
+                <div class="font-semibold">{{ __('Perhatian!') }}</div>
+                <div class="mt-1 text-xs text-red-700">{{ __('Untuk reset password petugas piket, silakan hubungi administrator sekolah.') }}</div>
+            </div>
+        @endif
 
         <x-auth-session-status class="text-center" :status="session('status')" />
 
@@ -31,7 +64,7 @@
                     required
                     autofocus
                     autocomplete="email"
-                    placeholder="email@example.com"
+                    placeholder="Masukkan email terdaftar"
                     class="form-input"
                 >
                 @if ($errors->has('email'))

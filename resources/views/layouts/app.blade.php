@@ -10,7 +10,7 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <meta name="description" content="Sistem Absensi Digital Siswa — SMA Digital Nusantara">
 
-        <title>{{ config('app.name', 'Absensi Digital') }} — {{ $title ?? 'Dashboard' }}</title>
+        <title>{{ config('app.name', 'Absensi Digital') }}  {{ $title ?? 'Dashboard' }}</title>
 
         <!-- Fonts -->
         <link href="{{ asset('vendor/fonts/app-fonts.css') }}" rel="stylesheet">

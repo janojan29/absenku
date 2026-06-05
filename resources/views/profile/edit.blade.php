@@ -26,17 +26,48 @@
     </div>
 
     <div class="max-w-2xl mx-auto space-y-6">
-        <div class="card animate-fade-slide-up">
-            <div class="max-w-xl">
-                @include('profile.partials.update-profile-information-form')
-            </div>
-        </div>
+        @if(Auth::user()->hasDefaultPassword() || empty(Auth::user()->whatsapp_number))
+            @if(Auth::user()->hasAnyRole(['siswa', 'guru', 'guru_walikelas']))
+                <div class="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 flex items-start gap-3 shadow-sm animate-fade-slide-up">
+                    <svg class="w-5 h-5 shrink-0 mt-0.5 text-amber-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                    </svg>
+                    <div>
+                        <h3 class="font-bold text-amber-900">Ubah Password & Nomor WhatsApp Wajib</h3>
+                        <p class="text-sm mt-1">
+                            @if(empty(Auth::user()->whatsapp_number) && Auth::user()->hasDefaultPassword())
+                                Anda diwajibkan mengubah password default dan mengisi nomor WhatsApp sebelum dapat mengakses halaman lainnya.
+                            @elseif(empty(Auth::user()->whatsapp_number))
+                                Anda diwajibkan mengisi nomor WhatsApp sebelum dapat mengakses halaman lainnya.
+                            @else
+                                Anda diwajibkan mengubah password default Anda sebelum dapat mengakses halaman lainnya.
+                            @endif
+                        </p>
+                    </div>
+                </div>
+            @endif
+        @endif
 
-        <div class="card animate-fade-slide-up stagger-2">
-            <div class="max-w-xl">
-                @include('profile.partials.update-password-form')
+        @if (!Auth::user()->hasAnyRole(['admin', 'petugas_piket']))
+            <div class="card animate-fade-slide-up">
+                <div class="max-w-xl">
+                    @include('profile.partials.update-profile-information-form')
+                </div>
             </div>
-        </div>
 
+            <div class="card animate-fade-slide-up stagger-2">
+                <div class="max-w-xl">
+                    @include('profile.partials.update-password-form')
+                </div>
+            </div>
+        @else
+            <div class="card animate-fade-slide-up p-6 text-center text-bw-400">
+                @if (Auth::user()->hasRole('admin'))
+                    {{ __('Password untuk akun Administrator hanya dapat diubah melalui database seeder atau hubungi operator.') }}
+                @else
+                    {{ __('Password untuk akun Petugas Piket hanya dapat diubah oleh Admin.') }}
+                @endif
+            </div>
+        @endif
     </div>
 </x-app-layout>
