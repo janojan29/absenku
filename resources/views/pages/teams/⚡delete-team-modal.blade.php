@@ -22,7 +22,7 @@ new class extends Component {
     #[Computed]
     public function deleteConfirmLabel(): string
     {
-        return __('Type ":name" to confirm', ['name' => $this->team->name]);
+        return __('Ketik ":name" untuk mengonfirmasi', ['name' => $this->team->name]);
     }
 
     public function deleteTeam(): void
@@ -34,7 +34,7 @@ new class extends Component {
         ]);
 
         if ($validated['deleteName'] !== $this->team->name) {
-            $this->addError('deleteName', __('The team name does not match.'));
+            $this->addError('deleteName', __('Nama tim tidak cocok.'));
 
             return;
         }
@@ -59,7 +59,7 @@ new class extends Component {
             $user->switchTeam($fallbackTeam);
         }
 
-        Flux::toast(variant: 'success', text: __('Team deleted.'));
+        Flux::toast(variant: 'success', text: __('Tim dihapus.'));
 
         $this->redirectRoute('teams.index', navigate: true);
     }
@@ -77,9 +77,9 @@ new class extends Component {
 <flux:modal name="delete-team" :show="$errors->isNotEmpty()" focusable class="max-w-lg">
     <form wire:submit="deleteTeam" class="space-y-6">
         <div>
-            <flux:heading size="lg">{{ __('Are you sure?') }}</flux:heading>
+            <flux:heading size="lg">{{ __('Apakah Anda yakin?') }}</flux:heading>
             <flux:subheading>
-                {{ __('This action cannot be undone. This will permanently delete the team ":name".', ['name' => $team->name]) }}
+                {{ __('Tindakan ini tidak dapat dibatalkan. Tim ":name" akan dihapus secara permanen.', ['name' => $team->name]) }}
             </flux:subheading>
         </div>
 
@@ -89,10 +89,10 @@ new class extends Component {
 
         <div class="flex justify-end space-x-2 rtl:space-x-reverse">
             <flux:modal.close>
-                <flux:button variant="filled">{{ __('Cancel') }}</flux:button>
+                <flux:button variant="filled">{{ __('Batal') }}</flux:button>
             </flux:modal.close>
             <flux:button variant="danger" type="submit" data-test="delete-team-confirm">
-                {{ __('Delete team') }}
+                {{ __('Hapus tim') }}
             </flux:button>
         </div>
     </form>

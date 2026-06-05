@@ -1,4 +1,4 @@
-<x-layouts::auth :title="__('Forgot password')">
+<x-layouts::auth :title="__('Lupa password')">
     <div class="flex flex-col gap-6">
         <x-auth-header
             :title="__('Lupa password')"
@@ -94,7 +94,7 @@
 
         <div class="space-x-1 rtl:space-x-reverse text-center text-sm text-zinc-400">
             <span>{{ __('Kembali ke') }}</span>
-            <flux:link :href="route('login')" wire:navigate>{{ __('login') }}</flux:link>
+            <flux:link :href="route('login')" wire:navigate>{{ __('halaman login') }}</flux:link>
         </div>
     </div>
 </x-layouts::auth>

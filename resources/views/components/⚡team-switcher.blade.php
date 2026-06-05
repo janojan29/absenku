@@ -43,7 +43,7 @@ new class extends Component {
 
         $this->reset('teamName');
 
-        Flux::toast(variant: 'success', text: __('Team created.'));
+        Flux::toast(variant: 'success', text: __('Tim dibuat.'));
 
         $this->redirectRoute('teams.edit', ['team' => $team->slug], navigate: true);
     }
@@ -104,7 +104,7 @@ new class extends Component {
     <flux:dropdown position="bottom" align="start">
         <flux:button variant="ghost" class="group w-full justify-start in-data-flux-sidebar-collapsed-desktop:justify-center" data-test="team-switcher-trigger">
             <flux:icon name="users" class="hidden size-4 in-data-flux-sidebar-collapsed-desktop:block" />
-            <span class="truncate font-semibold in-data-flux-sidebar-collapsed-desktop:hidden">{{ $this->currentTeam()['name'] ?? __('Select team') }}</span>
+            <span class="truncate font-semibold in-data-flux-sidebar-collapsed-desktop:hidden">{{ $this->currentTeam()['name'] ?? __('Pilih tim') }}</span>
             <flux:icon
                 name="chevrons-up-down"
                 variant="micro"
@@ -113,7 +113,7 @@ new class extends Component {
         </flux:button>
 
         <flux:menu class="min-w-56">
-            <flux:menu.heading>{{ __('Teams') }}</flux:menu.heading>
+            <flux:menu.heading>{{ __('Tim') }}</flux:menu.heading>
 
             @foreach ($this->teams() as $team)
                 <flux:menu.item
@@ -134,7 +134,7 @@ new class extends Component {
 
             <flux:modal.trigger name="create-team-switcher">
                 <flux:menu.item icon="plus" class="cursor-pointer" data-test="team-switcher-new-team">
-                    {{ __('New team') }}
+                    {{ __('Tim baru') }}
                 </flux:menu.item>
             </flux:modal.trigger>
         </flux:menu>
@@ -143,19 +143,19 @@ new class extends Component {
     <flux:modal name="create-team-switcher" :show="$errors->isNotEmpty()" focusable class="max-w-lg">
         <form wire:submit="createTeam" class="space-y-6">
             <div>
-                <flux:heading size="lg">{{ __('Create a new team') }}</flux:heading>
-                <flux:subheading>{{ __('Give your team a name to get started.') }}</flux:subheading>
+                <flux:heading size="lg">{{ __('Buat tim baru') }}</flux:heading>
+                <flux:subheading>{{ __('Beri nama tim Anda untuk memulai.') }}</flux:subheading>
             </div>
 
-            <flux:input wire:model="teamName" :label="__('Team name')" type="text" required autofocus data-test="switcher-create-team-name" />
+            <flux:input wire:model="teamName" :label="__('Nama tim')" type="text" required autofocus data-test="switcher-create-team-name" />
 
             <div class="flex justify-end space-x-2 rtl:space-x-reverse">
                 <flux:modal.close>
-                    <flux:button variant="filled">{{ __('Cancel') }}</flux:button>
+                    <flux:button variant="filled">{{ __('Batal') }}</flux:button>
                 </flux:modal.close>
 
                 <flux:button variant="primary" type="submit" data-test="switcher-create-team-submit">
-                    {{ __('Create team') }}
+                    {{ __('Buat tim') }}
                 </flux:button>
             </div>
         </form>

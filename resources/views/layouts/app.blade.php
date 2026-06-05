@@ -13,9 +13,7 @@
         <title>{{ config('app.name', 'Absensi Digital') }} — {{ $title ?? 'Dashboard' }}</title>
 
         <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+        <link href="{{ asset('vendor/fonts/app-fonts.css') }}" rel="stylesheet">
         <link rel="manifest" href="{{ asset('manifest.json') }}">
         <link rel="icon" type="image/png" sizes="192x192" href="{{ asset('icon-192.png') }}">
         <link rel="apple-touch-icon" sizes="192x192" href="{{ asset('icon-192.png') }}">

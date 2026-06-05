@@ -57,7 +57,7 @@ new class extends Component
 
         $this->populateTeamData();
 
-        Flux::toast(variant: 'success', text: __('Team updated.'));
+        Flux::toast(variant: 'success', text: __('Tim diperbarui.'));
 
         $this->redirectRoute('teams.edit', ['team' => $this->teamModel->fresh()->slug], navigate: true);
     }
@@ -77,7 +77,7 @@ new class extends Component
 
         $this->populateTeamData();
 
-        Flux::toast(variant: 'success', text: __('Member role updated.'));
+        Flux::toast(variant: 'success', text: __('Peran anggota diperbarui.'));
     }
 
     private function populateTeamData(): void
@@ -124,7 +124,7 @@ new class extends Component
 
         $title = $this->permissions->canUpdateTeam
             ? __('Edit :name', ['name' => $teamName])
-            : __('View :name', ['name' => $teamName]);
+            : __('Lihat :name', ['name' => $teamName]);
 
         return $this->view()->title($title);
     }
@@ -139,18 +139,18 @@ new class extends Component
 <section class="w-full">
     @include('partials.settings-heading')
 
-    <flux:heading class="sr-only">{{ __('Teams') }}</flux:heading>
+    <flux:heading class="sr-only">{{ __('Tim') }}</flux:heading>
 
-    <x-pages::settings.layout :heading="__('Teams')" :subheading="__('Manage your team settings')">
+    <x-pages::settings.layout :heading="__('Tim')" :subheading="__('Kelola pengaturan tim Anda')">
         <div class="space-y-10">
             <div class="space-y-6">
                 @if ($this->permissions->canUpdateTeam)
                     <div class="space-y-4">
                         <form wire:submit="updateTeam" class="space-y-6">
-                            <flux:input wire:model="teamName" :label="__('Team name')" required data-test="team-name-input" />
+                            <flux:input wire:model="teamName" :label="__('Nama tim')" required data-test="team-name-input" />
 
                             <flux:button variant="primary" type="submit" data-test="team-save-button">
-                                {{ __('Save') }}
+                                {{ __('Simpan') }}
                             </flux:button>
                         </form>
                     </div>
@@ -164,16 +164,16 @@ new class extends Component
             <div class="space-y-6">
                 <div class="flex items-center justify-between">
                     <div>
-                        <flux:heading>{{ __('Team members') }}</flux:heading>
+                        <flux:heading>{{ __('Anggota tim') }}</flux:heading>
                         @if ($this->permissions->canAddMember || $this->permissions->canUpdateMember || $this->permissions->canRemoveMember)
-                            <flux:subheading>{{ __('Manage who belongs to this team') }}</flux:subheading>
+                            <flux:subheading>{{ __('Kelola siapa yang tergabung dalam tim ini') }}</flux:subheading>
                         @endif
                     </div>
 
                     @if ($this->permissions->canCreateInvitation)
                         <flux:modal.trigger name="invite-member">
                             <flux:button variant="primary" icon="user-plus" data-test="invite-member-button">
-                                {{ __('Invite member') }}
+                                {{ __('Undang anggota') }}
                             </flux:button>
                         </flux:modal.trigger>
                     @endif
@@ -215,7 +215,7 @@ new class extends Component
 
                                 @if ($member['role'] !== 'owner' && $this->permissions->canRemoveMember)
                                     <flux:modal.trigger name="remove-member-{{ $member['id'] }}">
-                                        <flux:tooltip :content="__('Remove member')">
+                                        <flux:tooltip :content="__('Hapus anggota')">
                                             <flux:button
                                                 variant="ghost"
                                                 size="sm"
@@ -244,8 +244,8 @@ new class extends Component
             @if (count($invitations) > 0)
                 <div class="space-y-6">
                     <div>
-                        <flux:heading>{{ __('Pending invitations') }}</flux:heading>
-                        <flux:subheading>{{ __('Invitations that have not been accepted yet') }}</flux:subheading>
+                        <flux:heading>{{ __('Undangan tertunda') }}</flux:heading>
+                        <flux:subheading>{{ __('Undangan yang belum diterima') }}</flux:subheading>
                     </div>
 
                     <div class="space-y-3">
@@ -263,7 +263,7 @@ new class extends Component
 
                                 @if ($this->permissions->canCancelInvitation)
                                     <flux:modal.trigger name="cancel-invitation-{{ $invitation['code'] }}">
-                                        <flux:tooltip :content="__('Cancel invitation')">
+                                        <flux:tooltip :content="__('Batalkan undangan')">
                                             <flux:button
                                                 variant="ghost"
                                                 size="sm"
@@ -291,19 +291,19 @@ new class extends Component
             @if ($this->permissions->canDeleteTeam && ! $teamData['is_personal'])
                 <div class="space-y-6">
                     <div>
-                        <flux:heading>{{ __('Delete team') }}</flux:heading>
-                        <flux:subheading>{{ __('Permanently delete your team') }}</flux:subheading>
+                        <flux:heading>{{ __('Hapus tim') }}</flux:heading>
+                        <flux:subheading>{{ __('Hapus tim Anda secara permanen') }}</flux:subheading>
                     </div>
 
                     <div class="space-y-4 rounded-lg border border-red-200 bg-red-50 p-4 text-red-700 dark:border-red-200/10 dark:bg-red-900/20 dark:text-red-100">
                         <div>
-                            <p class="font-medium">{{ __('Warning') }}</p>
-                            <p class="text-sm">{{ __('Please proceed with caution, this cannot be undone.') }}</p>
+                            <p class="font-medium">{{ __('Peringatan') }}</p>
+                            <p class="text-sm">{{ __('Harap lanjutkan dengan hati-hati, tindakan ini tidak dapat dibatalkan.') }}</p>
                         </div>
 
                         <flux:modal.trigger name="delete-team">
                             <flux:button variant="danger" data-test="delete-team-button">
-                                {{ __('Delete team') }}
+                                {{ __('Hapus tim') }}
                             </flux:button>
                         </flux:modal.trigger>
                     </div>

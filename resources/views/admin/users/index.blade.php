@@ -1,7 +1,7 @@
 <x-app-layout>
-    <x-slot name="title">Manajemen User</x-slot>
+    <x-slot name="title">Manajemen Pengguna</x-slot>
     <x-slot name="header">
-        <h1 class="text-display-sm text-surface-50">Manajemen User</h1>
+        <h1 class="text-display-sm text-surface-50">Manajemen Pengguna</h1>
         <p class="text-sm text-electric-200/80 mt-1">Kelola data siswa, guru, dan admin</p>
     </x-slot>
 
@@ -40,8 +40,8 @@
                 <table class="w-full">
                     <thead>
                         <tr class="table-header">
-                            <th class="text-left py-3.5 px-4 text-xs font-semibold uppercase tracking-wider">User</th>
-                            <th class="text-left py-3.5 px-4 text-xs font-semibold uppercase tracking-wider">Role</th>
+                            <th class="text-left py-3.5 px-4 text-xs font-semibold uppercase tracking-wider">Pengguna</th>
+                            <th class="text-left py-3.5 px-4 text-xs font-semibold uppercase tracking-wider">Peran</th>
                             <th class="text-left py-3.5 px-4 text-xs font-semibold uppercase tracking-wider hidden md:table-cell">Identitas</th>
                             <th class="text-right py-3.5 px-4 text-xs font-semibold uppercase tracking-wider">Aksi</th>
                         </tr>
@@ -101,7 +101,7 @@
                                         </button>
 
                                         @if($canDelete)
-                                        <form method="POST" action="{{ route('admin.users.destroy', $user) }}" onsubmit="event.preventDefault(); window.dispatchEvent(new CustomEvent('open-confirm', { detail: { title: 'Hapus User', message: 'Hapus user ini? Tindakan ini tidak bisa dibatalkan.', confirmText: 'Ya, Hapus', type: 'danger', formEl: this } }));" class="inline-block">
+                                        <form method="POST" action="{{ route('admin.users.destroy', $user) }}" onsubmit="event.preventDefault(); window.dispatchEvent(new CustomEvent('open-confirm', { detail: { title: 'Hapus Pengguna', message: 'Hapus pengguna ini? Tindakan ini tidak bisa dibatalkan.', confirmText: 'Ya, Hapus', type: 'danger', formEl: this } }));" class="inline-block">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn-danger h-8 px-3 text-xs gap-1.5">
@@ -114,7 +114,7 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="4" class="py-12 text-center text-bw-400">Tidak ada data user.</td></tr>
+                            <tr><td colspan="4" class="py-12 text-center text-bw-400">Tidak ada data pengguna.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -134,7 +134,7 @@
         <div class="bg-white rounded-2xl shadow-card w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col relative z-10 animate-fade-scale-in">
             {{-- Header --}}
             <div class="px-6 py-4 border-b border-bw-200 flex items-center justify-between bg-bw-50/50">
-                <h3 class="font-bold text-lg text-navy-900">Edit Data User</h3>
+                <h3 class="font-bold text-lg text-navy-900">Edit Data Pengguna</h3>
                 <button type="button" onclick="closeEditModal()" class="w-8 h-8 flex items-center justify-center rounded-lg text-bw-400 hover:text-navy-600 hover:bg-bw-200 transition-colors">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
@@ -154,10 +154,10 @@
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold text-navy-600 uppercase tracking-wider mb-1.5">Role Akses</label>
+                            <label class="block text-xs font-semibold text-navy-600 uppercase tracking-wider mb-1.5">Peran Akses</label>
                             <input type="hidden" name="role" id="editRoleHidden" value="">
                             <select name="role_select" id="editRole" class="form-select w-full" onchange="syncRole(); updateFieldsVisibility();" required>
-                                <option value="">-- Pilih Role --</option>
+                                <option value="">-- Pilih Peran --</option>
                                 @foreach ($roles as $role)
                                     <option value="{{ $role->name }}">
                                         {{ $role->name === 'petugas_piket' ? 'Petugas Piket' : ($role->name === 'guru_walikelas' ? 'Guru Walikelas' : ucfirst(str_replace('_', ' ', $role->name))) }}
@@ -269,7 +269,7 @@
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'Gagal memuat data user', type: 'error' }}));
+                    window.dispatchEvent(new CustomEvent('toast', { detail: { message: 'Gagal memuat data pengguna', type: 'error' }}));
                 });
         }
 

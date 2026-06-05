@@ -52,10 +52,10 @@
 
                     @role('admin')
                         <x-nav-link :href="route('admin.settings.edit')" :active="request()->routeIs('admin.settings.*')">
-                            {{ __('Settings') }}
+                            {{ __('Pengaturan') }}
                         </x-nav-link>
                         <x-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users.*')">
-                            {{ __('Users') }}
+                            {{ __('Pengguna') }}
                         </x-nav-link>
                         <x-nav-link :href="route('admin.class-rooms.index')" :active="request()->routeIs('admin.class-rooms.*')">
                             {{ __('Kelas') }}
@@ -87,7 +87,7 @@
 
                     <x-slot name="content">
                         <x-dropdown-link :href="route('profile.edit')">
-                            {{ __('Profile') }}
+                            {{ __('Profil') }}
                         </x-dropdown-link>
 
                         <!-- Authentication -->
@@ -97,7 +97,7 @@
                             <x-dropdown-link :href="route('logout')"
                                     onclick="event.preventDefault();
                                                 this.closest('form').submit();">
-                                {{ __('Log Out') }}
+                                {{ __('Keluar') }}
                             </x-dropdown-link>
                         </form>
                     </x-slot>
@@ -151,10 +151,10 @@
 
             @role('admin')
                 <x-responsive-nav-link :href="route('admin.settings.edit')" :active="request()->routeIs('admin.settings.*')">
-                    {{ __('Settings') }}
+                    {{ __('Pengaturan') }}
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users.*')">
-                    {{ __('Users') }}
+                    {{ __('Pengguna') }}
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('admin.class-rooms.index')" :active="request()->routeIs('admin.class-rooms.*')">
                     {{ __('Kelas') }}
@@ -177,7 +177,7 @@
 
             <div class="mt-3 space-y-1">
                 <x-responsive-nav-link :href="route('profile.edit')">
-                    {{ __('Profile') }}
+                    {{ __('Profil') }}
                 </x-responsive-nav-link>
 
                 <!-- Authentication -->
@@ -187,7 +187,7 @@
                     <x-responsive-nav-link :href="route('logout')"
                             onclick="event.preventDefault();
                                         this.closest('form').submit();">
-                        {{ __('Log Out') }}
+                        {{ __('Keluar') }}
                     </x-responsive-nav-link>
                 </form>
             </div>

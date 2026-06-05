@@ -48,7 +48,7 @@ new class extends Component {
 
         $this->dispatch('close-modal', name: $this->modalName);
 
-        Flux::toast(variant: 'success', text: __('Member removed.'));
+        Flux::toast(variant: 'success', text: __('Anggota dihapus.'));
 
         $this->redirectRoute('teams.edit', ['team' => $this->team->slug], navigate: true);
     }
@@ -57,16 +57,16 @@ new class extends Component {
 <flux:modal :name="$modalName" focusable class="max-w-lg">
     <form wire:submit="removeMember" class="space-y-6">
         <div>
-            <flux:heading size="lg">{{ __('Remove team member') }}</flux:heading>
+            <flux:heading size="lg">{{ __('Hapus anggota tim') }}</flux:heading>
             <flux:subheading>
-                {{ __('Are you sure you want to remove :name from this team?', ['name' => $memberName]) }}
+                {{ __('Apakah Anda yakin ingin menghapus :name dari tim ini?', ['name' => $memberName]) }}
             </flux:subheading>
         </div>
         <div class="flex justify-end space-x-2 rtl:space-x-reverse">
             <flux:modal.close>
-                <flux:button variant="filled">{{ __('Cancel') }}</flux:button>
+                <flux:button variant="filled">{{ __('Batal') }}</flux:button>
             </flux:modal.close>
-            <flux:button variant="danger" type="submit" data-test="remove-member-confirm">{{ __('Remove member') }}</flux:button>
+            <flux:button variant="danger" type="submit" data-test="remove-member-confirm">{{ __('Hapus anggota') }}</flux:button>
         </div>
     </form>
 </flux:modal>

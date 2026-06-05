@@ -9,7 +9,7 @@ use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-new #[Title('Teams')] class extends Component {
+new #[Title('Tim')] class extends Component {
     public TeamInvitation $invitation;
 
     public function mount(TeamInvitation $invitation): void
@@ -45,19 +45,19 @@ new #[Title('Teams')] class extends Component {
     {
         if ($invitation->isAccepted()) {
             throw ValidationException::withMessages([
-                'invitation' => [__('This invitation has already been accepted.')],
+                'invitation' => [__('Undangan ini sudah diterima.')],
             ]);
         }
 
         if ($invitation->isExpired()) {
             throw ValidationException::withMessages([
-                'invitation' => [__('This invitation has expired.')],
+                'invitation' => [__('Undangan ini sudah kedaluwarsa.')],
             ]);
         }
 
         if (Str::lower($invitation->email) !== Str::lower($user->email)) {
             throw ValidationException::withMessages([
-                'invitation' => [__('This invitation was sent to a different email address.')],
+                'invitation' => [__('Undangan ini dikirim ke alamat email yang berbeda.')],
             ]);
         }
     }

@@ -41,7 +41,7 @@ new class extends Component {
 
         $this->dispatch('close-modal', name: $this->modalName);
 
-        Flux::toast(variant: 'success', text: __('Invitation cancelled.'));
+        Flux::toast(variant: 'success', text: __('Undangan dibatalkan.'));
 
         $this->redirectRoute('teams.edit', ['team' => $this->team->slug], navigate: true);
     }
@@ -50,16 +50,16 @@ new class extends Component {
 <flux:modal :name="$modalName" focusable class="max-w-lg">
     <form wire:submit="cancelInvitation" class="space-y-6">
         <div>
-            <flux:heading size="lg">{{ __('Cancel invitation') }}</flux:heading>
+            <flux:heading size="lg">{{ __('Batalkan undangan') }}</flux:heading>
             <flux:subheading>
-                {{ __('Are you sure you want to cancel the invitation for :email?', ['email' => $invitationEmail]) }}
+                {{ __('Apakah Anda yakin ingin membatalkan undangan untuk :email?', ['email' => $invitationEmail]) }}
             </flux:subheading>
         </div>
         <div class="flex justify-end space-x-2 rtl:space-x-reverse">
             <flux:modal.close>
-                <flux:button variant="filled">{{ __('Keep invitation') }}</flux:button>
+                <flux:button variant="filled">{{ __('Pertahankan undangan') }}</flux:button>
             </flux:modal.close>
-            <flux:button variant="danger" type="submit" data-test="cancel-invitation-confirm">{{ __('Cancel invitation') }}</flux:button>
+            <flux:button variant="danger" type="submit" data-test="cancel-invitation-confirm">{{ __('Batalkan undangan') }}</flux:button>
         </div>
     </form>
 </flux:modal>

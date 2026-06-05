@@ -6,10 +6,16 @@
                 <h1 class="text-display-sm text-surface-50">Data Siswa</h1>
                 <p class="text-sm text-electric-200/80 mt-1">Kelola data profil dan identitas siswa</p>
             </div>
-            <a href="{{ route('admin.students.create') }}" class="btn-primary btn-ripple h-10 px-5 gap-2 w-full sm:w-auto justify-center">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-                Tambah Siswa
-            </a>
+            <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                <a href="{{ route('admin.students.create') }}" class="btn-primary btn-ripple h-10 px-5 gap-2 w-full sm:w-auto justify-center">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                    Tambah Siswa
+                </a>
+                <a href="{{ route('admin.students.import') }}" class="btn-primary btn-ripple h-10 px-5 gap-2 w-full sm:w-auto justify-center flex items-center">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V3m0 0l-4.5 4.5M12 3l4.5 4.5M3 16.5v3A1.5 1.5 0 004.5 21h15a1.5 1.5 0 001.5-1.5v-3"/></svg>
+                    Import Data
+                </a>
+            </div>
         </div>
     </x-slot>
 
@@ -42,6 +48,7 @@
             </form>
         </div>
 
+
         {{-- Bulk Class Update --}}
         <div class="card animate-fade-slide-up">
             <form method="POST" action="{{ route('admin.students.bulk-class') }}" class="filter-panel filter-form">
@@ -67,6 +74,28 @@
                     </div>
                     <div class="min-w-[160px]">
                         <button type="submit" class="btn-primary btn-ripple h-[42px] px-6">Pindahkan Semua</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        {{-- Bulk Delete By Class --}}
+        <div class="card animate-fade-slide-up">
+            <form method="POST" action="{{ route('admin.students.bulk-delete') }}" class="filter-panel filter-form" onsubmit="event.preventDefault(); window.dispatchEvent(new CustomEvent('open-confirm', { detail: { title: 'Hapus akun kelas', message: 'Hapus semua akun siswa pada kelas ini? Tindakan ini tidak dapat dibatalkan.', confirmText: 'Ya, hapus', cancelText: 'Batal', type: 'danger', formEl: this } }));">
+                @csrf
+                @method('DELETE')
+                <div class="flex flex-row items-end gap-3">
+                    <div class="flex-1 min-w-[220px]">
+                        <label class="text-xs text-bw-400 font-semibold uppercase tracking-wider">Hapus 1 Kelas</label>
+                        <select name="class_room_id" class="form-select h-[42px] mt-1" required>
+                            <option value="">Pilih kelas</option>
+                            @foreach ($classes as $class)
+                                <option value="{{ $class->id }}">{{ $class->name }} — {{ $class->jurusan ?? '-' }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="min-w-[200px]">
+                        <button type="submit" class="btn-danger h-[42px] px-6">Hapus Akun Kelas</button>
                     </div>
                 </div>
             </form>

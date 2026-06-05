@@ -13,9 +13,7 @@
         <title>{{ config('app.name', 'Absensi Digital') }} — Login</title>
 
         <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+        <link href="{{ asset('vendor/fonts/app-fonts.css') }}" rel="stylesheet">
         <link rel="manifest" href="{{ asset('manifest.json') }}">
         <link rel="icon" type="image/png" sizes="192x192" href="{{ asset('icon-192.png') }}">
         <link rel="apple-touch-icon" sizes="192x192" href="{{ asset('icon-192.png') }}">
@@ -61,7 +59,7 @@
 
                     <h1 class="text-4xl xl:text-5xl font-bold text-white mb-4 leading-tight animate-fade-slide-up">
                         Absensi Digital<br>
-                        <span class="text-navy-300">Modern</span>
+                        <span class="text-navy-300">Praktis & Modern</span>
                     </h1>
                     <p class="text-navy-300/80 text-lg leading-relaxed animate-fade-slide-up stagger-1">
                         Pantau kehadiran siswa secara real-time dengan teknologi GPS dan dashboard interaktif.

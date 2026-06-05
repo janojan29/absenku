@@ -93,6 +93,8 @@ Route::middleware('auth')->group(function () {
             Route::get('/reports/attendance', [ReportController::class, 'index'])->name('teacher.report');
             Route::get('/reports/attendance/excel', [ReportController::class, 'exportExcel'])->name('teacher.report.excel');
             Route::get('/reports/attendance/pdf', [ReportController::class, 'exportPdf'])->name('teacher.report.pdf');
+            Route::get('/reports/attendance/summary/excel', [ReportController::class, 'exportSummaryExcel'])->name('teacher.report.summary.excel');
+            Route::get('/reports/attendance/summary/pdf', [ReportController::class, 'exportSummaryPdf'])->name('teacher.report.summary.pdf');
         });
     });
 
@@ -116,7 +118,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/students/create', [StudentController::class, 'create'])->name('admin.students.create');
         Route::get('/students/{user}/edit', [StudentController::class, 'edit'])->name('admin.students.edit');
         Route::post('/students', [StudentController::class, 'store'])->name('admin.students.store');
+        Route::get('/students/import', [StudentController::class, 'importForm'])->name('admin.students.import');
+        Route::get('/students/import/template', [StudentController::class, 'downloadTemplate'])->name('admin.students.import.template');
+        Route::post('/students/import', [StudentController::class, 'import'])->name('admin.students.import.store');
         Route::patch('/students/{user}', [StudentController::class, 'update'])->name('admin.students.update');
+        Route::delete('/students/bulk-delete', [StudentController::class, 'bulkDeleteByClass'])->name('admin.students.bulk-delete');
         Route::post('/students/bulk-class', [StudentController::class, 'bulkUpdateClass'])->name('admin.students.bulk-class');
 
         Route::get('/teachers', [TeacherController::class, 'index'])->name('admin.teachers.index');

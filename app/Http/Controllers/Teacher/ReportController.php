@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Teacher;
 
 use App\Exports\AttendanceRecapExport;
+use App\Exports\SummaryRecapExport;
 use App\Http\Controllers\Controller;
 use App\Models\Attendance;
 use App\Models\ClassRoom;
@@ -67,6 +68,34 @@ class ReportController extends Controller
         ])->setPaper('a4', 'portrait');
 
         return $pdf->download('rekap-absensi-' . $startDate->toDateString() . '-sampai-' . $endDate->toDateString() . '.pdf');
+    }
+
+    public function exportSummaryExcel(Request $request)
+    {
+        [$summaryRows, $summaryFilter] = $this->buildSummaryRecap($request);
+
+        $startDate = Carbon::parse($summaryFilter['resolved_start'] ?? now()->toDateString());
+        $endDate = Carbon::parse($summaryFilter['resolved_end'] ?? now()->toDateString());
+
+        $filename = 'rekap-keterangan-' . $startDate->toDateString() . '-sampai-' . $endDate->toDateString() . '.xlsx';
+
+        return Excel::download(new SummaryRecapExport($summaryRows), $filename);
+    }
+
+    public function exportSummaryPdf(Request $request)
+    {
+        [$summaryRows, $summaryFilter] = $this->buildSummaryRecap($request);
+
+        $startDate = Carbon::parse($summaryFilter['resolved_start'] ?? now()->toDateString());
+        $endDate = Carbon::parse($summaryFilter['resolved_end'] ?? now()->toDateString());
+
+        $pdf = Pdf::loadView('teacher.summary-recap-pdf', [
+            'summaryRows' => $summaryRows,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+        ])->setPaper('a4', 'portrait');
+
+        return $pdf->download('rekap-keterangan-' . $startDate->toDateString() . '-sampai-' . $endDate->toDateString() . '.pdf');
     }
 
     private function filters(Request $request): array
