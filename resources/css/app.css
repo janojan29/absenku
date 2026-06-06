@@ -407,13 +407,29 @@
 
     /* Keep password-eye buttons fixed (no bounce effect) */
     .password-toggle-btn {
-        min-height: 20px !important;
+        min-height: 0 !important;
+        height: auto !important;
+        padding: 4px !important;
+        background: none !important;
+        border: none !important;
+        box-shadow: none !important;
+        line-height: 1 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
         touch-action: manipulation;
+        transition: none !important;
+        opacity: 1 !important;
+        cursor: pointer;
     }
 
+    .password-toggle-btn:hover,
+    .password-toggle-btn:focus,
     .password-toggle-btn:active {
-        transform: translateY(-50%) !important;
+        transform: none !important;
         opacity: 1 !important;
+        background: none !important;
+        box-shadow: none !important;
     }
 
     /* Prevent iOS auto zoom on focused form controls */

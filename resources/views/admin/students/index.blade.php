@@ -53,8 +53,8 @@
         <div class="card animate-fade-slide-up">
             <form method="POST" action="{{ route('admin.students.bulk-class') }}" class="filter-panel filter-form">
                 @csrf
-                <div class="flex flex-row items-end gap-3">
-                    <div class="flex-1 min-w-[220px]">
+                <div class="flex flex-col sm:flex-row sm:items-end gap-3">
+                    <div class="flex-1">
                         <label class="text-xs text-bw-400 font-semibold uppercase tracking-wider">Kelas Asal</label>
                         <select name="from_class_room_id" class="form-select h-[42px] mt-1" required>
                             <option value="">Pilih kelas asal</option>
@@ -63,7 +63,7 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="flex-1 min-w-[220px]">
+                    <div class="flex-1">
                         <label class="text-xs text-bw-400 font-semibold uppercase tracking-wider">Kelas Tujuan</label>
                         <select name="to_class_room_id" class="form-select h-[42px] mt-1" required>
                             <option value="">Pilih kelas tujuan</option>
@@ -72,8 +72,8 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="min-w-[160px]">
-                        <button type="submit" class="btn-primary btn-ripple h-[42px] px-6">Pindahkan Semua</button>
+                    <div class="w-full sm:w-auto">
+                        <button type="submit" class="btn-primary btn-ripple h-[42px] px-6 w-full sm:w-auto">Pindahkan Semua</button>
                     </div>
                 </div>
             </form>
@@ -84,8 +84,8 @@
             <form method="POST" action="{{ route('admin.students.bulk-delete') }}" class="filter-panel filter-form" onsubmit="event.preventDefault(); window.dispatchEvent(new CustomEvent('open-confirm', { detail: { title: 'Hapus akun kelas', message: 'Hapus semua akun siswa pada kelas ini? Tindakan ini tidak dapat dibatalkan.', confirmText: 'Ya, hapus', cancelText: 'Batal', type: 'danger', formEl: this } }));">
                 @csrf
                 @method('DELETE')
-                <div class="flex flex-row items-end gap-3">
-                    <div class="flex-1 min-w-[220px]">
+                <div class="flex flex-col sm:flex-row sm:items-end gap-3">
+                    <div class="flex-1">
                         <label class="text-xs text-bw-400 font-semibold uppercase tracking-wider">Hapus 1 Kelas</label>
                         <select name="class_room_id" class="form-select h-[42px] mt-1" required>
                             <option value="">Pilih kelas</option>
@@ -94,8 +94,8 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="min-w-[200px]">
-                        <button type="submit" class="btn-danger h-[42px] px-6">Hapus Akun Kelas</button>
+                    <div class="w-full sm:w-auto">
+                        <button type="submit" class="btn-danger h-[42px] px-6 w-full sm:w-auto">Hapus Akun Kelas</button>
                     </div>
                 </div>
             </form>
