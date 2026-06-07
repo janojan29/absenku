@@ -45,7 +45,7 @@
                     </div>
 
                     <h1 class="text-4xl xl:text-5xl font-bold text-white mb-4 leading-tight animate-fade-slide-up">
-                        ABSENKU<br>
+                        AbsenKu<br>
                         <span class="text-navy-300">Absensi Digital</span>
                     </h1>
                     <p class="text-navy-300/80 text-lg leading-relaxed animate-fade-slide-up stagger-1">
@@ -58,20 +58,25 @@
             <div class="flex-1 flex items-center justify-center relative" style="background: #ffffff;">
                 @unless($hideAuthHeader ?? false)
                     {{-- Mobile gradient header --}}
-                    <div class="lg:hidden absolute top-0 left-0 right-0 h-40" style="background: linear-gradient(135deg, #0d1b2a 0%, #1e4d8c 100%); border-radius: 0 0 40px 40px;">
+                     <div class="lg:hidden absolute top-0 left-0 right-0 h-48" style="background: linear-gradient(135deg, #0d1b2a 0%, #1e4d8c 100%); border-radius: 0 0 40px 40px;">
                         <div class="flex items-center justify-center h-full">
                             <div class="text-center">
-                                <div class="w-12 h-12 mx-auto mb-2 rounded-xl bg-white flex items-center justify-center overflow-hidden">
-                                    <img src="{{ asset('images/logo.png') }}" class="w-10 h-10 object-contain" alt="SMKN Bungursari Logo">
+                                <div class="w-20 h-20 mx-auto mb-2.5 rounded-full bg-white flex items-center justify-center overflow-hidden shadow-md">
+                                    <img src="{{ asset('images/logo.webp') }}" class="w-14 h-14 object-contain" alt="SMKN Bungursari Logo">
                                 </div>
-                                <h1 class="text-white font-bold text-lg">Absensi Digital</h1>
+                                <p class="text-4xl xl:text-5xl font-bold text-white mb-0 leading-tight animate-fade-slide-up">
+                                    AbsenKu
+                                </p>
+                                <p class="text-navy-300/80 text-lg leading-relaxed animate-fade-slide-up stagger-1">
+                                    Absensi Digital
+                                </p>
                             </div>
                         </div>
                     </div>
                 @endunless
 
                 {{-- Main Content / Form Container --}}
-                <div class="w-full max-w-md p-6 sm:p-12 relative z-10 mt-32 lg:mt-0 bg-white lg:bg-transparent rounded-3xl lg:rounded-none shadow-xl lg:shadow-none mx-4 sm:mx-0">
+                <div class="w-full max-w-md p-6 sm:p-12 relative z-10 mt-40 lg:mt-0 bg-white lg:bg-transparent rounded-3xl lg:rounded-none shadow-xl lg:shadow-none mx-4 sm:mx-0">
                     @unless($hideAuthHeader ?? false)
                         {{-- Desktop Header --}}
                         <div class="hidden lg:block text-center mb-10">

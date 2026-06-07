@@ -101,4 +101,54 @@ class ProfileTest extends TestCase
 
         $this->assertNotNull($user->fresh());
     }
+
+    public function test_admin_and_piket_cannot_update_profile(): void
+    {
+        \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'admin']);
+        \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'petugas_piket']);
+
+        /** @var User $admin */
+        $admin = User::factory()->createOne();
+        $admin->assignRole('admin');
+
+        /** @var User $piket */
+        $piket = User::factory()->createOne();
+        $piket->assignRole('petugas_piket');
+
+        $response = $this
+            ->actingAs($admin)
+            ->patch('/profile', [
+                'whatsapp_number' => '+62811111111',
+            ]);
+
+        $response->assertSessionHasErrors('whatsapp_number');
+
+        $response2 = $this
+            ->actingAs($piket)
+            ->patch('/profile', [
+                'whatsapp_number' => '+62811111111',
+            ]);
+
+        $response2->assertSessionHasErrors('whatsapp_number');
+    }
+
+    public function test_admin_and_piket_cannot_update_password(): void
+    {
+        \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'admin']);
+        \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'petugas_piket']);
+
+        /** @var User $admin */
+        $admin = User::factory()->createOne();
+        $admin->assignRole('admin');
+
+        $response = $this
+            ->actingAs($admin)
+            ->put('/password', [
+                'current_password' => 'password',
+                'password' => 'new-password123',
+                'password_confirmation' => 'new-password123',
+            ]);
+
+        $response->assertSessionHasErrorsIn('updatePassword', 'password');
+    }
 }
