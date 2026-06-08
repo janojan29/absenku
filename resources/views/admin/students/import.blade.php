@@ -1,8 +1,8 @@
 <x-app-layout>
-    <x-slot name="title">Import Data Siswa</x-slot>
+    <x-slot name="title">Impor Data Siswa</x-slot>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-surface-50 leading-tight">
-            {{ __('Import Data Siswa') }}
+            {{ __('Impor Data Siswa') }}
         </h2>
     </x-slot>
 
@@ -16,7 +16,7 @@
 
             @if (session('import_errors'))
                 <div class="mb-6 rounded-md border border-amber-200 bg-amber-50 p-4 text-amber-900">
-                    <div class="font-semibold">Import selesai dengan catatan:</div>
+                    <div class="font-semibold">Impor selesai dengan catatan:</div>
                     <ul class="list-disc pl-5 mt-2 text-sm">
                         @foreach (session('import_errors') as $error)
                             <li>{{ $error }}</li>
@@ -28,7 +28,7 @@
             <div class="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6">
-                        <h3 class="text-lg font-semibold text-gray-900">Panduan Import</h3>
+                        <h3 class="text-lg font-semibold text-gray-900">Panduan Impor</h3>
                         <p class="text-sm text-bw-400 mt-1">Ikuti format kolom agar data masuk tanpa error.</p>
 
                         <div class="mt-5 space-y-4">
@@ -49,7 +49,7 @@
                             <div class="flex items-start gap-3">
                                 <div class="mt-0.5 h-6 w-6 rounded-full bg-indigo-50 text-indigo-600 text-xs font-semibold flex items-center justify-center">3</div>
                                 <div>
-                                    <div class="text-sm font-medium text-gray-900">Upload dan import</div>
+                                    <div class="text-sm font-medium text-gray-900">Unggah dan impor</div>
                                     <div class="text-xs text-bw-400">Password siswa otomatis: siswa123.</div>
                                 </div>
                             </div>
@@ -86,10 +86,10 @@
 
                             <div class="flex flex-col gap-2 pt-3 border-t">
                                 <a href="{{ route('admin.students.import.template') }}" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 font-medium text-center">
-                                    Download Template
+                                    Unduh Template
                                 </a>
                                 <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 font-medium">
-                                    Import Data
+                                    Impor Data
                                 </button>
                                 <a href="{{ route('admin.students.index') }}" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 font-medium text-center">
                                     Kembali

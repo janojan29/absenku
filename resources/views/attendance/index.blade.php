@@ -134,7 +134,7 @@
                             </button>
                         </form>
                     @elseif (!empty($isAfterCheckOutEnd) && $isAfterCheckOutEnd)
-                        <button disabled class="w-full h-14 text-lg rounded-xl font-semibold bg-bw-200 text-bw-400 cursor-not-allowed">Check-out ditutup (batas {{ substr($setting->check_out_end_time, 0, 5) }})</button>
+                        <button disabled class="w-full h-14 text-lg rounded-xl font-semibold bg-bw-200 text-bw-400 cursor-not-allowed">Absen Pulang ditutup (batas {{ substr($setting->check_out_end_time, 0, 5) }})</button>
                     @else
                         <button disabled class="w-full h-14 text-lg rounded-xl font-semibold bg-bw-200 text-bw-400 cursor-not-allowed">Absen Pulang (buka {{ substr($setting->check_out_start_time, 0, 5) }})</button>
                     @endif
@@ -142,7 +142,7 @@
                     <div class="text-center p-6 rounded-xl bg-emerald-50 border border-emerald-200/60">
                         <svg class="w-12 h-12 mx-auto text-emerald-500 mb-2" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
                         <div class="font-semibold text-emerald-700">Absensi Selesai</div>
-                        <div class="text-sm text-emerald-600 mt-1">Sudah check-in & check-out hari ini</div>
+                        <div class="text-sm text-emerald-600 mt-1">Sudah absen masuk & absen pulang hari ini</div>
                     </div>
                 @endif
 

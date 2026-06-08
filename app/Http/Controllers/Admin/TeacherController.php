@@ -116,8 +116,9 @@ class TeacherController extends Controller
 
         $data = $request->validate([
             'teacher_role' => ['required', 'string', 'in:guru,guru_walikelas'],
+            'name' => ['required', 'string', 'max:255'],
             'nip' => [
-                'nullable',
+                'required',
                 'string',
                 'max:50',
                 Rule::unique('teachers', 'nip')->ignore($user->teacher?->id),
@@ -135,6 +136,7 @@ class TeacherController extends Controller
 
         // Update user
         $user->update([
+            'name' => $data['name'],
             'whatsapp_number' => $data['whatsapp_number'] ?? null,
         ]);
 

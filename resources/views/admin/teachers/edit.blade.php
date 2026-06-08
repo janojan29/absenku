@@ -1,90 +1,76 @@
 <x-app-layout>
     <x-slot name="title">Edit Data Guru</x-slot>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Edit Data Guru') }}
-        </h2>
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <h1 class="text-display-sm text-surface-50">Edit Data Guru</h1>
+                <p class="text-sm text-electric-200/80 mt-1">Ubah data profil dan peran guru</p>
+            </div>
+        </div>
     </x-slot>
 
-    <div class="py-8">
-        <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6">
-                    @if ($errors->any())
-                        <div class="bg-red-50 border border-red-200 text-red-800 p-4 rounded mb-6">
-                            <div class="font-semibold">Terjadi kesalahan:</div>
-                            <ul class="list-disc pl-5 mt-2">
-                                @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    @endif
-
-                    <form method="POST" action="{{ route('admin.teachers.update', $teacher) }}" class="space-y-6">
-                        @csrf
-                        @method('PATCH')
-
-                        <div>
-                            <label for="teacher_role" class="block text-sm font-medium text-gray-700 mb-1">Jenis Guru</label>
-                            <select id="teacher_role" name="teacher_role" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
-                                <option value="guru" {{ old('teacher_role', $teacher->hasRole('guru_walikelas') ? 'guru_walikelas' : 'guru') === 'guru' ? 'selected' : '' }}>Guru</option>
-                                <option value="guru_walikelas" {{ old('teacher_role', $teacher->hasRole('guru_walikelas') ? 'guru_walikelas' : 'guru') === 'guru_walikelas' ? 'selected' : '' }}>Guru Walikelas</option>
-                            </select>
-                            @error('teacher_role')
-                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Nama Guru</label>
-                            <input type="text" value="{{ $teacher->name }}" class="w-full px-4 py-2 border border-gray-200 rounded-md bg-gray-100 text-gray-700" disabled>
-                        </div>
-
-                        <div>
-                            <label for="nip" class="block text-sm font-medium text-gray-700 mb-1">NIP</label>
-                            <input type="text" id="nip" name="nip" value="{{ old('nip', $teacher->teacher?->nip) }}" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="NIP">
-                            @error('nip')
-                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <div>
-                            <label for="subject" class="block text-sm font-medium text-gray-700 mb-1">Mata Pelajaran</label>
-                            <input type="text" id="subject" name="subject" value="{{ old('subject', $teacher->teacher?->subject) }}" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Mata Pelajaran">
-                            @error('subject')
-                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <div>
-                            <label for="wali_kelas" class="block text-sm font-medium text-gray-700 mb-1">Keterangan Wali Kelas</label>
-                            <input type="text" id="wali_kelas" name="wali_kelas" value="{{ old('wali_kelas', $teacher->teacher?->wali_kelas) }}" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Contoh: Wali Kelas X IPA 1">
-                            <p class="text-gray-500 text-sm mt-1">Wajib diisi jika jenis guru adalah Guru Walikelas.</p>
-                            @error('wali_kelas')
-                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <div>
-                            <label for="whatsapp_number" class="block text-sm font-medium text-gray-700 mb-1">No. WhatsApp</label>
-                            <input type="text" id="whatsapp_number" name="whatsapp_number" value="{{ old('whatsapp_number', $teacher->whatsapp_number) }}" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="+62812...">
-                            @error('whatsapp_number')
-                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <div class="flex justify-end gap-3 pt-6 border-t">
-                            <a href="{{ route('admin.teachers.index') }}" class="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 font-medium">
-                                Batal
-                            </a>
-                            <button type="submit" class="px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 font-medium">
-                                Simpan Perubahan
-                            </button>
-                        </div>
-                    </form>
-                </div>
+    <div class="max-w-3xl mx-auto space-y-6">
+        @if ($errors->any())
+            <div class="bg-red-50 border border-red-200 text-red-800 p-4 rounded-xl">
+                <div class="font-semibold text-sm">Terjadi kesalahan:</div>
+                <ul class="list-disc pl-5 mt-1.5 text-xs space-y-1">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
             </div>
+        @endif
+
+        <div class="card p-6 animate-fade-slide-up">
+            <form method="POST" action="{{ route('admin.teachers.update', $teacher) }}" class="space-y-6">
+                @csrf
+                @method('PATCH')
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div>
+                        <label for="teacher_role" class="block text-xs font-semibold text-navy-600 uppercase tracking-wider mb-1.5">Jenis Guru <span class="text-red-500">*</span></label>
+                        <select id="teacher_role" name="teacher_role" class="form-select w-full" required>
+                            <option value="guru" {{ old('teacher_role', $teacher->hasRole('guru_walikelas') ? 'guru_walikelas' : 'guru') === 'guru' ? 'selected' : '' }}>Guru</option>
+                            <option value="guru_walikelas" {{ old('teacher_role', $teacher->hasRole('guru_walikelas') ? 'guru_walikelas' : 'guru') === 'guru_walikelas' ? 'selected' : '' }}>Guru Walikelas</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="name" class="block text-xs font-semibold text-navy-600 uppercase tracking-wider mb-1.5">Nama Guru <span class="text-red-500">*</span></label>
+                        <input type="text" id="name" name="name" value="{{ old('name', $teacher->name) }}" class="form-input-clean w-full" required>
+                    </div>
+
+                    <div>
+                        <label for="nip" class="block text-xs font-semibold text-navy-600 uppercase tracking-wider mb-1.5">NIP <span class="text-red-500">*</span></label>
+                        <input type="text" id="nip" name="nip" value="{{ old('nip', $teacher->teacher?->nip) }}" class="form-input-clean w-full" placeholder="NIP" required>
+                    </div>
+
+                    <div>
+                        <label for="subject" class="block text-xs font-semibold text-navy-600 uppercase tracking-wider mb-1.5">Mata Pelajaran</label>
+                        <input type="text" id="subject" name="subject" value="{{ old('subject', $teacher->teacher?->subject) }}" class="form-input-clean w-full" placeholder="Mata Pelajaran">
+                    </div>
+
+                    <div>
+                        <label for="whatsapp_number" class="block text-xs font-semibold text-navy-600 uppercase tracking-wider mb-1.5">No. WhatsApp</label>
+                        <input type="text" id="whatsapp_number" name="whatsapp_number" value="{{ old('whatsapp_number', $teacher->whatsapp_number) }}" class="form-input-clean w-full" placeholder="+628...">
+                    </div>
+
+                    <div>
+                        <label for="wali_kelas" class="block text-xs font-semibold text-navy-600 uppercase tracking-wider mb-1.5">Keterangan Wali Kelas</label>
+                        <input type="text" id="wali_kelas" name="wali_kelas" value="{{ old('wali_kelas', $teacher->teacher?->wali_kelas) }}" class="form-input-clean w-full" placeholder="Contoh: X IPA 1">
+                        <p class="text-bw-400 text-[10px] mt-1">Wajib diisi jika jenis guru adalah Guru Walikelas.</p>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-6 border-t border-bw-200">
+                    <a href="{{ route('admin.teachers.index') }}" class="btn-secondary px-6 h-10 flex items-center justify-center">
+                        Batal
+                    </a>
+                    <button type="submit" class="btn-primary btn-ripple px-6 h-10">
+                        Simpan Perubahan
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </x-app-layout>

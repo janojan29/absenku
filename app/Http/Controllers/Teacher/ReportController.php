@@ -24,12 +24,34 @@ class ReportController extends Controller
         [$startDate, $endDate, $classRoomId, $status] = $this->filters($request);
 
         $classes = ClassRoom::query()->orderBy('name')->get();
-        $rows = $this->buildRows($startDate, $endDate, $classRoomId, $status);
+
+        // Get class filter based on active tab
+        $currentClassRoomId = null;
+        if ($tab === 'summary') {
+            $currentClassRoomId = $request->filled('summary_class_room_id') ? (int) $request->query('summary_class_room_id') : null;
+        } else {
+            $currentClassRoomId = $request->filled('class_room_id') ? (int) $request->query('class_room_id') : null;
+        }
+
+        // Paginate students with 20 results per page, sorted by user's name
+        $studentsPaginator = StudentProfile::query()
+            ->with(['user', 'classRoom'])
+            ->whereNotNull('class_room_id')
+            ->when($currentClassRoomId, fn($q) => $q->where('class_room_id', $currentClassRoomId))
+            ->join('users', 'student_profiles.user_id', '=', 'users.id')
+            ->orderBy('users.name')
+            ->select('student_profiles.*')
+            ->paginate(20)
+            ->withQueryString();
+
+        $paginatedStudents = $studentsPaginator->getCollection();
+
+        $rows = $this->buildRows($startDate, $endDate, $classRoomId, $status, $paginatedStudents);
         $summaryRows = collect();
         $summaryFilter = [];
 
         if ($tab === 'summary') {
-            [$summaryRows, $summaryFilter] = $this->buildSummaryRecap($request);
+            [$summaryRows, $summaryFilter] = $this->buildSummaryRecap($request, $paginatedStudents);
         }
 
         return view('teacher.report', [
@@ -42,6 +64,7 @@ class ReportController extends Controller
             'status' => $status,
             'summaryRows' => $summaryRows,
             'summaryFilter' => $summaryFilter,
+            'studentsPaginator' => $studentsPaginator,
         ]);
     }
 
@@ -124,12 +147,12 @@ class ReportController extends Controller
         return [$startDate, $endDate, $classRoomId, $status];
     }
 
-    private function buildRows(Carbon $startDate, Carbon $endDate, ?int $classRoomId, ?string $status): Collection
+    private function buildRows(Carbon $startDate, Carbon $endDate, ?int $classRoomId, ?string $status, $students = null): Collection
     {
         $rows = collect();
 
         for ($cursor = $startDate->copy(); $cursor->lte($endDate); $cursor->addDay()) {
-            $rows = $rows->concat($this->buildRowsForDate($cursor->copy(), $classRoomId));
+            $rows = $rows->concat($this->buildRowsForDate($cursor->copy(), $classRoomId, $students));
         }
 
         if ($status) {
@@ -139,14 +162,20 @@ class ReportController extends Controller
         return $rows->values();
     }
 
-    private function buildRowsForDate(Carbon $date, ?int $classRoomId): Collection
+    private function buildRowsForDate(Carbon $date, ?int $classRoomId, $students = null): Collection
     {
         $setting = SchoolSetting::singleton();
 
-        $students = StudentProfile::query()
-            ->with(['user', 'classRoom'])
-            ->when($classRoomId, fn($q) => $q->where('class_room_id', $classRoomId))
-            ->get();
+        if ($students === null) {
+            $students = StudentProfile::query()
+                ->with(['user', 'classRoom'])
+                ->whereNotNull('class_room_id')
+                ->when($classRoomId, fn($q) => $q->where('class_room_id', $classRoomId))
+                ->join('users', 'student_profiles.user_id', '=', 'users.id')
+                ->orderBy('users.name')
+                ->select('student_profiles.*')
+                ->get();
+        }
 
         $studentUserIds = $students->pluck('user_id');
 
@@ -224,7 +253,7 @@ class ReportController extends Controller
         return $rows->values();
     }
 
-    private function buildSummaryRecap(Request $request): array
+    private function buildSummaryRecap(Request $request, $students = null): array
     {
         $setting = SchoolSetting::singleton();
         $period = (string) $request->query('summary_period', 'range');
@@ -278,11 +307,16 @@ class ReportController extends Controller
             $summaryFilter['class_room_id'] = null;
         }
 
-        $students = StudentProfile::query()
-            ->with(['user', 'classRoom'])
-            ->whereNotNull('class_room_id')
-            ->when($summaryFilter['class_room_id'], fn($q, $classId) => $q->where('class_room_id', $classId))
-            ->get();
+        if ($students === null) {
+            $students = StudentProfile::query()
+                ->with(['user', 'classRoom'])
+                ->whereNotNull('class_room_id')
+                ->when($summaryFilter['class_room_id'], fn($q, $classId) => $q->where('class_room_id', $classId))
+                ->join('users', 'student_profiles.user_id', '=', 'users.id')
+                ->orderBy('users.name')
+                ->select('student_profiles.*')
+                ->get();
+        }
 
         $studentUserIds = $students->pluck('user_id')->values();
 

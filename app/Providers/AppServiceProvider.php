@@ -7,6 +7,8 @@ use App\Services\WhatsApp\NullWhatsAppClient;
 use App\Services\WhatsApp\WhatsAppClient;
 use Illuminate\Support\Str;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Auth\Notifications\VerifyEmail;
+use Illuminate\Notifications\Messages\MailMessage;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -39,6 +41,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        VerifyEmail::toMailUsing(function (object $notifiable, string $url) {
+            return (new MailMessage)
+                ->subject('Verifikasi Alamat Email Anda')
+                ->line('Silakan klik tombol di bawah ini untuk memverifikasi alamat email Anda.')
+                ->action('Verifikasi Alamat Email', $url)
+                ->line('Jika Anda tidak merasa membuat akun ini, abaikan saja email ini.');
+        });
     }
 }

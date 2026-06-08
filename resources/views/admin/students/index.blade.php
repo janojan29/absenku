@@ -13,7 +13,7 @@
                 </a>
                 <a href="{{ route('admin.students.import') }}" class="btn-primary btn-ripple h-10 px-5 gap-2 w-full sm:w-auto justify-center flex items-center">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V3m0 0l-4.5 4.5M12 3l4.5 4.5M3 16.5v3A1.5 1.5 0 004.5 21h15a1.5 1.5 0 001.5-1.5v-3"/></svg>
-                    Import Data
+                    Impor Data
                 </a>
             </div>
         </div>

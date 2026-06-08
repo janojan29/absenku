@@ -56,4 +56,12 @@ class SchoolSettingController extends Controller
 
         return back()->with('status', 'Pengaturan sekolah tersimpan.');
     }
+
+    public function clearSemester(): RedirectResponse
+    {
+        \Illuminate\Support\Facades\Artisan::call('attendance:clear-semester');
+        \Illuminate\Support\Facades\Cache::forget('semester_clean_checked');
+
+        return back()->with('status', 'Seluruh data absensi dan perizinan semester telah berhasil dibersihkan.');
+    }
 }

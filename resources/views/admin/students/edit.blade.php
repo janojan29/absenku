@@ -1,96 +1,88 @@
 <x-app-layout>
     <x-slot name="title">Edit Data Siswa</x-slot>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Edit Data Siswa') }}
-        </h2>
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <h1 class="text-display-sm text-surface-50">Edit Data Siswa</h1>
+                <p class="text-sm text-electric-200/80 mt-1">Ubah data profil dan identitas siswa</p>
+            </div>
+        </div>
     </x-slot>
 
-    <div class="py-8">
-        <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6">
-                    @if ($errors->any())
-                        <div class="bg-red-50 border border-red-200 text-red-800 p-4 rounded mb-6">
-                            <div class="font-semibold">Terjadi kesalahan:</div>
-                            <ul class="list-disc pl-5 mt-2">
-                                @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    @endif
-
-                    <form method="POST" action="{{ route('admin.students.update', $student) }}" class="space-y-6">
-                        @csrf
-                        @method('PATCH')
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Nama Siswa</label>
-                            <input type="text" value="{{ $student->name }}" class="w-full px-4 py-2 border border-gray-200 rounded-md bg-gray-100 text-gray-700" disabled>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label for="jurusan" class="block text-sm font-medium text-gray-700 mb-1">Jurusan <span class="text-red-500">*</span></label>
-                                <select id="jurusan" name="jurusan" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
-                                    <option value="">-- Pilih Jurusan --</option>
-                                    @foreach ($jurusans as $jurusan)
-                                        <option value="{{ $jurusan }}" @selected(old('jurusan', $student->studentProfile?->jurusan ?? $student->studentProfile?->classRoom?->jurusan) === $jurusan)>
-                                            {{ $jurusan }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @error('jurusan')
-                                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            <div>
-                                <label for="class_room_id" class="block text-sm font-medium text-gray-700 mb-1">Kelas <span class="text-red-500">*</span></label>
-                                <select id="class_room_id" name="class_room_id" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
-                                    <option value="">-- Pilih Kelas --</option>
-                                    @foreach ($classes as $class)
-                                        <option value="{{ $class->id }}"
-                                            data-jurusan="{{ $class->jurusan }}"
-                                            @selected(old('class_room_id', $student->studentProfile?->class_room_id) == $class->id)>
-                                            {{ $class->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @error('class_room_id')
-                                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                                @enderror
-                            </div>
-                        </div>
-
-                        <div>
-                            <label for="nis" class="block text-sm font-medium text-gray-700 mb-1">NISN</label>
-                            <input type="text" id="nis" name="nis" value="{{ old('nis', $student->studentProfile?->nis) }}" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="NISN">
-                            @error('nis')
-                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <div>
-                            <label for="parent_phone_wa" class="block text-sm font-medium text-gray-700 mb-1">No. WhatsApp Orang Tua</label>
-                            <input type="text" id="parent_phone_wa" name="parent_phone_wa" value="{{ old('parent_phone_wa', $student->studentProfile?->parent_phone_wa) }}" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="+62812...">
-                            @error('parent_phone_wa')
-                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <div class="flex justify-end gap-3 pt-6 border-t">
-                            <a href="{{ route('admin.students.index') }}" class="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 font-medium">
-                                Batal
-                            </a>
-                            <button type="submit" class="px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 font-medium">
-                                Simpan Perubahan
-                            </button>
-                        </div>
-                    </form>
-                </div>
+    <div class="max-w-3xl mx-auto space-y-6">
+        @if ($errors->any())
+            <div class="bg-red-50 border border-red-200 text-red-800 p-4 rounded-xl">
+                <div class="font-semibold text-sm">Terjadi kesalahan:</div>
+                <ul class="list-disc pl-5 mt-1.5 text-xs space-y-1">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
             </div>
+        @endif
+
+        <div class="card p-6 animate-fade-slide-up">
+            <form method="POST" action="{{ route('admin.students.update', $student) }}" class="space-y-6">
+                @csrf
+                @method('PATCH')
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div class="sm:col-span-2">
+                        <label for="name" class="block text-xs font-semibold text-navy-600 uppercase tracking-wider mb-1.5">Nama Lengkap <span class="text-red-500">*</span></label>
+                        <input type="text" id="name" name="name" value="{{ old('name', $student->name) }}" class="form-input-clean w-full" required>
+                    </div>
+
+                    <div>
+                        <label for="jurusan" class="block text-xs font-semibold text-navy-600 uppercase tracking-wider mb-1.5">Jurusan <span class="text-red-500">*</span></label>
+                        <select id="jurusan" name="jurusan" class="form-select w-full" required>
+                            <option value="">-- Pilih Jurusan --</option>
+                            @foreach ($jurusans as $jurusan)
+                                <option value="{{ $jurusan }}" @selected(old('jurusan', $student->studentProfile?->jurusan ?? $student->studentProfile?->classRoom?->jurusan) === $jurusan)>
+                                    {{ $jurusan }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="class_room_id" class="block text-xs font-semibold text-navy-600 uppercase tracking-wider mb-1.5">Kelas <span class="text-red-500">*</span></label>
+                        <select id="class_room_id" name="class_room_id" class="form-select w-full" required>
+                            <option value="">-- Pilih Kelas --</option>
+                            @foreach ($classes as $class)
+                                <option value="{{ $class->id }}"
+                                    data-jurusan="{{ $class->jurusan }}"
+                                    @selected(old('class_room_id', $student->studentProfile?->class_room_id) == $class->id)>
+                                    {{ $class->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="nis" class="block text-xs font-semibold text-navy-600 uppercase tracking-wider mb-1.5">NISN <span class="text-red-500">*</span></label>
+                        <input type="text" id="nis" name="nis" value="{{ old('nis', $student->studentProfile?->nis) }}" class="form-input-clean w-full" placeholder="NISN" required>
+                    </div>
+
+                    <div>
+                        <label for="whatsapp_number" class="block text-xs font-semibold text-navy-600 uppercase tracking-wider mb-1.5">No. WhatsApp Siswa</label>
+                        <input type="text" id="whatsapp_number" name="whatsapp_number" value="{{ old('whatsapp_number', $student->whatsapp_number) }}" class="form-input-clean w-full" placeholder="+628...">
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label for="parent_phone_wa" class="block text-xs font-semibold text-navy-600 uppercase tracking-wider mb-1.5">No. WhatsApp Orang Tua</label>
+                        <input type="text" id="parent_phone_wa" name="parent_phone_wa" value="{{ old('parent_phone_wa', $student->studentProfile?->parent_phone_wa) }}" class="form-input-clean w-full" placeholder="+628...">
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-6 border-t border-bw-200">
+                    <a href="{{ route('admin.students.index') }}" class="btn-secondary px-6 h-10 flex items-center justify-center">
+                        Batal
+                    </a>
+                    <button type="submit" class="btn-primary btn-ripple px-6 h-10">
+                        Simpan Perubahan
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
