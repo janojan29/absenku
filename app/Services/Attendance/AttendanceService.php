@@ -38,7 +38,7 @@ class AttendanceService
 
         if ($hasApprovedAbsentLeave) {
             throw ValidationException::withMessages([
-                'check_in' => 'Ijin tidak masuk kamu untuk hari ini sudah disetujui, jadi check-in dinonaktifkan.',
+                'check_in' => 'Ijin tidak masuk kamu untuk hari ini sudah disetujui, jadi absen masuk dinonaktifkan.',
             ]);
         }
 
@@ -115,7 +115,7 @@ class AttendanceService
             }
         });
 
-        return $alreadyCheckedIn ? 'Kamu sudah check-in.' : 'Check-in berhasil.';
+        return $alreadyCheckedIn ? 'Kamu sudah absen masuk.' : 'Absen masuk berhasil.';
     }
 
     public function checkOut(User $user, float $latitude, float $longitude): string
@@ -132,7 +132,7 @@ class AttendanceService
 
         if ($hasApprovedAbsentLeave) {
             throw ValidationException::withMessages([
-                'check_out' => 'Ijin tidak masuk kamu untuk hari ini sudah disetujui, jadi check-out dinonaktifkan.',
+                'check_out' => 'Ijin tidak masuk kamu untuk hari ini sudah disetujui, jadi absen pulang dinonaktifkan.',
             ]);
         }
 
@@ -143,12 +143,12 @@ class AttendanceService
 
         if (! $attendance || $attendance->check_in_at === null) {
             throw ValidationException::withMessages([
-                'check_out' => 'Kamu belum check-in hari ini.',
+                'check_out' => 'Kamu belum absen masuk hari ini.',
             ]);
         }
 
         if ($attendance->check_out_at !== null) {
-            return 'Kamu sudah check-out.';
+            return 'Kamu sudah absen pulang.';
         }
 
         $checkOutStart = Carbon::today()->setTimeFromTimeString($setting->check_out_start_time);
@@ -157,13 +157,13 @@ class AttendanceService
         $now = now();
         if ($now->lessThan($checkOutStart)) {
             throw ValidationException::withMessages([
-                'check_out' => 'Check-out baru bisa setelah jam ' . substr((string) $setting->check_out_start_time, 0, 5) . '.',
+                'check_out' => 'Absen pulang baru bisa setelah jam ' . substr((string) $setting->check_out_start_time, 0, 5) . '.',
             ]);
         }
 
         if ($now->greaterThan($checkOutEnd)) {
             throw ValidationException::withMessages([
-                'check_out' => 'Waktu check-out sudah berakhir pada jam ' . substr((string) $setting->check_out_end_time, 0, 5) . '.',
+                'check_out' => 'Waktu absen pulang sudah berakhir pada jam ' . substr((string) $setting->check_out_end_time, 0, 5) . '.',
             ]);
         }
 
@@ -197,6 +197,6 @@ class AttendanceService
             // Tidak ada notifikasi untuk absen pulang sesuai ketentuan.
         });
 
-        return 'Check-out berhasil.';
+        return 'Absen pulang berhasil.';
     }
 }

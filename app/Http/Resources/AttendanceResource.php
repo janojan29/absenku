@@ -9,11 +9,19 @@ class AttendanceResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        $setting = \App\Models\SchoolSetting::singleton();
+        $date = \Illuminate\Support\Carbon::parse($this->date);
+        $checkOutEnd = \Illuminate\Support\Carbon::today()->setTimeFromTimeString($setting->check_out_end_time);
+        $isMissingCheckout = $this->check_in_at !== null && $this->check_out_at === null;
+        $isPastOrEnded = $date->lt(\Illuminate\Support\Carbon::today()) || (now()->greaterThan($checkOutEnd));
+        
+        $status = ($isMissingCheckout && $isPastOrEnded) ? 'absent' : $this->status;
+
         return [
             'id' => $this->id,
             'user_id' => $this->user_id,
             'date' => optional($this->date)->toDateString(),
-            'status' => $this->status,
+            'status' => $status,
             'late_minutes' => $this->late_minutes,
             'check_in_at' => optional($this->check_in_at)->toDateTimeString(),
             'check_out_at' => optional($this->check_out_at)->toDateTimeString(),

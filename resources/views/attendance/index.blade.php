@@ -209,24 +209,73 @@
         <div id="riwayat" class="card animate-fade-slide-up stagger-3">
             <h3 class="font-semibold text-navy-800 mb-4 flex items-center gap-2">
                 <svg class="w-5 h-5 text-navy-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
-                Riwayat 14 Hari
+                Riwayat 7 Hari
             </h3>
             <div class="overflow-x-auto -mx-6 px-6">
                 <table class="w-full text-sm">
                     <thead><tr class="text-left text-xs uppercase tracking-wider text-bw-400 border-b border-bw-200">
                         <th class="pb-3 pr-4 font-semibold">Tanggal</th>
                         <th class="pb-3 pr-4 font-semibold">Masuk</th>
-                        <th class="pb-3 font-semibold">Pulang</th>
+                        <th class="pb-3 pr-4 font-semibold">Pulang</th>
+                        <th class="pb-3 font-semibold">Keterangan</th>
                     </tr></thead>
                     <tbody class="divide-y divide-bw-200/60">
                         @forelse ($recent as $row)
+                        @php
+                            $leaveForDate = $leaveRequests->get($row->date->toDateString())?->first();
+                        @endphp
                         <tr class="hover:bg-navy-500/[0.03] transition-colors duration-150">
                             <td class="py-3 pr-4 font-medium text-navy-700">{{ $row->date->format('d/m/Y') }}</td>
                             <td class="py-3 pr-4 tabular-nums text-navy-600">{{ optional($row->check_in_at)->format('H:i') ?? '—' }}</td>
-                            <td class="py-3 tabular-nums text-navy-600">{{ optional($row->check_out_at)->format('H:i') ?? '—' }}</td>
+                            <td class="py-3 pr-4 tabular-nums text-navy-600">{{ optional($row->check_out_at)->format('H:i') ?? '—' }}</td>
+                            <td class="py-3 text-navy-600">
+                                @php
+                                    $isMissingCheckout = $row->check_in_at !== null && $row->check_out_at === null;
+                                    $checkOutEnd = Carbon\Carbon::today()->setTimeFromTimeString($setting->check_out_end_time);
+                                    $isPastOrEnded = $row->date->lt(Carbon\Carbon::today()) || (now()->greaterThan($checkOutEnd));
+                                    $displayStatus = ($isMissingCheckout && $isPastOrEnded) ? 'absent' : $row->status;
+
+                                    $statusLabels = [
+                                        'present' => 'Hadir',
+                                        'late' => 'Terlambat',
+                                        'absent' => 'Alfa',
+                                        'leave' => 'Izin',
+                                    ];
+                                    $label = $statusLabels[$displayStatus] ?? $displayStatus;
+                                    $badgeClasses = match($displayStatus) {
+                                        'present' => 'bg-emerald-50 text-emerald-700 border border-emerald-200/60',
+                                        'late' => 'bg-amber-50 text-amber-700 border border-amber-200/60',
+                                        'absent' => 'bg-rose-50 text-rose-700 border border-rose-200/60',
+                                        'leave' => 'bg-sky-50 text-sky-700 border border-sky-200/60',
+                                        default => 'bg-slate-50 text-slate-700 border border-slate-200/60'
+                                    };
+                                @endphp
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold {{ $badgeClasses }} shadow-sm">
+                                    {{ $label }}
+                                </span>
+                                @if($leaveForDate)
+                                    <div class="mt-1.5 flex items-start gap-1 text-[11px] text-bw-500 leading-normal bg-bw-50 p-1.5 rounded-md border border-bw-100 max-w-xs">
+                                        <svg class="w-3.5 h-3.5 text-bw-400 mt-0.5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>
+                                        <div>
+                                            <span class="font-medium text-navy-800">
+                                                {{ $leaveForDate->type === 'early_leave' ? 'Izin Pulang Mendahului' : 'Izin Tidak Masuk' }}
+                                            </span>
+                                            <span class="text-bw-400">({{ $leaveForDate->reason === 'sick' ? 'Sakit' : 'Urusan Penting' }})</span>
+                                            @if(!empty($leaveForDate->keterangan))
+                                                <p class="mt-0.5 text-bw-500 italic">"{{ $leaveForDate->keterangan }}"</p>
+                                            @endif
+                                        </div>
+                                    </div>
+                                @elseif($isMissingCheckout && $isPastOrEnded)
+                                    <div class="mt-1.5 flex items-start gap-1 text-[11px] text-rose-500 leading-normal bg-rose-50/50 p-1.5 rounded-md border border-rose-100 max-w-xs">
+                                        <svg class="w-3.5 h-3.5 text-rose-400 mt-0.5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"/></svg>
+                                        <span>Tidak melakukan absen pulang</span>
+                                    </div>
+                                @endif
+                            </td>
                         </tr>
                         @empty
-                        <tr><td colspan="3" class="py-8 text-center text-bw-400">Belum ada data absensi.</td></tr>
+                        <tr><td colspan="4" class="py-8 text-center text-bw-400">Belum ada data absensi.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -241,21 +290,33 @@
             const leaveDateInput = document.getElementById('leave_date');
             const submitButton = document.getElementById('leave-submit-button');
             const submitWarning = document.getElementById('leave-submit-warning');
-            const blockedDates = @json($leaveDatesWithSubmission ?? []);
+            const absentBlockedDates = @json($absentBlockedDates ?? []);
+            const earlyLeaveBlockedToday = @json($earlyLeaveBlockedToday ?? false);
             if (!typeSelect || !leaveDateWrapper || !leaveDateInput || !submitButton || !submitWarning) return;
             const syncLeaveDateVisibility = () => {
                 const isAbsent = typeSelect.value === 'absent';
                 leaveDateWrapper.style.display = isAbsent ? '' : 'none';
                 leaveDateInput.disabled = !isAbsent;
                 leaveDateInput.required = isAbsent;
-                let targetDate = new Date().toISOString().slice(0, 10);
-                if (isAbsent) targetDate = leaveDateInput.value;
-                const isBlocked = blockedDates.includes(targetDate);
+                
+                let isBlocked = false;
+                if (isAbsent) {
+                    const targetDate = leaveDateInput.value;
+                    isBlocked = absentBlockedDates.includes(targetDate);
+                } else {
+                    isBlocked = earlyLeaveBlockedToday;
+                }
+                
                 submitButton.disabled = isBlocked;
                 submitButton.classList.toggle('opacity-50', isBlocked);
                 submitButton.classList.toggle('cursor-not-allowed', isBlocked);
-                if (isBlocked) { submitWarning.textContent = 'Pengajuan ijin untuk tanggal ini sudah ada.'; submitWarning.classList.remove('hidden'); }
-                else { submitWarning.classList.add('hidden'); submitWarning.textContent = ''; }
+                if (isBlocked) { 
+                    submitWarning.textContent = 'Pengajuan ijin untuk tanggal ini sudah ada.'; 
+                    submitWarning.classList.remove('hidden'); 
+                } else { 
+                    submitWarning.classList.add('hidden'); 
+                    submitWarning.textContent = ''; 
+                }
             };
             typeSelect.addEventListener('change', syncLeaveDateVisibility);
             leaveDateInput.addEventListener('change', syncLeaveDateVisibility);

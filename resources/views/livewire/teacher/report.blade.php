@@ -26,29 +26,38 @@
             {{-- Summary Filter --}}
             <div class="card animate-fade-slide-up stagger-1">
                 <h3 class="font-semibold text-navy-800 mb-4">Filter Rekap Keterangan</h3>
-                <form method="GET" action="{{ route('teacher.report') }}" class="report-filter-vertical">
+                <form id="lwSummaryFilterForm" method="GET" action="{{ route('teacher.report') }}">
                     <input type="hidden" name="tab" value="summary">
                     <input type="hidden" name="summary_period" value="range">
-                    <div class="report-filter-item report-filter-item-class">
-                        <label class="block text-xs font-medium text-navy-600 mb-1">Kelas</label>
-                        <select name="summary_class_room_id" class="form-select">
-                            <option value="">Semua Kelas</option>
-                            @foreach ($classes as $class)
-                                <option value="{{ $class->id }}" @selected((string) ($summaryFilter['class_room_id'] ?? '') === (string) $class->id)>{{ $class->jurusan ? $class->name.' : '.$class->jurusan : $class->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="report-filter-date-row">
-                        <div class="report-filter-item report-filter-item-date">
-                            <label class="block text-xs font-medium text-navy-600 mb-1">Dari Tanggal</label>
-                            <input name="summary_start_date" type="date" class="form-input-clean" value="{{ $summaryFilter['start_date'] ?? now()->toDateString() }}">
+                    <div class="filter-panel">
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <div class="flex-1">
+                                <label class="block text-xs font-semibold uppercase tracking-wider text-bw-400 mb-1">Kelas</label>
+                                <select name="summary_class_room_id" class="form-select" style="height:38px; border-radius:10px; font-size:13px; padding-top:0; padding-bottom:0;" onchange="document.getElementById('lwSummaryFilterForm').submit()">
+                                    <option value="">Semua Kelas</option>
+                                    @foreach ($classes as $class)
+                                        <option value="{{ $class->id }}" @selected((string) ($summaryFilter['class_room_id'] ?? '') === (string) $class->id)>{{ $class->jurusan ? $class->name.' : '.$class->jurusan : $class->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="flex gap-2 flex-1">
+                                <div class="flex-1">
+                                    <label class="block text-xs font-semibold uppercase tracking-wider text-bw-400 mb-1">Dari</label>
+                                    <input name="summary_start_date" type="date" class="form-input-clean" style="height:38px; border-radius:10px; font-size:13px; padding-top:0; padding-bottom:0;" value="{{ $summaryFilter['start_date'] ?? now()->toDateString() }}" onchange="document.getElementById('lwSummaryFilterForm').submit()">
+                                </div>
+                                <div class="flex-1">
+                                    <label class="block text-xs font-semibold uppercase tracking-wider text-bw-400 mb-1">Sampai</label>
+                                    <input name="summary_end_date" type="date" class="form-input-clean" style="height:38px; border-radius:10px; font-size:13px; padding-top:0; padding-bottom:0;" value="{{ $summaryFilter['end_date'] ?? now()->toDateString() }}" onchange="document.getElementById('lwSummaryFilterForm').submit()">
+                                </div>
+                            </div>
+                            <div class="sm:w-auto flex items-end">
+                                <a href="{{ route('teacher.report', ['tab' => 'summary']) }}" class="btn-secondary w-full sm:w-auto flex items-center justify-center gap-1" style="height:38px; min-height:38px; border-radius:10px; font-size:12px; padding:0 14px; white-space:nowrap;">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182M2.985 19.644l3.181-3.183"/></svg>
+                                    Reset
+                                </a>
+                            </div>
                         </div>
-                        <div class="report-filter-item report-filter-item-date">
-                            <label class="block text-xs font-medium text-navy-600 mb-1">Sampai Tanggal</label>
-                            <input name="summary_end_date" type="date" class="form-input-clean" value="{{ $summaryFilter['end_date'] ?? now()->toDateString() }}">
-                        </div>
                     </div>
-                    <button type="submit" class="btn-primary btn-ripple shrink-0 report-filter-submit">Terapkan</button>
                 </form>
             </div>
 
@@ -88,41 +97,50 @@
             {{-- Detail Filter --}}
             <div class="card animate-fade-slide-up stagger-1">
                 <h3 class="font-semibold text-navy-800 mb-4">Filter Rekap Absen</h3>
-                <form method="GET" action="{{ route('teacher.report') }}" class="report-filter-vertical">
+                <form id="lwDetailFilterForm" method="GET" action="{{ route('teacher.report') }}">
                     <input type="hidden" name="tab" value="detail">
-                    <div class="flex flex-row items-end gap-3">
-                        <div class="report-filter-item report-filter-item-class flex-1 min-w-[220px]">
-                            <label class="block text-xs font-medium text-navy-600 mb-1">Kelas</label>
-                            <select name="class_room_id" class="form-select">
-                                <option value="">Semua</option>
-                                @foreach ($classes as $class)
-                                    <option value="{{ $class->id }}" @selected((string) request('class_room_id', $classRoomId) === (string) $class->id)>{{ $class->jurusan ? $class->name.' : '.$class->jurusan : $class->name }}</option>
-                                @endforeach
-                            </select>
+                    <div class="filter-panel">
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <div class="sm:w-40">
+                                <label class="block text-xs font-semibold uppercase tracking-wider text-bw-400 mb-1">Kelas</label>
+                                <select name="class_room_id" class="form-select" style="height:38px; border-radius:10px; font-size:13px; padding-top:0; padding-bottom:0;" onchange="document.getElementById('lwDetailFilterForm').submit()">
+                                    <option value="">Semua</option>
+                                    @foreach ($classes as $class)
+                                        <option value="{{ $class->id }}" @selected((string) request('class_room_id', $classRoomId) === (string) $class->id)>{{ $class->jurusan ? $class->name.' : '.$class->jurusan : $class->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="sm:w-40">
+                                <label class="block text-xs font-semibold uppercase tracking-wider text-bw-400 mb-1">Status</label>
+                                <select name="status" class="form-select" style="height:38px; border-radius:10px; font-size:13px; padding-top:0; padding-bottom:0;" onchange="document.getElementById('lwDetailFilterForm').submit()">
+                                    <option value="">Semua</option>
+                                    <option value="present" @selected(request('status', $status) === 'present')>Hadir</option>
+                                    <option value="late" @selected(request('status', $status) === 'late')>Terlambat</option>
+                                    <option value="leave" @selected(request('status', $status) === 'leave')>Ijin</option>
+                                    <option value="absent" @selected(request('status', $status) === 'absent')>Alfa</option>
+                                    <option value="unknown" @selected(request('status', $status) === 'unknown')>Belum Absen</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="report-filter-item report-filter-item-status flex-1 min-w-[220px]">
-                            <label class="block text-xs font-medium text-navy-600 mb-1">Status</label>
-                            <select name="status" class="form-select">
-                                <option value="">Semua</option>
-                                <option value="present" @selected(request('status', $status) === 'present')>Hadir</option>
-                                <option value="late" @selected(request('status', $status) === 'late')>Terlambat</option>
-                                <option value="leave" @selected(request('status', $status) === 'leave')>Ijin</option>
-                                <option value="absent" @selected(request('status', $status) === 'absent')>Alfa</option>
-                                <option value="unknown" @selected(request('status', $status) === 'unknown')>Belum Absen</option>
-                            </select>
+                        <div class="flex flex-col sm:flex-row gap-3 mt-3 sm:items-end">
+                            <div class="flex gap-2 flex-1">
+                                <div class="flex-1">
+                                    <label class="block text-xs font-semibold uppercase tracking-wider text-bw-400 mb-1">Dari</label>
+                                    <input name="detail_start_date" type="date" class="form-input-clean" style="height:38px; border-radius:10px; font-size:13px; padding-top:0; padding-bottom:0;" value="{{ request('detail_start_date', $startDate->toDateString()) }}" onchange="document.getElementById('lwDetailFilterForm').submit()">
+                                </div>
+                                <div class="flex-1">
+                                    <label class="block text-xs font-semibold uppercase tracking-wider text-bw-400 mb-1">Sampai</label>
+                                    <input name="detail_end_date" type="date" class="form-input-clean" style="height:38px; border-radius:10px; font-size:13px; padding-top:0; padding-bottom:0;" value="{{ request('detail_end_date', $endDate->toDateString()) }}" onchange="document.getElementById('lwDetailFilterForm').submit()">
+                                </div>
+                            </div>
+                            <div class="sm:w-auto">
+                                <a href="{{ route('teacher.report', ['tab' => 'detail']) }}" class="btn-secondary w-full sm:w-auto flex items-center justify-center gap-1" style="height:38px; min-height:38px; border-radius:10px; font-size:12px; padding:0 14px; white-space:nowrap;">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182M2.985 19.644l3.181-3.183"/></svg>
+                                    Reset
+                                </a>
+                            </div>
                         </div>
                     </div>
-                    <div class="report-filter-date-row">
-                        <div class="report-filter-item report-filter-item-date">
-                            <label class="block text-xs font-medium text-navy-600 mb-1">Dari Tanggal</label>
-                            <input name="detail_start_date" type="date" class="form-input-clean" value="{{ request('detail_start_date', $startDate->toDateString()) }}">
-                        </div>
-                        <div class="report-filter-item report-filter-item-date">
-                            <label class="block text-xs font-medium text-navy-600 mb-1">Sampai Tanggal</label>
-                            <input name="detail_end_date" type="date" class="form-input-clean" value="{{ request('detail_end_date', $endDate->toDateString()) }}">
-                        </div>
-                    </div>
-                    <button type="submit" class="btn-primary btn-ripple shrink-0 report-filter-submit">Terapkan</button>
                 </form>
 
                 {{-- Export Buttons --}}

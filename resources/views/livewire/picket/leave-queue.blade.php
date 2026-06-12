@@ -111,6 +111,76 @@
             <span class="text-xs text-electric-200/80">Pengajuan yang sudah diproses</span>
         </div>
 
+        {{-- Filter Panel --}}
+        <div class="filter-panel mb-5">
+            <div class="report-filter-vertical sm:report-filter-vertical-off">
+                {{-- Row 1: Search + Status + Jenis --}}
+                <div class="flex flex-col sm:flex-row gap-3">
+                    {{-- Search --}}
+                    <div class="flex-1 min-w-0">
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-bw-400 mb-1">Cari Siswa</label>
+                        <div class="filter-search-wrap">
+                            <svg class="filter-search-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/></svg>
+                            <input wire:model.live.debounce.300ms="search" type="text" class="filter-input" placeholder="Nama siswa...">
+                        </div>
+                    </div>
+
+                    {{-- Status --}}
+                    <div class="sm:w-40">
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-bw-400 mb-1">Status</label>
+                        <select wire:model.live="filterStatus" class="form-select" style="height:38px; border-radius:10px; font-size:13px; padding-top:0; padding-bottom:0;">
+                            <option value="">Semua</option>
+                            <option value="approved">Disetujui</option>
+                            <option value="rejected">Ditolak</option>
+                        </select>
+                    </div>
+
+                    {{-- Jenis --}}
+                    <div class="sm:w-40">
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-bw-400 mb-1">Jenis</label>
+                        <select wire:model.live="filterType" class="form-select" style="height:38px; border-radius:10px; font-size:13px; padding-top:0; padding-bottom:0;">
+                            <option value="">Semua</option>
+                            <option value="absent">Tidak Masuk</option>
+                            <option value="early_leave">Pulang Awal</option>
+                        </select>
+                    </div>
+                </div>
+
+                {{-- Row 2: Date range + Reset --}}
+                <div class="flex flex-col sm:flex-row gap-3 mt-3 sm:items-end">
+                    <div class="flex gap-2 flex-1">
+                        <div class="flex-1">
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-bw-400 mb-1">Dari</label>
+                            <input wire:model.live="filterDateFrom" type="date" class="form-input-clean" style="height:38px; border-radius:10px; font-size:13px; padding-top:0; padding-bottom:0;">
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-bw-400 mb-1">Sampai</label>
+                            <input wire:model.live="filterDateTo" type="date" class="form-input-clean" style="height:38px; border-radius:10px; font-size:13px; padding-top:0; padding-bottom:0;">
+                        </div>
+                    </div>
+
+                    <div class="sm:w-auto">
+                        <button wire:click="resetFilters" type="button" class="btn-secondary w-full sm:w-auto" style="height:38px; min-height:38px; border-radius:10px; font-size:12px; padding:0 14px; white-space:nowrap;">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182M2.985 19.644l3.181-3.183"/></svg>
+                            Reset
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Export Buttons --}}
+        <div class="flex flex-wrap gap-2 mb-5">
+            <button wire:click="exportExcel" type="button" class="btn-secondary gap-2 text-sm" style="height:38px; min-height:38px; border-radius:10px; padding:0 14px; white-space:nowrap;">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+                Ekspor Excel
+            </button>
+            <button wire:click="exportPdf" type="button" class="btn-secondary gap-2 text-sm" style="height:38px; min-height:38px; border-radius:10px; padding:0 14px; white-space:nowrap;">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>
+                Ekspor PDF
+            </button>
+        </div>
+
         <div class="table-wrapper -mx-6">
             <div class="overflow-x-auto">
                 <table class="w-full">
@@ -137,7 +207,15 @@
                                 <td class="py-3 px-4 text-sm text-navy-600 hidden lg:table-cell">{{ $leave->decidedBy?->name ?? '-' }}</td>
                             </tr>
                         @empty
-                            <tr><td colspan="7" class="py-8 text-center text-bw-400 text-sm">Belum ada riwayat ijin.</td></tr>
+                            <tr>
+                                <td colspan="7" class="py-8 text-center text-bw-400 text-sm">
+                                    @if($search || $filterStatus || $filterType || $filterDateFrom || $filterDateTo)
+                                        Tidak ada riwayat yang cocok dengan filter.
+                                    @else
+                                        Belum ada riwayat ijin.
+                                    @endif
+                                </td>
+                            </tr>
                         @endforelse
                     </tbody>
                 </table>

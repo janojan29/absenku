@@ -1,8 +1,27 @@
 <x-app-layout>
     <x-slot name="title">Profil</x-slot>
     <x-slot name="header">
-        <h1 class="text-display-sm text-surface-50">Profil Saya</h1>
-        <p class="text-sm text-electric-200/80 mt-1">Kelola informasi akun Anda</p>
+        <div class="flex items-center justify-between gap-4">
+            <div>
+                <h1 class="text-display-sm text-surface-50">Profil Saya</h1>
+                <p class="text-sm text-electric-200/80 mt-1">Kelola informasi akun Anda</p>
+            </div>
+            <div class="flex items-center">
+                <!-- Mobile: White Close Icon (No Box) -->
+                <a href="{{ route('dashboard') }}" class="block sm:hidden text-white hover:text-white/80 shrink-0">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
+                    </svg>
+                </a>
+                <!-- Desktop: Secondary Back Button -->
+                <a href="{{ route('dashboard') }}" class="hidden sm:inline-flex btn-secondary h-10 px-5 gap-2 justify-center items-center shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/>
+                    </svg>
+                    <span>Kembali</span>
+                </a>
+            </div>
+        </div>
     </x-slot>
 
     {{-- Profile Hero --}}

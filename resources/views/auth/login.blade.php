@@ -92,7 +92,7 @@
                     name="remember"
                     class="w-4 h-4 rounded-md border-bw-300 text-navy-500 focus:ring-navy-500/30 transition-colors duration-150"
                 >
-                <span class="text-sm text-navy-600 group-hover:text-navy-800 transition-colors duration-150">Ingat saya</span>
+                <span class="text-sm text-gray-500 group-hover:text-gray-700 transition-colors duration-150">Ingat saya</span>
             </label>
 
             @if (Route::has('password.request'))

@@ -145,6 +145,22 @@ class ReportController extends Controller
 
             $finalStatus = $attendanceStatus ?? ($hasApprovedAbsentLeave ? 'leave' : 'unknown');
 
+            $statusIndonesianMap = [
+                'present' => 'Hadir',
+                'late' => 'Terlambat',
+                'absent' => 'Alfa',
+                'leave' => 'Ijin',
+                'unknown' => 'Belum Absen',
+            ];
+            $finalStatusIndonesian = $statusIndonesianMap[$finalStatus] ?? $finalStatus;
+
+            $statusIjinIndonesianMap = [
+                'pending' => 'Menunggu',
+                'approved' => 'Disetujui',
+                'rejected' => 'Ditolak',
+            ];
+            $statusIjinIndonesian = $leave ? ($statusIjinIndonesianMap[$leave->status] ?? $leave->status) : '-';
+
             $jenisIjin = '-';
             if ($leave) {
                 $jenisIjin = $leave->type === 'absent' ? 'Ijin Tidak Masuk' : 'Ijin Pulang Lebih Awal';
@@ -176,8 +192,8 @@ class ReportController extends Controller
                 'Kelas' => $sp->classRoom?->name ?? '-',
                 'Jurusan' => $sp->jurusan ?? $sp->classRoom?->jurusan ?? '-',
                 'Nama' => $sp->user->name,
-                'Status' => $finalStatus,
-                'Status Ijin' => $leave?->status ?? '-',
+                'Status' => $finalStatusIndonesian,
+                'Status Ijin' => $statusIjinIndonesian,
                 'Jenis Ijin' => $jenisIjin,
                 'Alasan Ijin' => $alasanIjin,
                 'Waktu Tidak Masuk' => $waktuTidakMasuk,

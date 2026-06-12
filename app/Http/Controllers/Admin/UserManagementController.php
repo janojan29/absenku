@@ -18,42 +18,6 @@ class UserManagementController extends Controller
 {
     public function index(Request $request): View
     {
-        $q = trim((string) $request->query('q', ''));
-
-        $users = User::query()
-            ->with(['studentProfile.classRoom', 'teacher'])
-            ->when($q !== '', function ($query) use ($q) {
-                $like = '%' . $q . '%';
-
-                $query->where(function ($subQuery) use ($like) {
-                    $subQuery
-                        ->where('name', 'like', $like)
-                        ->orWhere('email', 'like', $like)
-                        ->orWhere('whatsapp_number', 'like', $like)
-                        ->orWhereHas('roles', fn($roleQuery) => $roleQuery->where('name', 'like', $like))
-                        ->orWhereHas('studentProfile', function ($studentQuery) use ($like) {
-                            $studentQuery
-                                ->where('nis', 'like', $like)
-                                ->orWhere('jurusan', 'like', $like)
-                                ->orWhere('parent_phone_wa', 'like', $like)
-                                ->orWhereHas('classRoom', function ($classRoomQuery) use ($like) {
-                                    $classRoomQuery
-                                        ->where('name', 'like', $like)
-                                        ->orWhere('jurusan', 'like', $like);
-                                });
-                        })
-                        ->orWhereHas('teacher', function ($teacherQuery) use ($like) {
-                            $teacherQuery
-                                ->where('nip', 'like', $like)
-                                ->orWhere('subject', 'like', $like)
-                                ->orWhere('wali_kelas', 'like', $like);
-                        });
-                });
-            })
-            ->orderBy('name')
-            ->paginate(20)
-            ->withQueryString();
-
         $roles = Role::query()->orderBy('name')->get();
         $classRooms = ClassRoom::query()
             ->orderBy('name')
@@ -75,8 +39,6 @@ class UserManagementController extends Controller
         $picketOfficerCount = User::role('petugas_piket')->count();
 
         return view('admin.users.index', [
-            'users' => $users,
-            'q' => $q,
             'roles' => $roles,
             'classRooms' => $classRooms,
             'classRoomOptions' => $classRoomOptions,

@@ -35,16 +35,26 @@ class AttendanceController extends Controller
         $recent = Attendance::query()
             ->where('user_id', $user->id)
             ->orderByDesc('date')
-            ->limit(14)
+            ->limit(7)
             ->get();
 
         $setting = SchoolSetting::singleton();
 
         $todayLeaveSubmission = LeaveRequest::query()
             ->where('user_id', $user->id)
-            ->whereDate('date', $today)
+            ->where(function($query) use ($today) {
+                $query->whereDate('date', $today)
+                      ->orWhereDate('decided_at', $today);
+            })
             ->orderByDesc('created_at')
             ->first();
+
+        if ($todayLeaveSubmission && $todayLeaveSubmission->status === 'rejected') {
+            $isDecidedToday = $todayLeaveSubmission->decided_at && $todayLeaveSubmission->decided_at->isToday();
+            if (!$isDecidedToday) {
+                $todayLeaveSubmission = null;
+            }
+        }
 
         $hasApprovedAbsentLeaveToday = LeaveRequest::query()
             ->where('user_id', $user->id)
@@ -53,13 +63,19 @@ class AttendanceController extends Controller
             ->where('status', 'approved')
             ->exists();
 
-        $leaveDatesWithSubmission = LeaveRequest::query()
+        $absentBlockedDates = LeaveRequest::query()
             ->where('user_id', $user->id)
             ->whereBetween('date', [$today->toDateString(), $today->copy()->addDay()->toDateString()])
             ->pluck('date')
             ->map(fn ($date) => Carbon::parse($date)->toDateString())
             ->values()
             ->all();
+
+        $earlyLeaveBlockedToday = LeaveRequest::query()
+            ->where('user_id', $user->id)
+            ->whereDate('date', $today)
+            ->whereIn('status', ['pending', 'approved'])
+            ->exists();
 
         $checkInStart = Carbon::today()->setTimeFromTimeString($setting->check_in_start_time);
         $checkInEnd = Carbon::today()->setTimeFromTimeString($setting->check_in_end_time);
@@ -80,7 +96,13 @@ class AttendanceController extends Controller
             $canCheckOutNow = false;
         }
 
-        $showLeaveForm = $todayLeaveSubmission === null || $hasReachedCheckOutStart;
+        $hasPendingOrApprovedLeaveToday = LeaveRequest::query()
+            ->where('user_id', $user->id)
+            ->whereDate('date', $today)
+            ->whereIn('status', ['pending', 'approved'])
+            ->exists();
+
+        $showLeaveForm = ! $hasPendingOrApprovedLeaveToday;
 
         return response()->json([
             'data' => [
@@ -95,7 +117,9 @@ class AttendanceController extends Controller
                 'today_leave_submission' => $todayLeaveSubmission ? (new LeaveRequestResource($todayLeaveSubmission))->toArray($request) : null,
                 'has_approved_absent_leave_today' => $hasApprovedAbsentLeaveToday,
                 'show_leave_form' => $showLeaveForm,
-                'leave_dates_with_submission' => $leaveDatesWithSubmission,
+                'leave_dates_with_submission' => $absentBlockedDates,
+                'absent_blocked_dates' => $absentBlockedDates,
+                'early_leave_blocked_today' => $earlyLeaveBlockedToday,
             ],
         ]);
     }

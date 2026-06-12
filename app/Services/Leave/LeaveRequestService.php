@@ -36,7 +36,7 @@ class LeaveRequestService
 
                 if ($todayAttendance && $todayAttendance->check_in_at !== null) {
                     throw ValidationException::withMessages([
-                        'leave' => 'Kamu sudah check-in hari ini, jadi tidak bisa mengajukan ijin tidak masuk untuk hari ini.',
+                        'leave' => 'Kamu sudah absen masuk hari ini, jadi tidak bisa mengajukan ijin tidak masuk untuk hari ini.',
                     ]);
                 }
             }
@@ -50,15 +50,20 @@ class LeaveRequestService
 
             if (! $attendance || $attendance->check_in_at === null) {
                 throw ValidationException::withMessages([
-                    'leave' => 'Ijin pulang lebih awal hanya bisa diajukan setelah check-in.',
+                    'leave' => 'Ijin pulang lebih awal hanya bisa diajukan setelah absen masuk.',
                 ]);
             }
         }
 
-        $existingSubmission = LeaveRequest::query()
+        $existingQuery = LeaveRequest::query()
             ->where('user_id', $user->id)
-            ->whereDate('date', $targetDate)
-            ->exists();
+            ->whereDate('date', $targetDate);
+
+        if ($type === 'absent') {
+            $existingSubmission = $existingQuery->exists();
+        } else {
+            $existingSubmission = $existingQuery->whereIn('status', ['pending', 'approved'])->exists();
+        }
 
         if ($existingSubmission) {
             throw ValidationException::withMessages([

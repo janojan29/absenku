@@ -1215,3 +1215,46 @@
         background-clip: text;
     }
 }
+
+/* Custom remember_me checkbox styling: white background, gray border, blue checkmark on check */
+#remember_me {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    background-color: #ffffff !important;
+    border: 1.5px solid #94a3b8 !important;
+    border-radius: 4px !important;
+    width: 16px !important;
+    height: 16px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    position: relative !important;
+    outline: none !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+#remember_me:hover {
+    border-color: #64748b !important;
+}
+
+#remember_me:focus {
+    box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.2) !important;
+    border-color: #1d4ed8 !important;
+}
+
+#remember_me::after {
+    content: "" !important;
+    width: 4px !important;
+    height: 8px !important;
+    border: solid #1d4ed8 !important;
+    border-width: 0 2px 2px 0 !important;
+    transform: rotate(45deg) scale(0) !important;
+    transition: transform 0.1s ease !important;
+    position: absolute !important;
+    top: 1px !important;
+}
+
+#remember_me:checked::after {
+    transform: rotate(45deg) scale(1) !important;
+}

@@ -1,10 +1,22 @@
+@php
+    $statusMessage = session('status');
+    $translations = [
+        'profile-updated' => 'Profil berhasil diperbarui.',
+        'password-updated' => 'Kata sandi berhasil diperbarui.',
+        'verification-link-sent' => 'Tautan verifikasi baru telah dikirim ke alamat email Anda.',
+    ];
+    if (is_string($statusMessage) && isset($translations[$statusMessage])) {
+        $statusMessage = $translations[$statusMessage];
+    }
+@endphp
+
 {{-- Centered Popup Notification System --}}
 <div
     x-data="toastManager()"
     x-init="
         $nextTick(() => {
-            @if (session('status'))
-                add('{{ session('status') }}', 'success', 2000);
+            @if ($statusMessage)
+                add('{{ $statusMessage }}', 'success', 2000);
             @endif
             @if (session('error'))
                 add('{{ session('error') }}', 'error', 3000);

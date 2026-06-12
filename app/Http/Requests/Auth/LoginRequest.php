@@ -5,6 +5,8 @@ namespace App\Http\Requests\Auth;
 use App\Models\StudentProfile;
 use App\Models\Teacher;
 use App\Models\User;
+use App\Models\LeaveRequest;
+use Illuminate\Support\Carbon;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
@@ -62,6 +64,21 @@ class LoginRequest extends FormRequest
         // Try student via NISN
         $student = StudentProfile::query()->where('nis', $loginIdentifier)->first();
         if ($student?->user && Hash::check($password, $student->user->password)) {
+            // Check for pending leave request today
+            $today = Carbon::today();
+            $pendingLeave = LeaveRequest::query()
+                ->where('user_id', $student->user->id)
+                ->whereDate('date', $today)
+                ->where('status', 'pending')
+                ->first();
+
+            if ($pendingLeave) {
+                $typeLabel = $pendingLeave->type === 'absent' ? 'tidak masuk' : 'pulang lebih awal';
+                throw ValidationException::withMessages([
+                    'login_identifier' => "Pengajuan ijin {$typeLabel} Anda sedang diverifikasi oleh petugas piket.",
+                ]);
+            }
+
             Auth::login($student->user, $remember);
             RateLimiter::clear($this->throttleKey());
             return;

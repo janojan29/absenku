@@ -3,6 +3,9 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\User;
+use App\Models\StudentProfile;
+use App\Models\LeaveRequest;
+use App\Models\ClassRoom;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -58,5 +61,41 @@ class AuthenticationTest extends TestCase
 
         $this->assertGuest();
         $response->assertRedirect('/');
+    }
+
+    public function test_student_with_pending_leave_request_cannot_login(): void
+    {
+        $classRoom = ClassRoom::query()->create([
+            'name' => 'X RPL',
+            'jurusan' => 'RPL',
+        ]);
+
+        /** @var User $user */
+        $user = User::factory()->createOne([
+            'role' => 'siswa',
+        ]);
+
+        StudentProfile::query()->create([
+            'user_id' => $user->id,
+            'class_room_id' => $classRoom->id,
+            'nis' => '1234567890',
+        ]);
+
+        LeaveRequest::query()->create([
+            'user_id' => $user->id,
+            'date' => now()->toDateString(),
+            'type' => 'absent',
+            'reason' => 'sick',
+            'keterangan' => 'Sakit demam',
+            'status' => 'pending',
+        ]);
+
+        $response = $this->post('/login', [
+            'login_identifier' => '1234567890',
+            'password' => 'password',
+        ]);
+
+        $this->assertGuest();
+        $response->assertSessionHasErrors('login_identifier');
     }
 }

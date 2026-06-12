@@ -15,34 +15,7 @@ class TeacherController extends Controller
 {
     public function index(Request $request): View
     {
-        $q = trim((string) $request->query('q', ''));
-
-        $teachers = User::query()
-            ->whereHas('roles', fn($query) => $query->whereIn('name', ['guru', 'guru_walikelas']))
-            ->with(['teacher'])
-            ->when($q !== '', function ($query) use ($q) {
-                $like = '%' . $q . '%';
-
-                $query->where(function ($subQuery) use ($like) {
-                    $subQuery
-                        ->where('name', 'like', $like)
-                        ->orWhere('whatsapp_number', 'like', $like)
-                        ->orWhereHas('teacher', function ($teacherQuery) use ($like) {
-                            $teacherQuery
-                                ->where('nip', 'like', $like)
-                                ->orWhere('subject', 'like', $like)
-                                ->orWhere('wali_kelas', 'like', $like);
-                        });
-                });
-            })
-            ->orderBy('name')
-            ->paginate(20)
-            ->withQueryString();
-
-        return view('admin.teachers.index', [
-            'teachers' => $teachers,
-            'q' => $q,
-        ]);
+        return view('admin.teachers.index');
     }
 
     public function create(): View
