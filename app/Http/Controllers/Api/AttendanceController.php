@@ -135,6 +135,7 @@ class AttendanceController extends Controller
             $user,
             (float) $request->validated('latitude'),
             (float) $request->validated('longitude'),
+            (float) $request->validated('accuracy'),
         );
 
         return response()->json(['message' => $message]);
@@ -151,6 +152,7 @@ class AttendanceController extends Controller
             $user,
             (float) $request->validated('latitude'),
             (float) $request->validated('longitude'),
+            (float) $request->validated('accuracy'),
         );
 
         return response()->json(['message' => $message]);

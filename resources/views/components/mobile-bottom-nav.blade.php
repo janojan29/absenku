@@ -38,7 +38,7 @@
     } elseif ($isPicket) {
         $items = [
             ['label' => 'Beranda', 'href' => route('teacher.dashboard'), 'icon' => 'home', 'active' => request()->routeIs('teacher.dashboard')],
-            ['label' => 'Approval', 'href' => route('picket.leave-requests.index'), 'icon' => 'check-circle', 'active' => request()->routeIs('picket.leave-requests.*'), 'badge' => $pendingLeaveCount],
+            ['label' => 'Persetujuan', 'href' => route('picket.leave-requests.index'), 'icon' => 'check-circle', 'active' => request()->routeIs('picket.leave-requests.*'), 'badge' => $pendingLeaveCount],
             ['label' => 'Rekap', 'href' => route('teacher.report'), 'icon' => 'bar-chart', 'active' => request()->routeIs('teacher.report*')],
             ['label' => 'Profil', 'href' => route('profile.edit'), 'icon' => 'user', 'active' => request()->routeIs('profile.*')],
         ];

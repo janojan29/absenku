@@ -16,11 +16,13 @@ class Attendance extends Model
         'check_in_latitude',
         'check_in_longitude',
         'check_in_distance_meters',
+        'check_in_accuracy',
         'check_out_at',
         'check_out_late_minutes',
         'check_out_latitude',
         'check_out_longitude',
         'check_out_distance_meters',
+        'check_out_accuracy',
     ];
 
     protected $casts = [
@@ -32,7 +34,9 @@ class Attendance extends Model
         'check_out_latitude' => 'float',
         'check_out_longitude' => 'float',
         'check_in_distance_meters' => 'integer',
+        'check_in_accuracy' => 'float',
         'check_out_distance_meters' => 'integer',
+        'check_out_accuracy' => 'float',
         'late_minutes' => 'integer',
         'check_out_late_minutes' => 'integer',
     ];

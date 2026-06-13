@@ -118,7 +118,6 @@
                                     <option value="late" @selected(request('status', $status) === 'late')>Terlambat</option>
                                     <option value="leave" @selected(request('status', $status) === 'leave')>Ijin</option>
                                     <option value="absent" @selected(request('status', $status) === 'absent')>Alfa</option>
-                                    <option value="unknown" @selected(request('status', $status) === 'unknown')>Belum Absen</option>
                                 </select>
                             </div>
                         </div>

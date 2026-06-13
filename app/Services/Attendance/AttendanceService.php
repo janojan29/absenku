@@ -15,10 +15,18 @@ use Illuminate\Validation\ValidationException;
 
 class AttendanceService
 {
+    /** GPS accuracy below this value (meters) is suspiciously perfect → likely fake GPS */
+    private const MIN_ACCURACY_METERS = 5.0;
+
+    /** GPS accuracy above this value (meters) is too imprecise to trust */
+    private const MAX_ACCURACY_METERS = 100.0;
+
     public function __construct(private readonly HaversineDistance $distance) {}
 
-    public function checkIn(User $user, float $latitude, float $longitude): string
+    public function checkIn(User $user, float $latitude, float $longitude, float $accuracy): string
     {
+        $this->validateAccuracy($accuracy);
+
         $setting = SchoolSetting::singleton();
         $today = Carbon::today();
 
@@ -77,7 +85,7 @@ class AttendanceService
 
         $alreadyCheckedIn = false;
 
-        DB::transaction(function () use ($user, $today, $meters, $status, $lateMinutes, $latitude, $longitude, $hasApprovedLeaveToday, &$alreadyCheckedIn) {
+        DB::transaction(function () use ($user, $today, $meters, $status, $lateMinutes, $latitude, $longitude, $accuracy, $hasApprovedLeaveToday, &$alreadyCheckedIn) {
             $attendance = Attendance::query()->firstOrCreate(
                 ['user_id' => $user->id, 'date' => $today->toDateString()],
             );
@@ -94,6 +102,7 @@ class AttendanceService
                 'check_in_latitude' => $latitude,
                 'check_in_longitude' => $longitude,
                 'check_in_distance_meters' => (int) round($meters),
+                'check_in_accuracy' => round($accuracy, 2),
             ]);
 
             $classRoomId = (int) ($user->studentProfile?->class_room_id ?? 0);
@@ -118,8 +127,10 @@ class AttendanceService
         return $alreadyCheckedIn ? 'Kamu sudah absen masuk.' : 'Absen masuk berhasil.';
     }
 
-    public function checkOut(User $user, float $latitude, float $longitude): string
+    public function checkOut(User $user, float $latitude, float $longitude, float $accuracy): string
     {
+        $this->validateAccuracy($accuracy);
+
         $setting = SchoolSetting::singleton();
         $today = Carbon::today();
 
@@ -180,13 +191,14 @@ class AttendanceService
             ]);
         }
 
-        DB::transaction(function () use ($attendance, $user, $meters, $latitude, $longitude) {
+        DB::transaction(function () use ($attendance, $user, $meters, $latitude, $longitude, $accuracy) {
             $attendance->update([
                 'check_out_at' => now(),
                 'check_out_late_minutes' => null,
                 'check_out_latitude' => $latitude,
                 'check_out_longitude' => $longitude,
                 'check_out_distance_meters' => (int) round($meters),
+                'check_out_accuracy' => round($accuracy, 2),
             ]);
 
             $classRoomId = (int) ($user->studentProfile?->class_room_id ?? 0);
@@ -198,5 +210,27 @@ class AttendanceService
         });
 
         return 'Absen pulang berhasil.';
+    }
+
+    /**
+     * Validate GPS accuracy to detect fake GPS.
+     *
+     * Fake GPS apps typically report accuracy of exactly 0 or very low values (< 5m),
+     * which is practically impossible for real GPS hardware.
+     * Very high accuracy values (> 100m) indicate unreliable positioning.
+     */
+    private function validateAccuracy(float $accuracy): void
+    {
+        if ($accuracy < self::MIN_ACCURACY_METERS) {
+            throw ValidationException::withMessages([
+                'geo' => 'Akurasi GPS mencurigakan (' . round($accuracy, 1) . 'm). Pastikan kamu tidak menggunakan fake GPS.',
+            ]);
+        }
+
+        if ($accuracy > self::MAX_ACCURACY_METERS) {
+            throw ValidationException::withMessages([
+                'geo' => 'Akurasi GPS terlalu rendah (' . (int) round($accuracy) . 'm). Pastikan GPS aktif dan kamu berada di area terbuka.',
+            ]);
+        }
     }
 }

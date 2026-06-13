@@ -75,7 +75,7 @@
             <div class="bg-white p-6 space-y-5">
                 {{-- Location Status --}}
                 <div class="flex items-center gap-3 p-4 rounded-xl transition-all duration-300"
-                     :class="isLoading ? 'bg-bw-100' : (isInRange ? 'bg-emerald-50 border border-emerald-200/60' : 'bg-red-50 border border-red-200/60')">
+                     :class="isLoading ? 'bg-bw-100' : (isSuspicious ? 'bg-amber-50 border border-amber-300/80' : (isInRange ? 'bg-emerald-50 border border-emerald-200/60' : 'bg-red-50 border border-red-200/60'))">
                     <div class="shrink-0">
                         <template x-if="isLoading">
                             <div class="w-10 h-10 rounded-full bg-bw-200 flex items-center justify-center">
@@ -94,10 +94,22 @@
                         </template>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <div class="text-sm font-semibold" :class="isInRange ? 'text-emerald-700' : 'text-red-700'" x-text="statusText">Mendeteksi lokasi...</div>
+                        <div class="text-sm font-semibold" :class="isSuspicious ? 'text-amber-700' : (isInRange ? 'text-emerald-700' : 'text-red-700')" x-text="statusText">Mendeteksi lokasi...</div>
                         <div class="text-xs text-bw-400 mt-0.5" x-show="distance !== null">Jarak: <span x-text="distanceText"></span> · Radius: {{ $setting->radius_meters }}m</div>
                     </div>
                 </div>
+
+                {{-- Fake GPS Warning --}}
+                <template x-if="isSuspicious">
+                    <div class="flex items-start gap-3 p-4 rounded-xl bg-amber-50 border border-amber-300/80 animate-fade-slide-up">
+                        <svg class="w-5 h-5 text-amber-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/></svg>
+                        <div>
+                            <div class="text-sm font-semibold text-amber-800">⚠️ Fake GPS Terdeteksi</div>
+                            <div class="text-xs text-amber-700 mt-1" x-text="suspiciousReason"></div>
+                            <div class="text-xs text-amber-600 mt-1">Matikan aplikasi fake GPS dan muat ulang halaman ini.</div>
+                        </div>
+                    </div>
+                </template>
 
                 {{-- Attendance Buttons --}}
                 @if (!empty($hasApprovedAbsentLeaveToday) && $hasApprovedAbsentLeaveToday)
@@ -112,6 +124,7 @@
                             @csrf
                             <input type="hidden" name="latitude" value="">
                             <input type="hidden" name="longitude" value="">
+                            <input type="hidden" name="accuracy" value="">
                             <button type="submit" :disabled="submitting" class="btn-primary btn-ripple w-full h-14 text-lg">
                                 <template x-if="!submitting"><span class="flex items-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75"/></svg>Absen Masuk</span></template>
                                 <template x-if="submitting"><span class="flex items-center gap-2"><svg class="w-5 h-5 animate-spin-smooth" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>Memproses...</span></template>
@@ -128,6 +141,7 @@
                             @csrf
                             <input type="hidden" name="latitude" value="">
                             <input type="hidden" name="longitude" value="">
+                            <input type="hidden" name="accuracy" value="">
                             <button type="submit" :disabled="submitting" class="w-full h-14 text-lg rounded-xl font-semibold text-white btn-ripple transition-all duration-350 ease-bounce-in hover:translate-y-[-2px]" style="background: linear-gradient(135deg, #1a2744, #1e3a5f);">
                                 <template x-if="!submitting"><span class="flex items-center justify-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15m-3 0-3-3m0 0 3-3m-3 3H15"/></svg>Absen Pulang</span></template>
                                 <template x-if="submitting"><span class="flex items-center justify-center gap-2"><svg class="w-5 h-5 animate-spin-smooth" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>Memproses...</span></template>
