@@ -104,3 +104,40 @@ document.addEventListener('alpine:init', () => {
         });
     }
 });
+
+/* ── Dynamic Input Restrictions ── */
+document.addEventListener('input', (event) => {
+    const target = event.target;
+    if (!target) return;
+
+    // 1. Name input restriction (letters only + spaces & symbols: . , ' -)
+    const isSettingsPage = window.location.pathname.includes('/admin/settings');
+    const isNameInput = (target.id === 'name' && !isSettingsPage) || target.id === 'editName';
+    
+    if (isNameInput) {
+        restrictInput(target, /[^a-zA-Z\s.,'\-]/g);
+    }
+
+    // 2. Numeric inputs (NISN, NIP, Phone/WA numbers)
+    const isNumericInput = [
+        'nis', 'editNis', 'nip', 'editNip',
+        'whatsapp_number', 'editWhatsapp', 'parent_phone_wa', 'editParentPhone'
+    ].includes(target.id);
+
+    if (isNumericInput) {
+        restrictInput(target, /[^0-9]/g);
+    }
+});
+
+function restrictInput(element, regex) {
+    const oldValue = element.value;
+    const newValue = oldValue.replace(regex, '');
+    if (oldValue !== newValue) {
+        const selectionStart = element.selectionStart;
+        const selectionEnd = element.selectionEnd;
+        element.value = newValue;
+        const diff = oldValue.length - newValue.length;
+        element.setSelectionRange(selectionStart - diff, selectionEnd - diff);
+    }
+}
+

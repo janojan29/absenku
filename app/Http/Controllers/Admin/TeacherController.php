@@ -42,12 +42,16 @@ class TeacherController extends Controller
     {
         $data = $request->validate([
             'teacher_role' => ['required', 'string', 'in:guru,guru_walikelas'],
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'regex:/^[a-zA-Z\s.,\'\-]+$/', 'max:255'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'nip' => ['required', 'string', 'max:50', 'unique:teachers,nip'],
+            'nip' => ['required', 'string', 'regex:/^[0-9]+$/', 'max:50', 'unique:teachers,nip'],
             'subject' => ['nullable', 'string', 'max:150'],
             'wali_kelas' => ['nullable', 'string', 'max:100'],
-            'whatsapp_number' => ['nullable', 'string', 'max:30'],
+            'whatsapp_number' => ['nullable', 'string', 'regex:/^08[0-9]+$/', 'max:30'],
+        ], [
+            'name.regex' => 'Nama guru hanya boleh berisi huruf, spasi, dan tanda baca nama.',
+            'nip.regex' => 'NIP harus berupa angka.',
+            'whatsapp_number.regex' => 'Nomor WhatsApp guru harus diawali dengan 08 dan hanya berisi angka.',
         ]);
 
         if ($data['teacher_role'] === 'guru_walikelas' && empty($data['wali_kelas'])) {
@@ -89,16 +93,21 @@ class TeacherController extends Controller
 
         $data = $request->validate([
             'teacher_role' => ['required', 'string', 'in:guru,guru_walikelas'],
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'regex:/^[a-zA-Z\s.,\'\-]+$/', 'max:255'],
             'nip' => [
                 'required',
                 'string',
+                'regex:/^[0-9]+$/',
                 'max:50',
                 Rule::unique('teachers', 'nip')->ignore($user->teacher?->id),
             ],
             'subject' => ['nullable', 'string', 'max:150'],
             'wali_kelas' => ['nullable', 'string', 'max:100'],
-            'whatsapp_number' => ['nullable', 'string', 'max:30'],
+            'whatsapp_number' => ['nullable', 'string', 'regex:/^08[0-9]+$/', 'max:30'],
+        ], [
+            'name.regex' => 'Nama guru hanya boleh berisi huruf, spasi, dan tanda baca nama.',
+            'nip.regex' => 'NIP harus berupa angka.',
+            'whatsapp_number.regex' => 'Nomor WhatsApp guru harus diawali dengan 08 dan hanya berisi angka.',
         ]);
 
         if ($data['teacher_role'] === 'guru_walikelas' && empty($data['wali_kelas'])) {

@@ -88,5 +88,10 @@
                 </tbody>
             </table>
         </div>
+        @if($students->hasPages())
+            <div class="mt-4 px-4 pb-4">
+                {{ $students->links() }}
+            </div>
+        @endif
     </div>
 </div>

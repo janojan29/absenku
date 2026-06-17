@@ -127,14 +127,14 @@ export default function geolocationComponent(schoolLat = 0, schoolLng = 0, maxRa
             // Threshold: stddev < 0.0000001 degrees ≈ ~0.01mm — practically impossible for real GPS
             if (latStdDev < 0.0000001 && lngStdDev < 0.0000001) {
                 this.isSuspicious = true;
-                this.suspiciousReason = 'Koordinat GPS tidak berubah sama sekali — kemungkinan fake GPS terdeteksi.';
+                this.suspiciousReason = 'fake GPS terdeteksi.';
             }
 
             // Check 2: Accuracy too perfect (< 3m consistently)
             const avgAccuracy = samples.reduce((sum, s) => sum + s.accuracy, 0) / samples.length;
             if (avgAccuracy < 3) {
                 this.isSuspicious = true;
-                this.suspiciousReason = 'Akurasi GPS terlalu sempurna — kemungkinan fake GPS terdeteksi.';
+                this.suspiciousReason = 'fake GPS terdeteksi.';
             }
 
             this._stabilityChecked = true;
@@ -193,7 +193,7 @@ export default function geolocationComponent(schoolLat = 0, schoolLng = 0, maxRa
 
             // Block if fake GPS is suspected
             if (this.isSuspicious) {
-                alert('⚠️ Terdeteksi kemungkinan penggunaan fake GPS.\n\n' + this.suspiciousReason + '\n\nMatikan aplikasi fake GPS dan coba lagi.');
+                alert('⚠️ Terdeteksi menggunakan fake GPS.\n\n' + this.suspiciousReason + '\n\nMatikan aplikasi fake GPS dan coba lagi.');
                 return false;
             }
 
@@ -212,7 +212,7 @@ export default function geolocationComponent(schoolLat = 0, schoolLng = 0, maxRa
                         // Re-check after getting position
                         if (this.isSuspicious) {
                             this.isLoading = false;
-                            alert('⚠️ Terdeteksi kemungkinan penggunaan fake GPS.\n\n' + this.suspiciousReason + '\n\nMatikan aplikasi fake GPS dan coba lagi.');
+                            alert('⚠️ Terdeteksi menggunakan fake GPS.\n\n' + this.suspiciousReason + '\n\nMatikan aplikasi fake GPS dan coba lagi.');
                             return;
                         }
 

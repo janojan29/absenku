@@ -29,6 +29,8 @@ class CreateNewUser implements CreatesNewUsers
         Validator::make($input, [
             ...$this->profileRules(),
             'password' => $this->passwordRules(),
+        ], [
+            'name.regex' => 'Nama hanya boleh berisi huruf, spasi, dan tanda baca nama (., \'-).',
         ])->validate();
 
         return DB::transaction(function () use ($input) {

@@ -103,21 +103,21 @@ class UserManagementController extends Controller
 
         // Base validation rules for all users
         $validationRules = [
-            'name' => ['required', 'string', 'max:255'],
-            'whatsapp_number' => ['nullable', 'string', 'max:30'],
+            'name' => ['required', 'string', 'regex:/^[a-zA-Z\s.,\'\-]+$/', 'max:255'],
+            'whatsapp_number' => ['nullable', 'string', 'regex:/^08[0-9]+$/', 'max:30'],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
         ];
 
         // Add role-specific validation
         if ($role === 'siswa') {
             $validationRules = array_merge($validationRules, [
-                'nis' => ['required', 'string', 'max:20', 'unique:student_profiles,nis,' . ($user->studentProfile?->id ?? 'NULL')],
+                'nis' => ['required', 'string', 'regex:/^[0-9]+$/', 'max:50', 'unique:student_profiles,nis,' . ($user->studentProfile?->id ?? 'NULL')],
                 'class_room_id' => ['required', 'integer', 'exists:class_rooms,id'],
-                'parent_phone_wa' => ['nullable', 'string', 'max:30'],
+                'parent_phone_wa' => ['nullable', 'string', 'regex:/^08[0-9]+$/', 'max:30'],
             ]);
         } elseif (in_array($role, ['guru', 'guru_walikelas'], true)) {
             $validationRules = array_merge($validationRules, [
-                'nip' => ['required', 'string', 'max:20', 'unique:teachers,nip,' . ($user->teacher?->id ?? 'NULL')],
+                'nip' => ['required', 'string', 'regex:/^[0-9]+$/', 'max:50', 'unique:teachers,nip,' . ($user->teacher?->id ?? 'NULL')],
                 'subject' => ['nullable', 'string', 'max:150'],
                 'wali_kelas' => ['nullable', 'string', 'max:100'],
             ]);
@@ -127,7 +127,13 @@ class UserManagementController extends Controller
             }
         }
 
-        $data = $request->validate($validationRules);
+        $data = $request->validate($validationRules, [
+            'name.regex' => 'Nama hanya boleh berisi huruf, spasi, dan tanda baca nama.',
+            'nis.regex' => 'NISN harus berupa angka.',
+            'nip.regex' => 'NIP harus berupa angka.',
+            'whatsapp_number.regex' => 'Nomor WhatsApp harus diawali dengan 08 dan hanya berisi angka.',
+            'parent_phone_wa.regex' => 'Nomor HP orang tua harus diawali dengan 08 dan hanya berisi angka.',
+        ]);
 
         // Update user basic info
         $updateData = [

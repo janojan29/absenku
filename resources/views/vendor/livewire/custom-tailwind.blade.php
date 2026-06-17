@@ -16,7 +16,6 @@
         {{-- Centered Results Description --}}
         <div class="text-center flex-1 min-w-0 px-2">
             <p class="text-xs text-navy-800 font-medium truncate">
-                Menampilkan
                 @if ($paginator->firstItem())
                     <span class="font-bold text-navy-950">{{ $paginator->firstItem() }}</span>
                     -
@@ -26,7 +25,6 @@
                 @endif
                 dari
                 <span class="font-bold text-navy-950">{{ $paginator->total() }}</span>
-                data
             </p>
         </div>
 

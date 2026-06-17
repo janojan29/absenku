@@ -10,15 +10,28 @@ use App\Models\StudentProfile;
 use Illuminate\Support\Carbon;
 use Livewire\Component;
 use Livewire\Attributes\On;
+use Livewire\WithPagination;
 
 class Dashboard extends Component
 {
+    use WithPagination;
+
+    public function paginationView()
+    {
+        return 'vendor.livewire.custom-tailwind';
+    }
+
     public ?int $classRoomId = null;
 
     #[On('teacher-dashboard.refresh')]
     public function refresh(): void
     {
         // Intentionally empty: Livewire will re-render.
+    }
+
+    public function updatingClassRoomId()
+    {
+        $this->resetPage();
     }
 
     public function mount(): void
@@ -57,25 +70,25 @@ class Dashboard extends Component
             ->when($this->classRoomId, fn($q) => $q->where('class_room_id', $this->classRoomId))
             ->orderBy('class_room_id')
             ->orderBy('id')
-            ->get();
+            ->paginate(15);
 
         $lateAt = Carbon::parse($today->toDateString() . ' ' . $setting->check_in_start_time)
             ->addMinutes((int) $setting->late_tolerance_minutes);
 
         $effectiveStatuses = [];
-        foreach ($students as $sp) {
-            $attendance = $attendances->get($sp->user_id);
-            $leave = $approvedLeaves->get($sp->user_id);
+        foreach ($studentUserIds as $userId) {
+            $attendance = $attendances->get($userId);
+            $leave = $approvedLeaves->get($userId);
 
             if ($attendance && $attendance->check_in_at !== null) {
                 $checkInAt = Carbon::parse($attendance->check_in_at);
-                $effectiveStatuses[$sp->user_id] = $checkInAt->greaterThan($lateAt) ? 'late' : 'present';
+                $effectiveStatuses[$userId] = $checkInAt->greaterThan($lateAt) ? 'late' : 'present';
             } elseif ($attendance && $attendance->status === 'leave') {
-                $effectiveStatuses[$sp->user_id] = 'leave';
+                $effectiveStatuses[$userId] = 'leave';
             } elseif ($leave) {
-                $effectiveStatuses[$sp->user_id] = 'leave';
+                $effectiveStatuses[$userId] = 'leave';
             } else {
-                $effectiveStatuses[$sp->user_id] = 'unknown';
+                $effectiveStatuses[$userId] = 'unknown';
             }
         }
 
@@ -97,3 +110,4 @@ class Dashboard extends Component
         ]);
     }
 }
+

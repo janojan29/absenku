@@ -84,13 +84,18 @@ class StudentController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'regex:/^[a-zA-Z\s.,\'\-]+$/', 'max:255'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'jurusan' => ['required', 'string', 'max:100'],
             'class_room_id' => ['required', 'integer', 'exists:class_rooms,id'],
-            'nis' => ['required', 'string', 'max:50', 'unique:student_profiles,nis'],
-            'parent_phone_wa' => ['nullable', 'string', 'max:30'],
-            'whatsapp_number' => ['nullable', 'string', 'max:30'],
+            'nis' => ['required', 'string', 'regex:/^[0-9]+$/', 'max:50', 'unique:student_profiles,nis'],
+            'parent_phone_wa' => ['nullable', 'string', 'regex:/^08[0-9]+$/', 'max:30'],
+            'whatsapp_number' => ['nullable', 'string', 'regex:/^08[0-9]+$/', 'max:30'],
+        ], [
+            'name.regex' => 'Nama siswa hanya boleh berisi huruf, spasi, dan tanda baca nama.',
+            'nis.regex' => 'NISN harus berupa angka.',
+            'parent_phone_wa.regex' => 'Nomor HP orang tua harus diawali dengan 08 dan hanya berisi angka.',
+            'whatsapp_number.regex' => 'Nomor WhatsApp siswa harus diawali dengan 08 dan hanya berisi angka.',
         ]);
 
         $selectedClass = ClassRoom::query()->findOrFail((int) $data['class_room_id']);
@@ -166,6 +171,26 @@ class StudentController extends Controller
                 continue;
             }
 
+            if (!preg_match('/^[a-zA-Z\s.,\'\-]+$/', $name)) {
+                $errors[] = "Baris {$rowNumber}: Nama siswa hanya boleh berisi huruf, spasi, dan tanda baca nama.";
+                continue;
+            }
+
+            if (!preg_match('/^[0-9]+$/', $nis)) {
+                $errors[] = "Baris {$rowNumber}: NISN harus berupa angka.";
+                continue;
+            }
+
+            if ($parentPhone !== '' && !preg_match('/^08[0-9]+$/', $parentPhone)) {
+                $errors[] = "Baris {$rowNumber}: Nomor HP orang tua harus diawali dengan 08.";
+                continue;
+            }
+
+            if ($studentPhone !== '' && !preg_match('/^08[0-9]+$/', $studentPhone)) {
+                $errors[] = "Baris {$rowNumber}: Nomor HP siswa harus diawali dengan 08.";
+                continue;
+            }
+
             if (StudentProfile::query()->where('nis', $nis)->exists()) {
                 $errors[] = "Baris {$rowNumber}: NISN {$nis} sudah terdaftar.";
                 continue;
@@ -236,17 +261,23 @@ class StudentController extends Controller
         }
 
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'whatsapp_number' => ['nullable', 'string', 'max:30'],
+            'name' => ['required', 'string', 'regex:/^[a-zA-Z\s.,\'\-]+$/', 'max:255'],
+            'whatsapp_number' => ['nullable', 'string', 'regex:/^08[0-9]+$/', 'max:30'],
             'jurusan' => ['required', 'string', 'max:100'],
             'class_room_id' => ['required', 'integer', 'exists:class_rooms,id'],
             'nis' => [
                 'required',
                 'string',
+                'regex:/^[0-9]+$/',
                 'max:50',
                 \Illuminate\Validation\Rule::unique('student_profiles', 'nis')->ignore($user->studentProfile?->id),
             ],
-            'parent_phone_wa' => ['nullable', 'string', 'max:30'],
+            'parent_phone_wa' => ['nullable', 'string', 'regex:/^08[0-9]+$/', 'max:30'],
+        ], [
+            'name.regex' => 'Nama siswa hanya boleh berisi huruf, spasi, dan tanda baca nama.',
+            'nis.regex' => 'NISN harus berupa angka.',
+            'whatsapp_number.regex' => 'Nomor WhatsApp siswa harus diawali dengan 08 dan hanya berisi angka.',
+            'parent_phone_wa.regex' => 'Nomor HP orang tua harus diawali dengan 08 dan hanya berisi angka.',
         ]);
 
         $selectedClass = ClassRoom::query()->findOrFail((int) $data['class_room_id']);
