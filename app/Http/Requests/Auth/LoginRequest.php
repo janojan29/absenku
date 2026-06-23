@@ -75,7 +75,7 @@ class LoginRequest extends FormRequest
             if ($pendingLeave) {
                 $typeLabel = $pendingLeave->type === 'absent' ? 'tidak masuk' : 'pulang lebih awal';
                 throw ValidationException::withMessages([
-                    'login_identifier' => "Pengajuan ijin {$typeLabel} Anda sedang diverifikasi oleh petugas piket.",
+                    'login_identifier' => "Pengajuan izin {$typeLabel} Anda sedang diverifikasi oleh petugas piket.",
                 ]);
             }
 

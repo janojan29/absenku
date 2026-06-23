@@ -104,7 +104,7 @@ class LeaveQueue extends Component
             ];
         });
 
-        $filename = 'riwayat-ijin-' . now()->format('Ymd-His') . '.xlsx';
+        $filename = 'riwayat-izin-' . now()->format('Ymd-His') . '.xlsx';
         return Excel::download(new \App\Exports\LeaveHistoryExport($rows), $filename);
     }
 
@@ -126,7 +126,7 @@ class LeaveQueue extends Component
         });
 
         $pdf = Pdf::loadView('picket.leave-history-pdf', ['rows' => $rows]);
-        $filename = 'riwayat-ijin-' . now()->format('Ymd-His') . '.pdf';
+        $filename = 'riwayat-izin-' . now()->format('Ymd-His') . '.pdf';
         return response()->streamDownload(function () use ($pdf) {
             echo $pdf->output();
         }, $filename);

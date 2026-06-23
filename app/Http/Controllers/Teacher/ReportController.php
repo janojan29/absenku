@@ -33,25 +33,57 @@ class ReportController extends Controller
             $currentClassRoomId = $request->filled('class_room_id') ? (int) $request->query('class_room_id') : null;
         }
 
-        // Paginate students with 20 results per page, sorted by user's name
-        $studentsPaginator = StudentProfile::query()
-            ->with(['user', 'classRoom'])
-            ->whereNotNull('class_room_id')
-            ->when($currentClassRoomId, fn($q) => $q->where('class_room_id', $currentClassRoomId))
-            ->join('users', 'student_profiles.user_id', '=', 'users.id')
-            ->orderBy('users.name')
-            ->select('student_profiles.*')
-            ->paginate(20)
-            ->withQueryString();
-
-        $paginatedStudents = $studentsPaginator->getCollection();
-
-        $rows = $this->buildRows($startDate, $endDate, $classRoomId, $status, $paginatedStudents);
-        $summaryRows = collect();
-        $summaryFilter = [];
-
         if ($tab === 'summary') {
+            // Paginate students with 20 results per page, sorted by user's name
+            $studentsPaginator = StudentProfile::query()
+                ->with(['user', 'classRoom'])
+                ->whereNotNull('class_room_id')
+                ->when($currentClassRoomId, fn($q) => $q->where('class_room_id', $currentClassRoomId))
+                ->join('users', 'student_profiles.user_id', '=', 'users.id')
+                ->orderBy('users.name')
+                ->select('student_profiles.*')
+                ->paginate(20)
+                ->withQueryString();
+
+            $paginatedStudents = $studentsPaginator->getCollection();
+            $rows = collect();
+            $summaryRows = collect();
+            $summaryFilter = [];
+
             [$summaryRows, $summaryFilter] = $this->buildSummaryRecap($request, $paginatedStudents);
+        } else {
+            // For detail tab, get ALL students matching classroom filter
+            $students = StudentProfile::query()
+                ->with(['user', 'classRoom'])
+                ->whereNotNull('class_room_id')
+                ->when($currentClassRoomId, fn($q) => $q->where('class_room_id', $currentClassRoomId))
+                ->join('users', 'student_profiles.user_id', '=', 'users.id')
+                ->orderBy('users.name')
+                ->select('student_profiles.*')
+                ->get();
+
+            // Build all daily attendance rows
+            $allRows = $this->buildRows($startDate, $endDate, $classRoomId, $status, $students);
+
+            // Paginate the final daily log rows (20 results per page)
+            $currentPage = \Illuminate\Pagination\Paginator::resolveCurrentPage() ?? 1;
+            $perPage = 20;
+            $currentPageItems = $allRows->slice(($currentPage - 1) * $perPage, $perPage)->values();
+
+            $rows = new \Illuminate\Pagination\LengthAwarePaginator(
+                $currentPageItems,
+                $allRows->count(),
+                $perPage,
+                $currentPage,
+                [
+                    'path' => \Illuminate\Pagination\Paginator::resolveCurrentPath(),
+                    'query' => $request->query(),
+                ]
+            );
+
+            $studentsPaginator = collect();
+            $summaryRows = collect();
+            $summaryFilter = [];
         }
 
         return view('teacher.report', [
@@ -127,7 +159,7 @@ class ReportController extends Controller
             'detail_start_date' => ['nullable', 'date'],
             'detail_end_date' => ['nullable', 'date'],
             'class_room_id' => ['nullable', 'integer', 'exists:class_rooms,id'],
-            'status' => ['nullable', 'string', 'in:present,late,absent,leave,unknown'],
+            'status' => ['nullable', 'string', 'in:present,late,absent,leave,sick,unknown'],
         ]);
 
         $startDate = isset($data['detail_start_date'])
@@ -152,11 +184,23 @@ class ReportController extends Controller
         $rows = collect();
 
         for ($cursor = $startDate->copy(); $cursor->lte($endDate); $cursor->addDay()) {
+            if (\App\Helpers\HolidayHelper::isHoliday($cursor)) {
+                continue;
+            }
             $rows = $rows->concat($this->buildRowsForDate($cursor->copy(), $classRoomId, $students));
         }
 
         if ($status) {
-            $rows = $rows->where('Status', $status)->values();
+            $statusIndonesianMap = [
+                'present' => 'Hadir',
+                'late' => 'Terlambat',
+                'absent' => 'Alfa',
+                'leave' => 'Izin',
+                'sick' => 'Sakit',
+                'unknown' => 'Belum Absen',
+            ];
+            $indonesianStatus = $statusIndonesianMap[$status] ?? $status;
+            $rows = $rows->where('Status', $indonesianStatus)->values();
         }
 
         return $rows->values();
@@ -198,42 +242,65 @@ class ReportController extends Controller
             $hasApprovedAbsentLeave = $leave && $leave->status === 'approved' && $leave->type === 'absent';
             $attendanceStatus = null;
 
-            if ($attendance && $attendance->check_out_at !== null) {
-                $lateAt = Carbon::parse($date->toDateString() . ' ' . $setting->check_in_start_time)
-                    ->addMinutes((int) $setting->late_tolerance_minutes);
-                $checkInAt = Carbon::parse($attendance->check_in_at);
+            if ($attendance && $attendance->check_in_at !== null) {
+                $checkOutEnd = Carbon::parse($date->toDateString() . ' ' . $setting->check_out_end_time);
+                $isMissingCheckout = $attendance->check_out_at === null;
+                $isPastOrEnded = $date->lt(Carbon::today()) || (now()->greaterThan($checkOutEnd));
 
-                $attendanceStatus = $checkInAt->greaterThan($lateAt) ? 'late' : 'present';
-            } elseif ($attendance && $attendance->check_in_at !== null && $attendance->check_out_at === null) {
-                $attendanceStatus = 'absent';
+                if ($isMissingCheckout && $isPastOrEnded) {
+                    $attendanceStatus = 'absent';
+                } else {
+                    $attendanceStatus = $attendance->status;
+                    if (empty($attendanceStatus)) {
+                        $endCheckIn = Carbon::parse($date->toDateString() . ' ' . $setting->check_in_end_time);
+                        $lateAt = (clone $endCheckIn)->subMinutes((int) $setting->late_tolerance_minutes);
+                        $checkInAt = Carbon::parse($attendance->check_in_at);
+                        $attendanceStatus = $checkInAt->greaterThan($lateAt) ? 'late' : 'present';
+                    }
+                }
+            } elseif ($attendance) {
+                $attendanceStatus = $attendance->status;
             }
 
-            $finalStatus = $attendanceStatus ?? ($hasApprovedAbsentLeave ? 'leave' : 'unknown');
+            $finalStatus = $attendanceStatus ?? ($hasApprovedAbsentLeave ? ($leave->reason === 'sick' ? 'sick' : 'leave') : 'unknown');
 
             $statusIndonesianMap = [
                 'present' => 'Hadir',
                 'late' => 'Terlambat',
                 'absent' => 'Alfa',
-                'leave' => 'Ijin',
+                'leave' => 'Izin',
+                'sick' => 'Sakit',
                 'unknown' => 'Belum Absen',
             ];
             $finalStatusIndonesian = $statusIndonesianMap[$finalStatus] ?? $finalStatus;
+            if ($finalStatus === 'late') {
+                $lateMinutes = $attendance?->late_minutes;
+                if (empty($lateMinutes) && $attendance?->check_in_at) {
+                    $endCheckIn = Carbon::parse($date->toDateString() . ' ' . $setting->check_in_end_time);
+                    $lateAt = (clone $endCheckIn)->subMinutes((int) $setting->late_tolerance_minutes);
+                    $checkInAt = Carbon::parse($attendance->check_in_at);
+                    $lateMinutes = (int) $checkInAt->diffInMinutes($lateAt);
+                }
+                if ($lateMinutes > 0) {
+                    $finalStatusIndonesian = "Terlambat ({$lateMinutes} Menit)";
+                }
+            }
 
-            $statusIjinIndonesianMap = [
+            $statusIzinIndonesianMap = [
                 'pending' => 'Menunggu',
                 'approved' => 'Disetujui',
                 'rejected' => 'Ditolak',
             ];
-            $statusIjinIndonesian = $leave ? ($statusIjinIndonesianMap[$leave->status] ?? $leave->status) : '-';
+            $statusIzinIndonesian = $leave ? ($statusIzinIndonesianMap[$leave->status] ?? $leave->status) : '-';
 
-            $jenisIjin = '-';
+            $jenisIzin = '-';
             if ($leave) {
-                $jenisIjin = $leave->type === 'absent' ? 'Ijin Tidak Masuk' : 'Ijin Pulang Lebih Awal';
+                $jenisIzin = $leave->type === 'absent' ? 'Izin Tidak Masuk' : 'Izin Pulang Lebih Awal';
             }
 
-            $alasanIjin = '-';
+            $alasanIzin = '-';
             if ($leave) {
-                $alasanIjin = $leave->reason === 'urgent' ? 'Urusan Penting/Mendadak' : ($leave->reason === 'sick' ? 'Sakit' : $leave->reason);
+                $alasanIzin = $leave->reason === 'urgent' ? 'Urusan Penting/Mendadak' : ($leave->reason === 'sick' ? 'Sakit' : $leave->reason);
             }
 
             $waktuTidakMasuk = '-';
@@ -256,11 +323,11 @@ class ReportController extends Controller
                 'Jurusan' => $sp->jurusan ?? $sp->classRoom?->jurusan ?? '-',
                 'Nama' => $sp->user->name,
                 'Status' => $finalStatusIndonesian,
-                'Status Ijin' => $statusIjinIndonesian,
-                'Jenis Ijin' => $jenisIjin,
-                'Alasan Ijin' => $alasanIjin,
+                'Status Izin' => $statusIzinIndonesian,
+                'Jenis Izin' => $jenisIzin,
+                'Alasan Izin' => $alasanIzin,
                 'Waktu Tidak Masuk' => $waktuTidakMasuk,
-                'Keterangan Ijin' => $leave?->keterangan ?? '-',
+                'Keterangan Izin' => $leave?->keterangan ?? '-',
                 'Masuk' => optional($attendance?->check_in_at)->format('H:i') ?? '-',
                 'Pulang' => optional($attendance?->check_out_at)->format('H:i') ?? '-',
             ];
@@ -353,14 +420,22 @@ class ReportController extends Controller
             $dateKey = Carbon::parse($attendance->date)->toDateString();
             $status = null;
 
-            if ($attendance->check_out_at !== null) {
-                $lateAt = Carbon::parse($dateKey . ' ' . $setting->check_in_start_time)
-                    ->addMinutes((int) $setting->late_tolerance_minutes);
-                $checkInAt = Carbon::parse($attendance->check_in_at);
+            if ($attendance->check_in_at !== null) {
+                $checkOutEnd = Carbon::parse($dateKey . ' ' . $setting->check_out_end_time);
+                $isMissingCheckout = $attendance->check_out_at === null;
+                $isPastOrEnded = Carbon::parse($dateKey)->lt(Carbon::today()) || (now()->greaterThan($checkOutEnd));
 
-                $status = $checkInAt->greaterThan($lateAt) ? 'late' : 'present';
-            } elseif ($attendance->check_in_at !== null && $attendance->check_out_at === null) {
-                $status = 'absent';
+                if ($isMissingCheckout && $isPastOrEnded) {
+                    $status = 'absent';
+                } else {
+                    $status = $attendance->status;
+                    if (empty($status)) {
+                        $endCheckIn = Carbon::parse($dateKey . ' ' . $setting->check_in_end_time);
+                        $lateAt = (clone $endCheckIn)->subMinutes((int) $setting->late_tolerance_minutes);
+                        $checkInAt = Carbon::parse($attendance->check_in_at);
+                        $status = $checkInAt->greaterThan($lateAt) ? 'late' : 'present';
+                    }
+                }
             }
 
             $attendanceMap[$attendance->user_id][$dateKey] = $status;
@@ -374,12 +449,14 @@ class ReportController extends Controller
 
         $dates = [];
         for ($cursor = $start->copy(); $cursor->lte($end); $cursor->addDay()) {
-            $dates[] = $cursor->toDateString();
+            if (!\App\Helpers\HolidayHelper::isHoliday($cursor)) {
+                $dates[] = $cursor->toDateString();
+            }
         }
 
         $summaryRows = $students->map(function ($student) use ($attendanceMap, $leaveMap, $dates, $classes) {
             $hadir = 0;
-            $ijin = 0;
+            $izin = 0;
             $telat = 0;
             $alfa = 0;
 
@@ -392,7 +469,7 @@ class ReportController extends Controller
                 } elseif ($status === 'late') {
                     $telat++;
                 } elseif ($status === 'leave' || $hasLeave) {
-                    $ijin++;
+                    $izin++;
                 } else {
                     $alfa++;
                 }
@@ -405,7 +482,7 @@ class ReportController extends Controller
                 'Kelas' => $class?->name ?? '-',
                 'Jurusan' => $student->jurusan ?? $class?->jurusan ?? '-',
                 'Hadir' => $hadir,
-                'Ijin' => $ijin,
+                'Izin' => $izin,
                 'Telat' => $telat,
                 'Alfa' => $alfa,
             ];

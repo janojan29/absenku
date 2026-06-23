@@ -33,7 +33,7 @@ class SummaryRecapExport implements FromCollection, WithHeadings, ShouldAutoSize
             'Kelas',
             'Jurusan',
             'Hadir',
-            'Ijin',
+            'Izin',
             'Telat',
             'Alfa',
         ];
@@ -77,7 +77,7 @@ class SummaryRecapExport implements FromCollection, WithHeadings, ShouldAutoSize
                     ],
                 ]);
 
-                // Center-align numeric columns (D-G: Hadir, Ijin, Telat, Alfa)
+                // Center-align numeric columns (D-G: Hadir, Izin, Telat, Alfa)
                 $numericRange = 'D2:G' . $highestRow;
                 if ($highestRow >= 2) {
                     $sheet->getStyle($numericRange)->applyFromArray([

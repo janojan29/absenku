@@ -33,12 +33,16 @@
                         <div class="flex flex-col sm:flex-row gap-3">
                             <div class="flex-1">
                                 <label class="block text-xs font-semibold uppercase tracking-wider text-bw-400 mb-1">Kelas</label>
-                                <select name="summary_class_room_id" class="form-select" style="height:38px; border-radius:10px; font-size:13px; padding-top:0; padding-bottom:0;" onchange="document.getElementById('summaryFilterForm').submit()">
-                                    <option value="">Semua Kelas</option>
-                                    @foreach ($classes as $class)
-                                        <option value="{{ $class->id }}" @selected((string) ($summaryFilter['class_room_id'] ?? '') === (string) $class->id)>{{ $class->jurusan ? $class->name.' : '.$class->jurusan : $class->name }}</option>
-                                    @endforeach
-                                </select>
+                                <x-expandable-select
+                                    name="summary_class_room_id"
+                                    :options="array_merge(
+                                        [['value' => '', 'label' => 'Semua Kelas']],
+                                        $classes->map(fn($c) => ['value' => $c->id, 'label' => $c->jurusan ? $c->name.' : '.$c->jurusan : $c->name])->toArray()
+                                    )"
+                                    :selected="(string) ($summaryFilter['class_room_id'] ?? '')"
+                                    placeholder="Semua Kelas"
+                                    onSelect="document.getElementById('summaryFilterForm').submit()"
+                                />
                             </div>
                             <div class="flex gap-2 flex-1">
                                 <div class="flex-1">
@@ -82,7 +86,7 @@
                             <th class="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider hidden sm:table-cell">Kelas</th>
                             <th class="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider hidden md:table-cell">Jurusan</th>
                             <th class="text-center py-3 px-4 text-xs font-semibold uppercase tracking-wider">Hadir</th>
-                            <th class="text-center py-3 px-4 text-xs font-semibold uppercase tracking-wider">Ijin</th>
+                            <th class="text-center py-3 px-4 text-xs font-semibold uppercase tracking-wider">Izin</th>
                             <th class="text-center py-3 px-4 text-xs font-semibold uppercase tracking-wider">Telat</th>
                             <th class="text-center py-3 px-4 text-xs font-semibold uppercase tracking-wider">Alfa</th>
                         </tr></thead>
@@ -93,7 +97,7 @@
                                     <td class="py-3 px-4 text-sm text-navy-600 hidden sm:table-cell">{{ $row['Kelas'] }}</td>
                                     <td class="py-3 px-4 text-sm text-navy-600 hidden md:table-cell">{{ $row['Jurusan'] }}</td>
                                     <td class="py-3 px-4 text-sm text-center font-semibold text-emerald-600">{{ $row['Hadir'] }}</td>
-                                    <td class="py-3 px-4 text-sm text-center font-semibold text-cyan-600">{{ $row['Ijin'] }}</td>
+                                    <td class="py-3 px-4 text-sm text-center font-semibold text-cyan-600">{{ $row['Izin'] }}</td>
                                     <td class="py-3 px-4 text-sm text-center font-semibold text-amber-600">{{ $row['Telat'] }}</td>
                                     <td class="py-3 px-4 text-sm text-center font-semibold text-red-600">{{ $row['Alfa'] }}</td>
                                 </tr>
@@ -119,24 +123,35 @@
                     <input type="hidden" name="tab" value="detail">
                     <div class="filter-panel">
                         <div class="flex flex-col sm:flex-row gap-3">
-                            <div class="sm:w-40">
+                            <div class="sm:w-48">
                                 <label class="block text-xs font-semibold uppercase tracking-wider text-bw-400 mb-1">Kelas</label>
-                                <select name="class_room_id" class="form-select" style="height:38px; border-radius:10px; font-size:13px; padding-top:0; padding-bottom:0;" onchange="document.getElementById('detailFilterForm').submit()">
-                                    <option value="">Semua</option>
-                                    @foreach ($classes as $class)
-                                        <option value="{{ $class->id }}" @selected((string) request('class_room_id', $classRoomId) === (string) $class->id)>{{ $class->jurusan ? $class->name.' : '.$class->jurusan : $class->name }}</option>
-                                    @endforeach
-                                </select>
+                                <x-expandable-select
+                                    name="class_room_id"
+                                    :options="array_merge(
+                                        [['value' => '', 'label' => 'Semua']],
+                                        $classes->map(fn($c) => ['value' => $c->id, 'label' => $c->jurusan ? $c->name.' : '.$c->jurusan : $c->name])->toArray()
+                                    )"
+                                    :selected="(string) request('class_room_id', $classRoomId)"
+                                    placeholder="Semua"
+                                    onSelect="document.getElementById('detailFilterForm').submit()"
+                                />
                             </div>
-                            <div class="sm:w-40">
+                            <div class="sm:w-48">
                                 <label class="block text-xs font-semibold uppercase tracking-wider text-bw-400 mb-1">Status</label>
-                                <select name="status" class="form-select" style="height:38px; border-radius:10px; font-size:13px; padding-top:0; padding-bottom:0;" onchange="document.getElementById('detailFilterForm').submit()">
-                                    <option value="">Semua</option>
-                                    <option value="present" @selected(request('status', $status) === 'present')>Hadir</option>
-                                    <option value="late" @selected(request('status', $status) === 'late')>Terlambat</option>
-                                    <option value="leave" @selected(request('status', $status) === 'leave')>Ijin</option>
-                                    <option value="absent" @selected(request('status', $status) === 'absent')>Alfa</option>
-                                </select>
+                                <x-expandable-select
+                                    name="status"
+                                    :options="[
+                                        ['value' => '', 'label' => 'Semua'],
+                                        ['value' => 'present', 'label' => 'Hadir'],
+                                        ['value' => 'late', 'label' => 'Terlambat'],
+                                        ['value' => 'leave', 'label' => 'Izin'],
+                                        ['value' => 'sick', 'label' => 'Sakit'],
+                                        ['value' => 'absent', 'label' => 'Alfa'],
+                                    ]"
+                                    :selected="(string) request('status', $status)"
+                                    placeholder="Semua"
+                                    onSelect="document.getElementById('detailFilterForm').submit()"
+                                />
                             </div>
                         </div>
                         <div class="flex flex-col sm:flex-row gap-3 mt-3 sm:items-end">
@@ -182,9 +197,9 @@
                             <th class="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider hidden sm:table-cell">Kelas</th>
                             <th class="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider">Nama</th>
                             <th class="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider">Status</th>
-                            <th class="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider hidden md:table-cell">Masuk</th>
-                            <th class="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider hidden md:table-cell">Pulang</th>
-                            <th class="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider hidden lg:table-cell">Keterangan</th>
+                            <th class="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider">Masuk</th>
+                            <th class="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider">Pulang</th>
+                            <th class="text-left py-3 px-4 text-xs font-semibold uppercase tracking-wider">Keterangan</th>
                         </tr></thead>
                         <tbody>
                             @forelse ($rows as $row)
@@ -194,14 +209,26 @@
                                     <td class="py-3 px-4 text-sm font-medium text-navy-800">{{ $row['Nama'] }}</td>
                                     <td class="py-3 px-4">
                                         @php
-                                            $statusMap = ['hadir' => 'present', 'terlambat' => 'late', 'alfa' => 'absent', 'ijin' => 'leave', 'belum absen' => 'unknown'];
-                                            $badgeStatus = $statusMap[strtolower($row['Status'])] ?? 'unknown';
+                                            $statusLower = strtolower($row['Status']);
+                                            if (str_starts_with($statusLower, 'hadir')) {
+                                                $badgeStatus = 'present';
+                                            } elseif (str_starts_with($statusLower, 'terlambat')) {
+                                                $badgeStatus = 'late';
+                                            } elseif (str_starts_with($statusLower, 'alfa')) {
+                                                $badgeStatus = 'absent';
+                                            } elseif (str_starts_with($statusLower, 'izin') || str_starts_with($statusLower, 'ijin')) {
+                                                $badgeStatus = 'leave';
+                                            } elseif (str_starts_with($statusLower, 'sakit')) {
+                                                $badgeStatus = 'sick';
+                                            } else {
+                                                $badgeStatus = 'unknown';
+                                            }
                                         @endphp
                                         <x-status-badge :status="$badgeStatus" :label="$row['Status']" />
                                     </td>
-                                    <td class="py-3 px-4 text-sm tabular-nums text-navy-600 hidden md:table-cell">{{ $row['Masuk'] }}</td>
-                                    <td class="py-3 px-4 text-sm tabular-nums text-navy-600 hidden md:table-cell">{{ $row['Pulang'] }}</td>
-                                    <td class="py-3 px-4 text-sm text-navy-600 hidden lg:table-cell max-w-[200px] truncate">{{ $row['Keterangan Ijin'] ?: '-' }}</td>
+                                    <td class="py-3 px-4 text-sm tabular-nums text-navy-600">{{ $row['Masuk'] }}</td>
+                                    <td class="py-3 px-4 text-sm tabular-nums text-navy-600">{{ $row['Pulang'] }}</td>
+                                    <td class="py-3 px-4 text-sm text-navy-600 max-w-[200px] truncate">{{ $row['Keterangan Izin'] ?: '-' }}</td>
                                 </tr>
                             @empty
                                 <tr><td colspan="7" class="py-8 text-center text-bw-400 text-sm">Tidak ada data.</td></tr>
@@ -211,9 +238,9 @@
                 </div>
             </div>
 
-            @if ($studentsPaginator->hasPages())
+            @if ($rows instanceof \Illuminate\Pagination\LengthAwarePaginator && $rows->hasPages())
                 <div class="mt-4 card p-4">
-                    {{ $studentsPaginator->links() }}
+                    {{ $rows->links() }}
                 </div>
             @endif
         @endif

@@ -16,11 +16,11 @@
                 @csrf
                 <div class="flex-1 w-full">
                     <label class="block text-xs font-medium text-navy-600 mb-1">Nama Kelas <span class="text-red-500">*</span></label>
-                    <input type="text" name="name" class="form-input-clean w-full" placeholder="Cth: X, XI, XII" value="{{ old('name') }}" required>
+                    <input type="text" name="name" class="form-input-clean w-full" placeholder="Cth: X MP 1, X TSM 1" value="{{ old('name') }}" required>
                 </div>
                 <div class="flex-1 w-full">
                     <label class="block text-xs font-medium text-navy-600 mb-1">Jurusan <span class="text-red-500">*</span></label>
-                    <input type="text" name="jurusan" class="form-input-clean w-full" placeholder="Cth: MIPA, IPS, TKJ" value="{{ old('jurusan') }}" required>
+                    <input type="text" name="jurusan" class="form-input-clean w-full" placeholder="Cth: Teknik Sepeda Motor" value="{{ old('jurusan') }}" required>
                 </div>
                 <button type="submit" class="btn-primary btn-ripple h-[42px] px-6 w-full sm:w-auto shrink-0">
                     Tambah

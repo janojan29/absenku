@@ -59,11 +59,11 @@
                 <th>Jurusan</th>
                 <th>Nama</th>
                 <th>Status</th>
-                <th>Status Ijin</th>
-                <th>Jenis Ijin</th>
-                <th>Alasan Ijin</th>
+                <th>Status Izin</th>
+                <th>Jenis Izin</th>
+                <th>Alasan Izin</th>
                 <th>Waktu Tidak Masuk</th>
-                <th>Keterangan Ijin</th>
+                <th>Keterangan Izin</th>
                 <th>Masuk</th>
                 <th>Pulang</th>
             </tr>
@@ -76,11 +76,11 @@
                     <td>{{ $row['Jurusan'] }}</td>
                     <td>{{ $row['Nama'] }}</td>
                     <td>{{ $row['Status'] }}</td>
-                    <td>{{ $row['Status Ijin'] }}</td>
-                    <td>{{ $row['Jenis Ijin'] }}</td>
-                    <td>{{ $row['Alasan Ijin'] }}</td>
+                    <td>{{ $row['Status Izin'] }}</td>
+                    <td>{{ $row['Jenis Izin'] }}</td>
+                    <td>{{ $row['Alasan Izin'] }}</td>
                     <td>{{ $row['Waktu Tidak Masuk'] }}</td>
-                    <td>{{ $row['Keterangan Ijin'] }}</td>
+                    <td>{{ $row['Keterangan Izin'] }}</td>
                     <td class="center">{{ $row['Masuk'] }}</td>
                     <td class="center">{{ $row['Pulang'] }}</td>
                 </tr>

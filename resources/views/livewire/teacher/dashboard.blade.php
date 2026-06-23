@@ -1,23 +1,27 @@
 <div class="space-y-6">
-    <div class="card animate-fade-slide-up">
+    <div class="card animate-fade-slide-up relative z-20">
         <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
             <div>
                 <h3 class="text-lg font-semibold text-navy-800">Ringkasan Hari Ini</h3>
                 <p class="text-sm text-bw-400">{{ $today->translatedFormat('d M Y') }}</p>
             </div>
             <div class="w-full sm:w-64">
-                <label class="block text-xs font-semibold uppercase tracking-wider text-bw-400">Kelas</label>
-                <select wire:model.live="classRoomId" class="form-select mt-1">
-                    <option value="">Semua Kelas</option>
-                    @foreach ($classes as $class)
-                        <option value="{{ $class->id }}">{{ $class->jurusan ? $class->name.' : '.$class->jurusan : $class->name }}</option>
-                    @endforeach
-                </select>
+                <label class="block text-xs font-semibold uppercase tracking-wider text-bw-400 mb-1">Kelas</label>
+                <x-expandable-select
+                    name="classRoomId"
+                    :options="array_merge(
+                        [['value' => '', 'label' => 'Semua Kelas']],
+                        $classes->map(fn($c) => ['value' => $c->id, 'label' => $c->jurusan ? $c->name.' : '.$c->jurusan : $c->name])->toArray()
+                    )"
+                    :selected="$classRoomId ?? ''"
+                    placeholder="Semua Kelas"
+                    wireClick="$set('classRoomId', :value)"
+                />
             </div>
         </div>
     </div>
 
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-slide-up stagger-1">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-slide-up stagger-1 relative z-10">
         <div class="card">
             <p class="text-xs font-semibold uppercase tracking-wider text-bw-400">Hadir</p>
             <p class="text-2xl font-bold text-emerald-600 mt-1">{{ $counts['present'] }}</p>
@@ -27,7 +31,7 @@
             <p class="text-2xl font-bold text-amber-600 mt-1">{{ $counts['late'] }}</p>
         </div>
         <div class="card">
-            <p class="text-xs font-semibold uppercase tracking-wider text-bw-400">Ijin</p>
+            <p class="text-xs font-semibold uppercase tracking-wider text-bw-400">Izin</p>
             <p class="text-2xl font-bold text-cyan-600 mt-1">{{ $counts['leave'] }}</p>
         </div>
         <div class="card">
@@ -36,7 +40,7 @@
         </div>
     </div>
 
-    <div class="table-wrapper animate-fade-slide-up stagger-2">
+    <div class="table-wrapper animate-fade-slide-up stagger-2 relative z-0">
         <div class="overflow-x-auto">
             <table class="w-full">
                 <thead>
@@ -52,6 +56,7 @@
                     @forelse ($students as $student)
                         @php
                             $status = $effectiveStatuses[$student->user_id] ?? 'unknown';
+                            $label = $statusLabels[$student->user_id] ?? null;
                             $attendance = $attendances->get($student->user_id);
                         @endphp
                         <tr class="table-row">
@@ -71,7 +76,7 @@
                                 <div class="text-xs text-bw-400">{{ $student->jurusan ?? $student->classRoom?->jurusan ?? '-' }}</div>
                             </td>
                             <td class="py-3 px-4">
-                                <x-status-badge :status="$status" />
+                                <x-status-badge :status="$status" :label="$label" />
                             </td>
                             <td class="py-3 px-4 text-sm text-navy-600 hidden md:table-cell">
                                 {{ $attendance?->check_in_at ? \Illuminate\Support\Carbon::parse($attendance->check_in_at)->format('H:i') : '-' }}

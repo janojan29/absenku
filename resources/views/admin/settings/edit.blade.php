@@ -74,7 +74,7 @@
                     <div class="mt-4">
                         <label for="late_tolerance_minutes" class="block text-xs font-semibold text-navy-600 uppercase tracking-wider mb-1.5">Toleransi Terlambat (Menit)</label>
                         <input id="late_tolerance_minutes" name="late_tolerance_minutes" type="number" class="form-input-clean w-full sm:w-1/2" value="{{ old('late_tolerance_minutes', $setting->late_tolerance_minutes) }}" required min="0" max="180" />
-                        <p class="text-xs text-bw-400 mt-1">Siswa dianggap terlambat jika absen lebih dari waktu toleransi (dihitung setelah jam Buka Absen Masuk).</p>
+                        <p class="text-xs text-bw-400 mt-1">Siswa dianggap terlambat jika absen pada rentang menit terakhir sebelum Tutup Absen Masuk (dihitung mundur dari jam Tutup Absen Masuk).</p>
                     </div>
                 </div>
 

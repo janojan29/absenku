@@ -68,7 +68,7 @@ class ReportController extends Controller
             'detail_start_date' => ['nullable', 'date'],
             'detail_end_date' => ['nullable', 'date'],
             'class_room_id' => ['nullable', 'integer', 'exists:class_rooms,id'],
-            'status' => ['nullable', 'string', 'in:present,late,absent,leave,unknown'],
+            'status' => ['nullable', 'string', 'in:present,late,absent,leave,sick,unknown'],
         ]);
 
         $startDate = isset($data['detail_start_date'])
@@ -93,11 +93,23 @@ class ReportController extends Controller
     {
         $rows = collect();
         for ($cursor = $startDate->copy(); $cursor->lte($endDate); $cursor->addDay()) {
+            if (\App\Helpers\HolidayHelper::isHoliday($cursor)) {
+                continue;
+            }
             $rows = $rows->concat($this->buildRowsForDate($cursor->copy(), $classRoomId));
         }
 
         if ($status) {
-            $rows = $rows->where('Status', $status)->values();
+            $statusIndonesianMap = [
+                'present' => 'Hadir',
+                'late' => 'Terlambat',
+                'absent' => 'Alfa',
+                'leave' => 'Izin',
+                'sick' => 'Sakit',
+                'unknown' => 'Belum Absen',
+            ];
+            $indonesianStatus = $statusIndonesianMap[$status] ?? $status;
+            $rows = $rows->where('Status', $indonesianStatus)->values();
         }
 
         return $rows->values();
@@ -133,42 +145,65 @@ class ReportController extends Controller
             $hasApprovedAbsentLeave = $leave && $leave->status === 'approved' && $leave->type === 'absent';
             $attendanceStatus = null;
 
-            if ($attendance && $attendance->check_out_at !== null) {
-                $lateAt = Carbon::parse($date->toDateString() . ' ' . $setting->check_in_start_time)
-                    ->addMinutes((int) $setting->late_tolerance_minutes);
-                $checkInAt = Carbon::parse($attendance->check_in_at);
+            if ($attendance && $attendance->check_in_at !== null) {
+                $checkOutEnd = Carbon::parse($date->toDateString() . ' ' . $setting->check_out_end_time);
+                $isMissingCheckout = $attendance->check_out_at === null;
+                $isPastOrEnded = $date->lt(Carbon::today()) || (now()->greaterThan($checkOutEnd));
 
-                $attendanceStatus = $checkInAt->greaterThan($lateAt) ? 'late' : 'present';
-            } elseif ($attendance && $attendance->check_in_at !== null && $attendance->check_out_at === null) {
-                $attendanceStatus = 'absent';
+                if ($isMissingCheckout && $isPastOrEnded) {
+                    $attendanceStatus = 'absent';
+                } else {
+                    $attendanceStatus = $attendance->status;
+                    if (empty($attendanceStatus)) {
+                        $endCheckIn = Carbon::parse($date->toDateString() . ' ' . $setting->check_in_end_time);
+                        $lateAt = (clone $endCheckIn)->subMinutes((int) $setting->late_tolerance_minutes);
+                        $checkInAt = Carbon::parse($attendance->check_in_at);
+                        $attendanceStatus = $checkInAt->greaterThan($lateAt) ? 'late' : 'present';
+                    }
+                }
+            } elseif ($attendance) {
+                $attendanceStatus = $attendance->status;
             }
 
-            $finalStatus = $attendanceStatus ?? ($hasApprovedAbsentLeave ? 'leave' : 'unknown');
+            $finalStatus = $attendanceStatus ?? ($hasApprovedAbsentLeave ? ($leave->reason === 'sick' ? 'sick' : 'leave') : 'unknown');
 
             $statusIndonesianMap = [
                 'present' => 'Hadir',
                 'late' => 'Terlambat',
                 'absent' => 'Alfa',
-                'leave' => 'Ijin',
+                'leave' => 'Izin',
+                'sick' => 'Sakit',
                 'unknown' => 'Belum Absen',
             ];
             $finalStatusIndonesian = $statusIndonesianMap[$finalStatus] ?? $finalStatus;
+            if ($finalStatus === 'late') {
+                $lateMinutes = $attendance?->late_minutes;
+                if (empty($lateMinutes) && $attendance?->check_in_at) {
+                    $endCheckIn = Carbon::parse($date->toDateString() . ' ' . $setting->check_in_end_time);
+                    $lateAt = (clone $endCheckIn)->subMinutes((int) $setting->late_tolerance_minutes);
+                    $checkInAt = Carbon::parse($attendance->check_in_at);
+                    $lateMinutes = (int) $checkInAt->diffInMinutes($lateAt);
+                }
+                if ($lateMinutes > 0) {
+                    $finalStatusIndonesian = "Terlambat ({$lateMinutes} Menit)";
+                }
+            }
 
-            $statusIjinIndonesianMap = [
+            $statusIzinIndonesianMap = [
                 'pending' => 'Menunggu',
                 'approved' => 'Disetujui',
                 'rejected' => 'Ditolak',
             ];
-            $statusIjinIndonesian = $leave ? ($statusIjinIndonesianMap[$leave->status] ?? $leave->status) : '-';
+            $statusIzinIndonesian = $leave ? ($statusIzinIndonesianMap[$leave->status] ?? $leave->status) : '-';
 
-            $jenisIjin = '-';
+            $jenisIzin = '-';
             if ($leave) {
-                $jenisIjin = $leave->type === 'absent' ? 'Ijin Tidak Masuk' : 'Ijin Pulang Lebih Awal';
+                $jenisIzin = $leave->type === 'absent' ? 'Izin Tidak Masuk' : 'Izin Pulang Lebih Awal';
             }
 
-            $alasanIjin = '-';
+            $alasanIzin = '-';
             if ($leave) {
-                $alasanIjin = $leave->reason === 'urgent'
+                $alasanIzin = $leave->reason === 'urgent'
                     ? 'Urusan Penting/Mendadak'
                     : ($leave->reason === 'sick' ? 'Sakit' : $leave->reason);
             }
@@ -193,11 +228,11 @@ class ReportController extends Controller
                 'Jurusan' => $sp->jurusan ?? $sp->classRoom?->jurusan ?? '-',
                 'Nama' => $sp->user->name,
                 'Status' => $finalStatusIndonesian,
-                'Status Ijin' => $statusIjinIndonesian,
-                'Jenis Ijin' => $jenisIjin,
-                'Alasan Ijin' => $alasanIjin,
+                'Status Izin' => $statusIzinIndonesian,
+                'Jenis Izin' => $jenisIzin,
+                'Alasan Izin' => $alasanIzin,
                 'Waktu Tidak Masuk' => $waktuTidakMasuk,
-                'Keterangan Ijin' => $leave?->keterangan ?? '-',
+                'Keterangan Izin' => $leave?->keterangan ?? '-',
                 'Masuk' => optional($attendance?->check_in_at)->format('H:i') ?? '-',
                 'Pulang' => optional($attendance?->check_out_at)->format('H:i') ?? '-',
             ];

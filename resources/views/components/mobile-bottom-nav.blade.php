@@ -91,7 +91,7 @@
                         <span class="mobile-bottom-nav-dot" aria-hidden="true"></span>
                     @endif
                     @if (!empty($item['badge']))
-                        <span class="mobile-bottom-nav-badge" aria-label="{{ $item['badge'] }} pengajuan ijin menunggu persetujuan">
+                        <span class="mobile-bottom-nav-badge" aria-label="{{ $item['badge'] }} pengajuan izin menunggu persetujuan">
                             {{ $item['badge'] > 99 ? '99+' : $item['badge'] }}
                         </span>
                     @endif

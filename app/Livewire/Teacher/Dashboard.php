@@ -21,7 +21,7 @@ class Dashboard extends Component
         return 'vendor.livewire.custom-tailwind';
     }
 
-    public ?int $classRoomId = null;
+    public $classRoomId = null;
 
     #[On('teacher-dashboard.refresh')]
     public function refresh(): void
@@ -47,6 +47,7 @@ class Dashboard extends Component
         $setting = SchoolSetting::singleton();
 
         $today = Carbon::today();
+        \Log::info('Dashboard classRoomId: ' . json_encode($this->classRoomId));
 
         $studentUserIds = StudentProfile::query()
             ->when($this->classRoomId, fn($q) => $q->where('class_room_id', $this->classRoomId))
@@ -72,30 +73,56 @@ class Dashboard extends Component
             ->orderBy('id')
             ->paginate(15);
 
-        $lateAt = Carbon::parse($today->toDateString() . ' ' . $setting->check_in_start_time)
-            ->addMinutes((int) $setting->late_tolerance_minutes);
+        $endCheckIn = Carbon::parse($today->toDateString() . ' ' . $setting->check_in_end_time);
+        $lateAt = (clone $endCheckIn)->subMinutes((int) $setting->late_tolerance_minutes);
 
         $effectiveStatuses = [];
+        $statusLabels = [];
+        $isHoliday = \App\Helpers\HolidayHelper::isHoliday($today);
+
         foreach ($studentUserIds as $userId) {
             $attendance = $attendances->get($userId);
             $leave = $approvedLeaves->get($userId);
 
             if ($attendance && $attendance->check_in_at !== null) {
                 $checkInAt = Carbon::parse($attendance->check_in_at);
-                $effectiveStatuses[$userId] = $checkInAt->greaterThan($lateAt) ? 'late' : 'present';
+                if ($checkInAt->greaterThan($lateAt)) {
+                    $effectiveStatuses[$userId] = 'late';
+                    $lateMinutes = $attendance->late_minutes;
+                    if (empty($lateMinutes)) {
+                        $lateMinutes = (int) $checkInAt->diffInMinutes($lateAt);
+                    }
+                    $statusLabels[$userId] = $lateMinutes > 0 ? "Terlambat ({$lateMinutes} Menit)" : "Terlambat";
+                } else {
+                    $effectiveStatuses[$userId] = 'present';
+                    $statusLabels[$userId] = 'Hadir';
+                }
             } elseif ($attendance && $attendance->status === 'leave') {
-                $effectiveStatuses[$userId] = 'leave';
+                $isSick = ($leave && $leave->reason === 'sick');
+                $effectiveStatuses[$userId] = $isSick ? 'sick' : 'leave';
+                $statusLabels[$userId] = $isSick ? 'Sakit' : 'Izin';
+            } elseif ($attendance && $attendance->status === 'sick') {
+                $effectiveStatuses[$userId] = 'sick';
+                $statusLabels[$userId] = 'Sakit';
             } elseif ($leave) {
-                $effectiveStatuses[$userId] = 'leave';
+                $isSick = $leave->reason === 'sick';
+                $effectiveStatuses[$userId] = $isSick ? 'sick' : 'leave';
+                $statusLabels[$userId] = $isSick ? 'Sakit' : 'Izin';
             } else {
-                $effectiveStatuses[$userId] = 'unknown';
+                if ($isHoliday) {
+                    $effectiveStatuses[$userId] = 'holiday';
+                    $statusLabels[$userId] = 'Libur';
+                } else {
+                    $effectiveStatuses[$userId] = 'unknown';
+                    $statusLabels[$userId] = 'Belum Absen';
+                }
             }
         }
 
         $counts = [
             'present' => collect($effectiveStatuses)->where(fn($value) => $value === 'present')->count(),
             'late' => collect($effectiveStatuses)->where(fn($value) => $value === 'late')->count(),
-            'leave' => collect($effectiveStatuses)->where(fn($value) => $value === 'leave')->count(),
+            'leave' => collect($effectiveStatuses)->where(fn($value) => in_array($value, ['leave', 'sick']))->count(),
             'unknown' => collect($effectiveStatuses)->where(fn($value) => $value === 'unknown')->count(),
         ];
 
@@ -105,6 +132,7 @@ class Dashboard extends Component
             'attendances' => $attendances,
             'approvedLeaves' => $approvedLeaves,
             'effectiveStatuses' => $effectiveStatuses,
+            'statusLabels' => $statusLabels,
             'counts' => $counts,
             'today' => $today,
         ]);

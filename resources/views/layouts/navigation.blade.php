@@ -40,7 +40,7 @@
                     @role('petugas_piket')
                         <x-nav-link :href="route('picket.leave-requests.index')" :active="request()->routeIs('picket.leave-requests.*')">
                             <span class="relative inline-flex items-center pr-6">
-                                {{ __('Persetujuan Ijin') }}
+                                {{ __('Persetujuan Izin') }}
                                 @if ($pendingLeaveCount > 0)
                                     <span class="absolute -top-2 -right-1 inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-semibold" style="background:#ef4444;color:#fff;border:1px solid #ef4444;box-shadow:0 4px 12px rgba(239,68,68,0.35);">
                                         {{ $pendingLeaveCount > 99 ? '99+' : $pendingLeaveCount }}
@@ -139,7 +139,7 @@
             @role('petugas_piket')
                 <x-responsive-nav-link :href="route('picket.leave-requests.index')" :active="request()->routeIs('picket.leave-requests.*')">
                     <span class="relative inline-flex items-center pr-6">
-                        {{ __('Persetujuan Ijin') }}
+                        {{ __('Persetujuan Izin') }}
                         @if ($pendingLeaveCount > 0)
                             <span class="absolute -top-2 -right-1 inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-semibold" style="background:#ef4444;color:#fff;border:1px solid #ef4444;box-shadow:0 4px 12px rgba(239,68,68,0.35);">
                                 {{ $pendingLeaveCount > 99 ? '99+' : $pendingLeaveCount }}

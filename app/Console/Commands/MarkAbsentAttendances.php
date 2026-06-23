@@ -27,6 +27,11 @@ class MarkAbsentAttendances extends Command
             return self::FAILURE;
         }
 
+        if (\App\Helpers\HolidayHelper::isHoliday($date)) {
+            $this->info("Skipped: {$dateString} is a holiday/weekend.");
+            return self::SUCCESS;
+        }
+
         /** @var Collection<int,int> $studentUserIds */
         $studentUserIds = StudentProfile::query()->pluck('user_id');
 

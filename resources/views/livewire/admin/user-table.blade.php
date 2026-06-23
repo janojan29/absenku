@@ -51,7 +51,7 @@
                                         'siswa' => 'badge-hadir',
                                         'guru', 'guru_walikelas' => 'badge-terlambat',
                                         'admin' => 'bg-navy-100 text-navy-700 border-navy-200',
-                                        default => 'badge-ijin'
+                                        default => 'badge-izin'
                                     };
                                 @endphp
                                 <span class="badge {{ $badgeClass }}">{{ $roleLabel }}</span>

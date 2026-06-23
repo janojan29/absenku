@@ -29,15 +29,38 @@
             <div class="card animate-fade-slide-up">
                 <div class="flex items-center gap-3 mb-2">
                     <svg class="w-5 h-5 text-accent-info" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>
-                    <span class="text-sm font-semibold text-navy-800">Pengajuan Ijin Hari Ini</span>
+                    <span class="text-sm font-semibold text-navy-800">
+                        @if(optional($todayLeaveSubmission->date)->isTomorrow())
+                            Pengajuan Izin Besok
+                        @else
+                            Pengajuan Izin Hari Ini
+                        @endif
+                    </span>
                     <x-status-badge :status="$leaveStatus" />
                 </div>
-                <p class="text-sm text-navy-600">Tanggal {{ optional($todayLeaveSubmission->date)->format('d/m/Y') ?? '-' }}</p>
+                <p class="text-sm text-navy-600">
+                    Tanggal {{ optional($todayLeaveSubmission->date)->format('d/m/Y') ?? '-' }} 
+                    @if(optional($todayLeaveSubmission->date)->isToday())
+                        (Hari Ini)
+                    @elseif(optional($todayLeaveSubmission->date)->isTomorrow())
+                        (Besok)
+                    @endif
+                </p>
+                @if ($leaveStatus === 'pending')
+                    <div class="mt-2.5 p-3 rounded-xl bg-amber-50 border border-amber-200/80 text-xs text-amber-800 flex items-start gap-2">
+                        <svg class="w-4 h-4 mt-0.5 shrink-0 text-amber-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"/>
+                        </svg>
+                        <div>
+                            <strong>PENTING:</strong> Segera hubungi Wali Kelas Anda melalui WhatsApp untuk melakukan konfirmasi dan mengirimkan bukti pendukung agar pengajuan izin ini dapat divalidasi dan disetujui.
+                        </div>
+                    </div>
+                @endif
                 @if (!empty($todayLeaveSubmission->decision_note))
                     <p class="text-xs text-bw-400 mt-1">Catatan: {{ $todayLeaveSubmission->decision_note }}</p>
                 @endif
                 @if (!$showLeaveForm)
-                    <p class="text-xs text-bw-400 mt-2">Form perijinan muncul kembali mulai jam pulang ({{ substr($setting->check_out_start_time, 0, 5) }}).</p>
+                    <p class="text-xs text-bw-400 mt-2">Form perizinan muncul kembali mulai jam pulang ({{ substr($setting->check_out_start_time, 0, 5) }}).</p>
                 @endif
             </div>
         @endif
@@ -103,11 +126,19 @@
 
 
                 {{-- Attendance Buttons --}}
-                @if (!empty($hasApprovedAbsentLeaveToday) && $hasApprovedAbsentLeaveToday)
+                @if (!empty($isHolidayToday) && $isHolidayToday)
+                    <div class="text-center p-5 rounded-xl bg-bw-100/50 border border-bw-200">
+                        <svg class="w-10 h-10 mx-auto text-bw-400 mb-2" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z"/>
+                        </svg>
+                        <div class="font-semibold text-navy-800">Hari Libur</div>
+                        <div class="text-sm text-bw-400 mt-1">Absensi masuk & pulang dinonaktifkan hari ini.</div>
+                    </div>
+                @elseif (!empty($hasApprovedAbsentLeaveToday) && $hasApprovedAbsentLeaveToday)
                     <div class="text-center p-5 rounded-xl bg-sky-50 border border-sky-200/70">
                         <svg class="w-10 h-10 mx-auto text-sky-500 mb-2" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
-                        <div class="font-semibold text-sky-700">Ijin Tidak Masuk Disetujui</div>
-                        <div class="text-sm text-sky-600 mt-1">Absensi hari ini dikunci otomatis sebagai ijin.</div>
+                        <div class="font-semibold text-sky-700">Izin Tidak Masuk Disetujui</div>
+                        <div class="text-sm text-sky-600 mt-1">Absensi hari ini dikunci otomatis sebagai izin.</div>
                     </div>
                 @elseif (!$attendance?->check_in_at)
                     @if ($canCheckInNow)
@@ -168,39 +199,65 @@
 
         {{-- Leave Request Form --}}
         @if ($showLeaveForm)
-        <div id="ijin" class="card animate-fade-slide-up stagger-2">
+        <div id="izin" class="card animate-fade-slide-up stagger-2">
             <div class="flex items-center gap-2 mb-5">
                 <svg class="w-5 h-5 text-accent-info" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>
-                <h3 class="font-semibold text-navy-800">Pengajuan Ijin</h3>
+                <h3 class="font-semibold text-navy-800">Pengajuan Izin</h3>
             </div>
-            <form method="POST" action="{{ route('leave-requests.store') }}" class="space-y-4">
+            <form method="POST" action="{{ route('leave-requests.store') }}" class="space-y-4"
+                  x-data="{
+                      leaveType: '{{ old('type', 'absent') }}',
+                      leaveDate: '{{ old('leave_date', now()->toDateString()) }}',
+                      leaveReason: '{{ old('reason', '') }}'
+                  }">
                 @csrf
+                {{-- Jenis Izin --}}
                 <div>
-                    <label for="type" class="block text-sm font-medium text-navy-700 mb-1.5">Jenis Ijin</label>
-                    <select id="type" name="type" class="form-select" required>
-                        <option value="absent" @selected(old('type', 'absent') === 'absent')>Ijin Tidak Masuk</option>
-                        <option value="early_leave" @selected(old('type') === 'early_leave')>Ijin Pulang Lebih Awal</option>
-                    </select>
+                    <label class="block text-sm font-medium text-navy-700 mb-1.5">Jenis Izin</label>
+                    <x-expandable-select
+                        name="type"
+                        :options="[
+                            ['value' => 'absent', 'label' => 'Izin Tidak Masuk'],
+                            ['value' => 'early_leave', 'label' => 'Izin Pulang Lebih Awal'],
+                        ]"
+                        :selected="old('type', 'absent')"
+                        placeholder="Pilih jenis izin"
+                    />
                 </div>
+
+                {{-- Waktu Izin --}}
                 <div id="leave-date-wrapper">
-                    <label for="leave_date" class="block text-sm font-medium text-navy-700 mb-1.5">Waktu Ijin</label>
-                    <select id="leave_date" name="leave_date" class="form-select">
-                        <option value="{{ now()->toDateString() }}" @selected(old('leave_date', now()->toDateString()) === now()->toDateString())>Hari Ini ({{ now()->format('d/m/Y') }})</option>
-                        <option value="{{ now()->copy()->addDay()->toDateString() }}" @selected(old('leave_date') === now()->copy()->addDay()->toDateString())>Besok ({{ now()->copy()->addDay()->format('d/m/Y') }})</option>
-                    </select>
-                    <p class="text-xs text-bw-400 mt-1">1 hari hanya boleh 1 kali pengajuan ijin.</p>
+                    <label class="block text-sm font-medium text-navy-700 mb-1.5">Waktu Izin</label>
+                    <x-expandable-select
+                        name="leave_date"
+                        :options="[
+                            ['value' => now()->toDateString(), 'label' => 'Hari Ini (' . now()->format('d/m/Y') . ')'],
+                            ['value' => now()->copy()->addDay()->toDateString(), 'label' => 'Besok (' . now()->copy()->addDay()->format('d/m/Y') . ')'],
+                        ]"
+                        :selected="old('leave_date', now()->toDateString())"
+                        placeholder="Pilih waktu"
+                    />
+                    <p class="text-xs text-bw-400 mt-1">1 hari hanya boleh 1 kali pengajuan izin.</p>
                 </div>
+
+                {{-- Alasan --}}
                 <div>
-                    <label for="reason" class="block text-sm font-medium text-navy-700 mb-1.5">Alasan</label>
-                    <select id="reason" name="reason" class="form-select" required>
-                        <option value="">-- Pilih Alasan --</option>
-                        <option value="urgent" @selected(old('reason') === 'urgent')>Urusan Penting/Mendadak</option>
-                        <option value="sick" @selected(old('reason') === 'sick')>Sakit</option>
-                    </select>
+                    <label class="block text-sm font-medium text-navy-700 mb-1.5">Alasan</label>
+                    <x-expandable-select
+                        name="reason"
+                        :options="[
+                            ['value' => '', 'label' => '-- Pilih Alasan --'],
+                            ['value' => 'urgent', 'label' => 'Urusan Penting/Mendadak'],
+                            ['value' => 'sick', 'label' => 'Sakit'],
+                        ]"
+                        :selected="old('reason', '')"
+                        placeholder="-- Pilih Alasan --"
+                    />
                 </div>
+
                 <div>
                     <label for="keterangan" class="block text-sm font-medium text-navy-700 mb-1.5">Keterangan</label>
-                    <textarea id="keterangan" name="keterangan" rows="3" class="form-input-clean" required placeholder="Jelaskan alasan ijin...">{{ old('keterangan') }}</textarea>
+                    <textarea id="keterangan" name="keterangan" rows="3" class="form-input-clean" required placeholder="Jelaskan alasan izin...">{{ old('keterangan') }}</textarea>
                 </div>
                 <div class="space-y-2">
                     <p id="leave-submit-warning" class="text-xs text-red-600 hidden"></p>
@@ -290,42 +347,51 @@
 
     <script>
         (function () {
-            const typeSelect = document.getElementById('type');
+            const typeInput = document.querySelector('input[name="type"]');
             const leaveDateWrapper = document.getElementById('leave-date-wrapper');
-            const leaveDateInput = document.getElementById('leave_date');
+            const leaveDateInput = document.querySelector('input[name="leave_date"]');
             const submitButton = document.getElementById('leave-submit-button');
             const submitWarning = document.getElementById('leave-submit-warning');
             const absentBlockedDates = @json($absentBlockedDates ?? []);
             const earlyLeaveBlockedToday = @json($earlyLeaveBlockedToday ?? false);
-            if (!typeSelect || !leaveDateWrapper || !leaveDateInput || !submitButton || !submitWarning) return;
-            const syncLeaveDateVisibility = () => {
-                const isAbsent = typeSelect.value === 'absent';
-                leaveDateWrapper.style.display = isAbsent ? '' : 'none';
-                leaveDateInput.disabled = !isAbsent;
-                leaveDateInput.required = isAbsent;
-                
+            if (!typeInput || !submitButton || !submitWarning) return;
+
+            const syncState = () => {
+                const isAbsent = typeInput.value === 'absent';
+                // Show/hide date wrapper
+                if (leaveDateWrapper) {
+                    leaveDateWrapper.style.display = isAbsent ? '' : 'none';
+                }
+
                 let isBlocked = false;
-                if (isAbsent) {
-                    const targetDate = leaveDateInput.value;
-                    isBlocked = absentBlockedDates.includes(targetDate);
-                } else {
+                if (isAbsent && leaveDateInput) {
+                    isBlocked = absentBlockedDates.includes(leaveDateInput.value);
+                } else if (!isAbsent) {
                     isBlocked = earlyLeaveBlockedToday;
                 }
-                
                 submitButton.disabled = isBlocked;
                 submitButton.classList.toggle('opacity-50', isBlocked);
                 submitButton.classList.toggle('cursor-not-allowed', isBlocked);
-                if (isBlocked) { 
-                    submitWarning.textContent = 'Pengajuan ijin untuk tanggal ini sudah ada.'; 
-                    submitWarning.classList.remove('hidden'); 
-                } else { 
-                    submitWarning.classList.add('hidden'); 
-                    submitWarning.textContent = ''; 
+                if (isBlocked) {
+                    submitWarning.textContent = 'Pengajuan izin untuk tanggal ini sudah ada.';
+                    submitWarning.classList.remove('hidden');
+                } else {
+                    submitWarning.classList.add('hidden');
+                    submitWarning.textContent = '';
                 }
             };
-            typeSelect.addEventListener('change', syncLeaveDateVisibility);
-            leaveDateInput.addEventListener('change', syncLeaveDateVisibility);
-            syncLeaveDateVisibility();
+
+            // Watch hidden inputs for value changes (driven by expandable-select component)
+            const observer = new MutationObserver(syncState);
+            observer.observe(typeInput, { attributes: true, attributeFilter: ['value'] });
+            typeInput.addEventListener('change', syncState);
+            typeInput.addEventListener('input', syncState);
+            if (leaveDateInput) {
+                observer.observe(leaveDateInput, { attributes: true, attributeFilter: ['value'] });
+                leaveDateInput.addEventListener('change', syncState);
+                leaveDateInput.addEventListener('input', syncState);
+            }
+            syncState();
         })();
     </script>
 </x-app-layout>

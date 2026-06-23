@@ -23,7 +23,6 @@ class TriggerAttendanceNotifications
 
             $markAbsentAt = Carbon::today()
                 ->setTimeFromTimeString((string) $setting->check_in_end_time)
-                ->addMinutes((int) $setting->late_tolerance_minutes)
                 ->addMinutes(5);
 
             $missingCheckoutAt = Carbon::today()

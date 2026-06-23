@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="utf-8">
-    <title>Riwayat Pengajuan Ijin</title>
+    <title>Riwayat Pengajuan Izin</title>
     <style>
         @page {
             size: A4 landscape;
@@ -76,7 +76,7 @@
     </style>
 </head>
 <body>
-    <div class="title">Riwayat Pengajuan Ijin / Keterangan</div>
+    <div class="title">Riwayat Pengajuan Izin / Keterangan</div>
     <div class="subtitle">Dicetak pada: {{ now()->format('d/m/Y H:i') }}</div>
 
     <table>

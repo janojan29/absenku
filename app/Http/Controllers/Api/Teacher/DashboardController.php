@@ -52,39 +52,71 @@ class DashboardController extends Controller
             ->orderBy('id')
             ->get();
 
-        $lateAt = Carbon::parse($today->toDateString() . ' ' . $setting->check_in_start_time)
-            ->addMinutes((int) $setting->late_tolerance_minutes);
+        $endCheckIn = Carbon::parse($today->toDateString() . ' ' . $setting->check_in_end_time);
+        $lateAt = (clone $endCheckIn)->subMinutes((int) $setting->late_tolerance_minutes);
 
         $effectiveStatuses = [];
+        $statusLabels = [];
+        $keteranganMap = [];
+        $isHoliday = \App\Helpers\HolidayHelper::isHoliday($today);
+
         foreach ($students as $sp) {
             $attendance = $attendances->get($sp->user_id);
             $leave = $approvedLeaves->get($sp->user_id);
 
             if ($attendance && $attendance->check_in_at !== null) {
                 $checkInAt = Carbon::parse($attendance->check_in_at);
-                $effectiveStatuses[$sp->user_id] = $checkInAt->greaterThan($lateAt) ? 'late' : 'present';
+                if ($checkInAt->greaterThan($lateAt)) {
+                    $effectiveStatuses[$sp->user_id] = 'late';
+                    $lateMinutes = $attendance->late_minutes;
+                    if (empty($lateMinutes)) {
+                        $lateMinutes = (int) $checkInAt->diffInMinutes($lateAt);
+                    }
+                    $statusLabels[$sp->user_id] = $lateMinutes > 0 ? "Terlambat ({$lateMinutes} Menit)" : "Terlambat";
+                } else {
+                    $effectiveStatuses[$sp->user_id] = 'present';
+                    $statusLabels[$sp->user_id] = 'Hadir';
+                }
             } elseif ($attendance && $attendance->status === 'leave') {
-                $effectiveStatuses[$sp->user_id] = 'leave';
+                $isSick = ($leave && $leave->reason === 'sick');
+                $effectiveStatuses[$sp->user_id] = $isSick ? 'sick' : 'leave';
+                $statusLabels[$sp->user_id] = $isSick ? 'Sakit' : 'Izin';
+                $keteranganMap[$sp->user_id] = $leave?->keterangan ?? '-';
+            } elseif ($attendance && $attendance->status === 'sick') {
+                $effectiveStatuses[$sp->user_id] = 'sick';
+                $statusLabels[$sp->user_id] = 'Sakit';
+                $keteranganMap[$sp->user_id] = $leave?->keterangan ?? '-';
             } elseif ($leave) {
-                $effectiveStatuses[$sp->user_id] = 'leave';
+                $isSick = $leave->reason === 'sick';
+                $effectiveStatuses[$sp->user_id] = $isSick ? 'sick' : 'leave';
+                $statusLabels[$sp->user_id] = $isSick ? 'Sakit' : 'Izin';
+                $keteranganMap[$sp->user_id] = $leave->keterangan ?? '-';
             } else {
-                $effectiveStatuses[$sp->user_id] = 'unknown';
+                if ($isHoliday) {
+                    $effectiveStatuses[$sp->user_id] = 'holiday';
+                    $statusLabels[$sp->user_id] = 'Libur';
+                } else {
+                    $effectiveStatuses[$sp->user_id] = 'unknown';
+                    $statusLabels[$sp->user_id] = 'Belum Absen';
+                }
             }
         }
 
         $counts = [
             'present' => collect($effectiveStatuses)->where(fn ($value) => $value === 'present')->count(),
             'late' => collect($effectiveStatuses)->where(fn ($value) => $value === 'late')->count(),
-            'leave' => collect($effectiveStatuses)->where(fn ($value) => $value === 'leave')->count(),
+            'leave' => collect($effectiveStatuses)->where(fn ($value) => in_array($value, ['leave', 'sick']))->count(),
             'unknown' => collect($effectiveStatuses)->where(fn ($value) => $value === 'unknown')->count(),
         ];
 
-        $rows = $students->map(function ($sp) use ($effectiveStatuses) {
+        $rows = $students->map(function ($sp) use ($effectiveStatuses, $statusLabels, $keteranganMap) {
             return [
                 'name' => $sp->user?->name ?? '-',
                 'class_room' => $sp->classRoom?->name ?? '-',
                 'jurusan' => $sp->jurusan ?? $sp->classRoom?->jurusan ?? '-',
                 'status' => $effectiveStatuses[$sp->user_id] ?? 'unknown',
+                'status_label' => $statusLabels[$sp->user_id] ?? 'Belum Absen',
+                'keterangan' => $keteranganMap[$sp->user_id] ?? '-',
             ];
         })->values();
 

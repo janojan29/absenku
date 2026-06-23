@@ -335,4 +335,65 @@ class StudentController extends Controller
             ->route('admin.students.index')
             ->with('status', 'Semua akun siswa pada kelas terpilih berhasil dihapus.');
     }
+
+    public function bulkUpdateClass(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'from_class_room_id' => ['required', 'integer', 'exists:class_rooms,id'],
+            'to_class_room_id' => ['required', 'integer', 'exists:class_rooms,id', 'different:from_class_room_id'],
+        ], [
+            'to_class_room_id.different' => 'Kelas asal dan kelas tujuan harus berbeda.',
+        ]);
+
+        $fromClassId = (int) $data['from_class_room_id'];
+        $toClassId = (int) $data['to_class_room_id'];
+
+        $fromClass = ClassRoom::query()->findOrFail($fromClassId);
+        $toClass = ClassRoom::query()->findOrFail($toClassId);
+
+        if (mb_strtolower(trim($fromClass->jurusan ?? '')) !== mb_strtolower(trim($toClass->jurusan ?? ''))) {
+            return redirect()
+                ->route('admin.students.index')
+                ->withErrors([
+                    'to_class_room_id' => 'Jurusan kelas asal dan kelas tujuan harus sama.',
+                ]);
+        }
+
+        $toClassHasStudents = StudentProfile::query()
+            ->where('class_room_id', $toClassId)
+            ->exists();
+
+        if ($toClassHasStudents) {
+            return redirect()
+                ->route('admin.students.index')
+                ->withErrors([
+                    'to_class_room_id' => 'Kelas tujuan masih memiliki siswa. Kosongkan kelas tujuan terlebih dahulu untuk menghindari penumpukan.',
+                ]);
+        }
+
+        $count = StudentProfile::query()
+            ->where('class_room_id', $fromClassId)
+            ->count();
+
+        if ($count === 0) {
+            return redirect()
+                ->route('admin.students.index')
+                ->withErrors([
+                    'from_class_room_id' => 'Tidak ada siswa pada kelas asal tersebut.',
+                ]);
+        }
+
+        DB::transaction(function () use ($fromClassId, $toClassId, $toClass) {
+            StudentProfile::query()
+                ->where('class_room_id', $fromClassId)
+                ->update([
+                    'class_room_id' => $toClassId,
+                    'jurusan' => $toClass->jurusan,
+                ]);
+        });
+
+        return redirect()
+            ->route('admin.students.index')
+            ->with('status', "Berhasil memindahkan {$count} siswa ke kelas {$toClass->name}.");
+    }
 }

@@ -58,7 +58,7 @@
                 <th style="width:15%">Kelas</th>
                 <th style="width:19%">Jurusan</th>
                 <th style="width:9%" class="center">Hadir</th>
-                <th style="width:9%" class="center">Ijin</th>
+                <th style="width:9%" class="center">Izin</th>
                 <th style="width:9%" class="center">Telat</th>
                 <th style="width:9%" class="center">Alfa</th>
             </tr>
@@ -70,7 +70,7 @@
                     <td>{{ $row['Kelas'] }}</td>
                     <td>{{ $row['Jurusan'] }}</td>
                     <td class="center">{{ $row['Hadir'] }}</td>
-                    <td class="center">{{ $row['Ijin'] }}</td>
+                    <td class="center">{{ $row['Izin'] }}</td>
                     <td class="center">{{ $row['Telat'] }}</td>
                     <td class="center">{{ $row['Alfa'] }}</td>
                 </tr>

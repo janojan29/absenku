@@ -22,12 +22,30 @@
     <div class="space-y-6">
         {{-- Bulk Class Update --}}
         <div class="card animate-fade-slide-up">
-            <form method="POST" action="{{ route('admin.students.bulk-class') }}" class="filter-panel filter-form">
+            <form method="POST" action="{{ route('admin.students.bulk-class') }}" class="filter-panel filter-form"
+                  x-data="{ fromClassId: '', toClassId: '' }">
                 @csrf
                 <div class="flex flex-col sm:flex-row sm:items-end gap-3">
                     <div class="flex-1">
                         <label class="text-xs text-bw-400 font-semibold uppercase tracking-wider">Kelas Asal</label>
-                        <select name="from_class_room_id" class="form-select h-[42px] mt-1" required>
+                        <select name="from_class_room_id" class="form-select h-[42px] mt-1" x-model="fromClassId" required
+                                @change="
+                                    toClassId = '';
+                                    const toSel = $refs.toClassSelect;
+                                    while (toSel.options.length > 1) { toSel.remove(1); }
+                                    const fromId = parseInt(fromClassId);
+                                    if (!fromId) return;
+                                    const allClasses = {{ Js::from($classes->map(fn($c) => ['id' => $c->id, 'name' => $c->name, 'jurusan' => trim($c->jurusan ?? '')])) }};
+                                    const selected = allClasses.find(c => c.id === fromId);
+                                    if (!selected) return;
+                                    const filtered = allClasses.filter(c => c.id !== fromId && (c.jurusan || '').trim().toLowerCase() === (selected.jurusan || '').trim().toLowerCase());
+                                    filtered.forEach(function(item) {
+                                        const opt = document.createElement('option');
+                                        opt.value = item.id;
+                                        opt.textContent = item.name + ' \u2014 ' + (item.jurusan || '-');
+                                        toSel.appendChild(opt);
+                                    });
+                                ">
                             <option value="">Pilih kelas asal</option>
                             @foreach ($classes as $class)
                                 <option value="{{ $class->id }}">{{ $class->name }} — {{ $class->jurusan ?? '-' }}</option>
@@ -36,11 +54,8 @@
                     </div>
                     <div class="flex-1">
                         <label class="text-xs text-bw-400 font-semibold uppercase tracking-wider">Kelas Tujuan</label>
-                        <select name="to_class_room_id" class="form-select h-[42px] mt-1" required>
+                        <select name="to_class_room_id" class="form-select h-[42px] mt-1" x-model="toClassId" :disabled="!fromClassId" required x-ref="toClassSelect">
                             <option value="">Pilih kelas tujuan</option>
-                            @foreach ($classes as $class)
-                                <option value="{{ $class->id }}">{{ $class->name }} — {{ $class->jurusan ?? '-' }}</option>
-                            @endforeach
                         </select>
                     </div>
                     <div class="w-full sm:w-auto">

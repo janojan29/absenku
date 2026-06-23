@@ -28,17 +28,18 @@ class LeaveApprovalService
                 'decision_note' => $decisionNote,
             ]);
 
-            if ($leaveRequest->type === 'absent') {
+            if ($leaveRequest->type === 'absent' && !\App\Helpers\HolidayHelper::isHoliday($leaveRequest->date)) {
+                $statusToSet = $leaveRequest->reason === 'sick' ? 'sick' : 'leave';
                 Attendance::query()->updateOrCreate(
                     ['user_id' => $leaveRequest->user_id, 'date' => $leaveRequest->date->toDateString()],
-                    ['status' => 'leave'],
+                    ['status' => $statusToSet],
                 );
             }
 
             event(new LeaveRequestUpdated($leaveRequest));
 
             $user = $leaveRequest->user()->with('studentProfile')->first();
-            $message = 'Pengajuan ijin kamu untuk tanggal ' . $leaveRequest->date->format('d/m/Y') . ' telah DISETUJUI.';
+            $message = 'Pengajuan izin kamu untuk tanggal ' . $leaveRequest->date->format('d/m/Y') . ' telah DISETUJUI.';
 
             if (! empty($user?->whatsapp_number)) {
                 SendWhatsAppMessage::dispatch(
@@ -82,7 +83,7 @@ class LeaveApprovalService
             event(new LeaveRequestUpdated($leaveRequest));
 
             $user = $leaveRequest->user()->with('studentProfile')->first();
-            $message = 'Pengajuan ijin kamu untuk tanggal ' . $leaveRequest->date->format('d/m/Y') . ' telah DITOLAK.';
+            $message = 'Pengajuan izin kamu untuk tanggal ' . $leaveRequest->date->format('d/m/Y') . ' telah DITOLAK.';
 
             if (! empty($user?->whatsapp_number)) {
                 SendWhatsAppMessage::dispatch(

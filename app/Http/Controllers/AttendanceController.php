@@ -27,8 +27,10 @@ class AttendanceController extends Controller
         $recent = Attendance::query()
             ->where('user_id', $user->id)
             ->orderByDesc('date')
-            ->limit(7)
-            ->get();
+            ->get()
+            ->filter(fn ($item) => !\App\Helpers\HolidayHelper::isHoliday($item->date))
+            ->take(7)
+            ->values();
 
         $setting = SchoolSetting::singleton();
 
@@ -36,6 +38,7 @@ class AttendanceController extends Controller
             ->where('user_id', $user->id)
             ->where(function($query) use ($today) {
                 $query->whereDate('date', $today)
+                      ->orWhereDate('date', $today->copy()->addDay())
                       ->orWhereDate('decided_at', $today);
             })
             ->orderByDesc('created_at')
@@ -75,26 +78,22 @@ class AttendanceController extends Controller
         $checkOutEnd = Carbon::today()->setTimeFromTimeString($setting->check_out_end_time);
         $now = now();
 
+        $isHolidayToday = \App\Helpers\HolidayHelper::isHoliday($today);
+
         $hasReachedCheckInStart = $now->greaterThanOrEqualTo($checkInStart);
         $isAfterCheckInEnd = $now->greaterThan($checkInEnd);
-        $canCheckInNow = $hasReachedCheckInStart && ! $isAfterCheckInEnd;
+        $canCheckInNow = $hasReachedCheckInStart && ! $isAfterCheckInEnd && !$isHolidayToday;
 
         $hasReachedCheckOutStart = $now->greaterThanOrEqualTo($checkOutStart);
         $isAfterCheckOutEnd = $now->greaterThan($checkOutEnd);
-        $canCheckOutNow = $hasReachedCheckOutStart && ! $isAfterCheckOutEnd;
+        $canCheckOutNow = $hasReachedCheckOutStart && ! $isAfterCheckOutEnd && !$isHolidayToday;
 
         if ($hasApprovedAbsentLeaveToday) {
             $canCheckInNow = false;
             $canCheckOutNow = false;
         }
 
-        $hasPendingOrApprovedLeaveToday = LeaveRequest::query()
-            ->where('user_id', $user->id)
-            ->whereDate('date', $today)
-            ->whereIn('status', ['pending', 'approved'])
-            ->exists();
-
-        $showLeaveForm = ! $hasPendingOrApprovedLeaveToday;
+        $showLeaveForm = true;
 
         $recentDates = $recent->pluck('date')->map(fn($d) => $d->toDateString())->all();
         $leaveRequests = LeaveRequest::query()
@@ -119,6 +118,7 @@ class AttendanceController extends Controller
             'absentBlockedDates' => $absentBlockedDates,
             'earlyLeaveBlockedToday' => $earlyLeaveBlockedToday,
             'leaveRequests' => $leaveRequests,
+            'isHolidayToday' => $isHolidayToday,
         ]);
     }
 

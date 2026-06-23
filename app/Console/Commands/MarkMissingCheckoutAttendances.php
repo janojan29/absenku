@@ -25,6 +25,11 @@ class MarkMissingCheckoutAttendances extends Command
             return self::FAILURE;
         }
 
+        if (\App\Helpers\HolidayHelper::isHoliday($date)) {
+            $this->info("Skipped: {$dateString} is a holiday/weekend.");
+            return self::SUCCESS;
+        }
+
         $updated = 0;
 
         Attendance::query()

@@ -30,6 +30,12 @@ class AttendanceService
         $setting = SchoolSetting::singleton();
         $today = Carbon::today();
 
+        if (\App\Helpers\HolidayHelper::isHoliday($today)) {
+            throw ValidationException::withMessages([
+                'check_in' => 'Hari ini adalah hari libur. Absen masuk dinonaktifkan.',
+            ]);
+        }
+
         $hasApprovedLeaveToday = LeaveRequest::query()
             ->where('user_id', $user->id)
             ->whereDate('date', $today)
@@ -46,7 +52,7 @@ class AttendanceService
 
         if ($hasApprovedAbsentLeave) {
             throw ValidationException::withMessages([
-                'check_in' => 'Ijin tidak masuk kamu untuk hari ini sudah disetujui, jadi absen masuk dinonaktifkan.',
+                'check_in' => 'Izin tidak masuk kamu untuk hari ini sudah disetujui, jadi absen masuk dinonaktifkan.',
             ]);
         }
 
@@ -65,7 +71,7 @@ class AttendanceService
 
         $start = Carbon::today()->setTimeFromTimeString($setting->check_in_start_time);
         $end = Carbon::today()->setTimeFromTimeString($setting->check_in_end_time);
-        $lateAt = (clone $start)->addMinutes((int) $setting->late_tolerance_minutes);
+        $lateAt = (clone $end)->subMinutes((int) $setting->late_tolerance_minutes);
         $now = now();
 
         if ($now->lessThan($start)) {
@@ -81,7 +87,7 @@ class AttendanceService
         }
 
         $status = $now->greaterThan($lateAt) ? 'late' : 'present';
-        $lateMinutes = $status === 'late' ? (int) abs($now->diffInMinutes($start)) : null;
+        $lateMinutes = $status === 'late' ? (int) abs($now->diffInMinutes($lateAt)) : null;
 
         $alreadyCheckedIn = false;
 
@@ -134,6 +140,12 @@ class AttendanceService
         $setting = SchoolSetting::singleton();
         $today = Carbon::today();
 
+        if (\App\Helpers\HolidayHelper::isHoliday($today)) {
+            throw ValidationException::withMessages([
+                'check_out' => 'Hari ini adalah hari libur. Absen pulang dinonaktifkan.',
+            ]);
+        }
+
         $hasApprovedAbsentLeave = LeaveRequest::query()
             ->where('user_id', $user->id)
             ->whereDate('date', $today)
@@ -143,7 +155,7 @@ class AttendanceService
 
         if ($hasApprovedAbsentLeave) {
             throw ValidationException::withMessages([
-                'check_out' => 'Ijin tidak masuk kamu untuk hari ini sudah disetujui, jadi absen pulang dinonaktifkan.',
+                'check_out' => 'Izin tidak masuk kamu untuk hari ini sudah disetujui, jadi absen pulang dinonaktifkan.',
             ]);
         }
 

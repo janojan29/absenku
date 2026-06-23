@@ -1,4 +1,4 @@
-<div wire:poll.5s class="space-y-6">
+<div wire:poll.30s class="space-y-6">
     {{-- Error & Status Messages --}}
     @if ($errors->any())
         <div class="card border-accent-danger/30 bg-red-50/80 animate-fade-slide-up">
@@ -25,7 +25,7 @@
             </h3>
             <span class="text-xs text-electric-200/80 flex items-center gap-1">
                 <svg class="w-3.5 h-3.5 animate-spin-smooth" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
-                Segarkan otomatis 5 detik
+                Segarkan otomatis 30 detik
             </span>
         </div>
 
@@ -49,7 +49,7 @@
 
                     {{-- Type Badge --}}
                     <div class="flex items-center gap-2">
-                        <span class="badge {{ $leave->type === 'absent' ? 'badge-ijin' : 'badge-terlambat' }}">
+                        <span class="badge {{ $leave->type === 'absent' ? 'badge-izin' : 'badge-terlambat' }}">
                             <span class="badge-dot"></span>
                             {{ $leave->type === 'absent' ? 'Tidak Masuk' : 'Pulang Awal' }}
                         </span>
@@ -107,7 +107,7 @@
     {{-- History Section --}}
     <div class="card">
         <div class="flex items-center justify-between mb-5">
-            <h3 class="font-semibold text-navy-800">Riwayat Ijin</h3>
+            <h3 class="font-semibold text-navy-800">Riwayat Izin</h3>
             <span class="text-xs text-electric-200/80">Pengajuan yang sudah diproses</span>
         </div>
 
@@ -126,23 +126,35 @@
                     </div>
 
                     {{-- Status --}}
-                    <div class="sm:w-40">
+                    <div class="sm:w-44">
                         <label class="block text-xs font-semibold uppercase tracking-wider text-bw-400 mb-1">Status</label>
-                        <select wire:model.live="filterStatus" class="form-select" style="height:38px; border-radius:10px; font-size:13px; padding-top:0; padding-bottom:0;">
-                            <option value="">Semua</option>
-                            <option value="approved">Disetujui</option>
-                            <option value="rejected">Ditolak</option>
-                        </select>
+                        <x-expandable-select
+                            name="filterStatus"
+                            :options="[
+                                ['value' => '', 'label' => 'Semua'],
+                                ['value' => 'approved', 'label' => 'Disetujui'],
+                                ['value' => 'rejected', 'label' => 'Ditolak'],
+                            ]"
+                            :selected="$filterStatus ?? ''"
+                            placeholder="Semua"
+                            wireClick="$set('filterStatus', :value)"
+                        />
                     </div>
 
                     {{-- Jenis --}}
-                    <div class="sm:w-40">
+                    <div class="sm:w-44">
                         <label class="block text-xs font-semibold uppercase tracking-wider text-bw-400 mb-1">Jenis</label>
-                        <select wire:model.live="filterType" class="form-select" style="height:38px; border-radius:10px; font-size:13px; padding-top:0; padding-bottom:0;">
-                            <option value="">Semua</option>
-                            <option value="absent">Tidak Masuk</option>
-                            <option value="early_leave">Pulang Awal</option>
-                        </select>
+                        <x-expandable-select
+                            name="filterType"
+                            :options="[
+                                ['value' => '', 'label' => 'Semua'],
+                                ['value' => 'absent', 'label' => 'Tidak Masuk'],
+                                ['value' => 'early_leave', 'label' => 'Pulang Awal'],
+                            ]"
+                            :selected="$filterType ?? ''"
+                            placeholder="Semua"
+                            wireClick="$set('filterType', :value)"
+                        />
                     </div>
                 </div>
 
@@ -160,7 +172,7 @@
                     </div>
 
                     <div class="sm:w-auto">
-                        <button wire:click="resetFilters" type="button" class="btn-secondary w-full sm:w-auto" style="height:38px; min-height:38px; border-radius:10px; font-size:12px; padding:0 14px; white-space:nowrap;">
+                        <button wire:click="resetFilters" @click="$dispatch('reset-select-filters')" type="button" class="btn-secondary w-full sm:w-auto" style="height:38px; min-height:38px; border-radius:10px; font-size:12px; padding:0 14px; white-space:nowrap;">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182M2.985 19.644l3.181-3.183"/></svg>
                             Reset
                         </button>
@@ -181,7 +193,7 @@
             </button>
         </div>
 
-        <div class="table-wrapper -mx-6">
+        <div class="table-wrapper">
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead>
@@ -212,7 +224,7 @@
                                     @if($search || $filterStatus || $filterType || $filterDateFrom || $filterDateTo)
                                         Tidak ada riwayat yang cocok dengan filter.
                                     @else
-                                        Belum ada riwayat ijin.
+                                        Belum ada riwayat izin.
                                     @endif
                                 </td>
                             </tr>

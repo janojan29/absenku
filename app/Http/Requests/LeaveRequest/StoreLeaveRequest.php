@@ -29,8 +29,8 @@ class StoreLeaveRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'leave_date.required_if' => 'Tanggal ijin wajib diisi untuk ijin tidak masuk.',
-            'leave_date.in' => 'Tanggal ijin tidak masuk hanya boleh hari ini atau besok.',
+            'leave_date.required_if' => 'Tanggal izin wajib diisi untuk izin tidak masuk.',
+            'leave_date.in' => 'Tanggal izin tidak masuk hanya boleh hari ini atau besok.',
         ];
     }
 }

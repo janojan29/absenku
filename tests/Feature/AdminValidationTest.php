@@ -81,4 +81,45 @@ class AdminValidationTest extends TestCase
 
         $response->assertSessionHasErrors(['nip', 'whatsapp_number']);
     }
+
+    public function test_student_bulk_update_class_success(): void
+    {
+        $targetClassRoom = ClassRoom::create([
+            'name' => 'XII TSM 2',
+            'jurusan' => 'Teknik Sepeda Motor'
+        ]);
+
+        // Create student in source classroom
+        $studentUser = User::factory()->create();
+        $studentUser->assignRole('siswa');
+        $profile = StudentProfile::create([
+            'user_id' => $studentUser->id,
+            'class_room_id' => $this->classRoom->id,
+            'nis' => '1234567890',
+            'jurusan' => $this->classRoom->jurusan,
+        ]);
+
+        $response = $this->actingAs($this->admin)->post(route('admin.students.bulk-class'), [
+            'from_class_room_id' => $this->classRoom->id,
+            'to_class_room_id' => $targetClassRoom->id,
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $response->assertRedirect(route('admin.students.index'));
+        
+        $this->assertDatabaseHas('student_profiles', [
+            'user_id' => $studentUser->id,
+            'class_room_id' => $targetClassRoom->id,
+        ]);
+    }
+
+    public function test_student_bulk_update_class_same_class_fails(): void
+    {
+        $response = $this->actingAs($this->admin)->post(route('admin.students.bulk-class'), [
+            'from_class_room_id' => $this->classRoom->id,
+            'to_class_room_id' => $this->classRoom->id,
+        ]);
+
+        $response->assertSessionHasErrors(['to_class_room_id']);
+    }
 }

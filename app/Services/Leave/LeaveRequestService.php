@@ -24,7 +24,13 @@ class LeaveRequestService
 
             if (! $isToday && ! $isTomorrow) {
                 throw ValidationException::withMessages([
-                    'leave' => 'Ijin tidak masuk hanya bisa diajukan untuk hari ini atau besok.',
+                    'leave' => 'Izin tidak masuk hanya bisa diajukan untuk hari ini atau besok.',
+                ]);
+            }
+
+            if (\App\Helpers\HolidayHelper::isHoliday($targetDate)) {
+                throw ValidationException::withMessages([
+                    'leave' => 'Tidak dapat mengajukan izin tidak masuk pada hari libur atau tanggal merah.',
                 ]);
             }
 
@@ -36,7 +42,7 @@ class LeaveRequestService
 
                 if ($todayAttendance && $todayAttendance->check_in_at !== null) {
                     throw ValidationException::withMessages([
-                        'leave' => 'Kamu sudah absen masuk hari ini, jadi tidak bisa mengajukan ijin tidak masuk untuk hari ini.',
+                        'leave' => 'Kamu sudah absen masuk hari ini, jadi tidak bisa mengajukan izin tidak masuk untuk hari ini.',
                     ]);
                 }
             }
@@ -50,7 +56,7 @@ class LeaveRequestService
 
             if (! $attendance || $attendance->check_in_at === null) {
                 throw ValidationException::withMessages([
-                    'leave' => 'Ijin pulang lebih awal hanya bisa diajukan setelah absen masuk.',
+                    'leave' => 'Izin pulang lebih awal hanya bisa diajukan setelah absen masuk.',
                 ]);
             }
         }
@@ -67,7 +73,7 @@ class LeaveRequestService
 
         if ($existingSubmission) {
             throw ValidationException::withMessages([
-                'leave' => 'Pengajuan ijin untuk tanggal ' . $targetDate->format('d-m-Y') . ' sudah ada. Dalam 1 hari hanya boleh 1 kali pengajuan ijin.',
+                'leave' => 'Pengajuan izin untuk tanggal ' . $targetDate->format('d-m-Y') . ' sudah ada. Dalam 1 hari hanya boleh 1 kali pengajuan izin.',
             ]);
         }
 
@@ -82,6 +88,6 @@ class LeaveRequestService
 
         LeaveRequestCreated::dispatch($leave);
 
-        return 'Pengajuan ijin terkirim (menunggu ACC).';
+        return 'Pengajuan izin terkirim (menunggu ACC).';
     }
 }

@@ -19,12 +19,17 @@
         'terlambat' => ['class' => 'badge-terlambat', 'label' => 'Terlambat'],
         'absent'  => ['class' => 'badge-alfa', 'label' => 'Alfa'],
         'alfa'    => ['class' => 'badge-alfa', 'label' => 'Alfa'],
-        'leave'   => ['class' => 'badge-ijin', 'label' => 'Ijin'],
-        'ijin'    => ['class' => 'badge-ijin', 'label' => 'Ijin'],
+        'leave'   => ['class' => 'badge-izin', 'label' => 'Izin'],
+        'izin'    => ['class' => 'badge-izin', 'label' => 'Izin'],
+        'ijin'    => ['class' => 'badge-izin', 'label' => 'Izin'],
+        'sick'    => ['class' => 'badge-sakit', 'label' => 'Sakit'],
+        'sakit'   => ['class' => 'badge-sakit', 'label' => 'Sakit'],
         'approved'  => ['class' => 'badge-hadir', 'label' => 'Disetujui'],
         'rejected'  => ['class' => 'badge-alfa', 'label' => 'Ditolak'],
         'pending'   => ['class' => 'badge-terlambat', 'label' => 'Menunggu'],
         'unknown' => ['class' => 'badge-belum', 'label' => 'Belum Absen'],
+        'holiday' => ['class' => 'badge-belum', 'label' => 'Libur'],
+        'libur'   => ['class' => 'badge-belum', 'label' => 'Libur'],
     ];
     $config = $configs[$status] ?? $configs['unknown'];
     $displayLabel = $label ?? $config['label'];

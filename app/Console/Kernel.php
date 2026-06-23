@@ -25,10 +25,9 @@ class Kernel extends ConsoleKernel
         try {
             if (\Illuminate\Support\Facades\Schema::hasTable('school_settings')) {
                 $setting = \App\Models\SchoolSetting::first();
-                if ($setting && $setting->check_in_end_time && $setting->late_tolerance_minutes !== null) {
-                    // Jadwalkan 5 menit setelah batas waktu toleransi terakhir
+                if ($setting && $setting->check_in_end_time) {
+                    // Jadwalkan 5 menit setelah batas waktu absen tutup
                     $time = \Illuminate\Support\Carbon::parse($setting->check_in_end_time)
-                        ->addMinutes($setting->late_tolerance_minutes)
                         ->addMinutes(5)
                         ->format('H:i');
                 }
