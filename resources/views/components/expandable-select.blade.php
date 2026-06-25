@@ -15,20 +15,33 @@
             break;
         }
     }
+    
+    $optionsJson = json_encode(collect($options)->map(fn($o) => ['value' => (string)$o['value'], 'label' => $o['label']])->values()->all());
 @endphp
 
 <div class="relative"
-     wire:ignore
+     wire:ignore.self
      wire:key="select-{{ $name }}"
-     :class="open ? 'z-30' : 'z-10'"
+     data-es-value="{{ $selected }}"
+     data-es-label="{{ $selectedLabel }}"
+     data-es-options='{{ $optionsJson }}'
      x-data="{
          open: false,
-         selectedValue: '{{ addslashes($selected) }}',
+         selectedValue: '{{ addslashes((string) $selected) }}',
          selectedLabel: '{{ addslashes($selectedLabel) }}'
      }"
-     x-effect="selectedValue = '{{ addslashes($selected) }}'; selectedLabel = '{{ addslashes($selectedLabel) }}';"
      x-init="
+         // Lookup function to update label based on value
+         let updateLabel = (val) => {
+             let options = JSON.parse($el.getAttribute('data-es-options') || '[]');
+             let opt = options.find(o => String(o.value) === String(val));
+             selectedLabel = opt ? opt.label : '{{ addslashes($placeholder) }}';
+         };
+
+         // Watch selectedValue to update the hidden input and the selectedLabel
          $watch('selectedValue', val => {
+             updateLabel(val);
+             
              let input = $refs.hiddenInput;
              if (input) {
                  input.value = val;
@@ -37,6 +50,30 @@
                  input.dispatchEvent(new Event('input', { bubbles: true }));
              }
          });
+         
+         // Initialize label on load
+         updateLabel(selectedValue);
+
+         // MutationObserver to watch attribute updates from Livewire (since wire:ignore is present)
+         let observer = new MutationObserver((mutations) => {
+             mutations.forEach((mutation) => {
+                 if (mutation.type === 'attributes') {
+                     if (mutation.attributeName === 'data-es-value') {
+                         let val = $el.getAttribute('data-es-value') || '';
+                         if (String(selectedValue) !== String(val)) {
+                             selectedValue = val;
+                         }
+                     }
+                     if (mutation.attributeName === 'data-es-label') {
+                         let lbl = $el.getAttribute('data-es-label') || '{{ addslashes($placeholder) }}';
+                         if (selectedLabel !== lbl) {
+                             selectedLabel = lbl;
+                         }
+                     }
+                 }
+             });
+         });
+         observer.observe($el, { attributes: true, attributeFilter: ['data-es-value', 'data-es-label'] });
      "
      @click.outside="open = false"
      @keydown.escape.window="open = false"
@@ -46,7 +83,7 @@
      ">
 
     {{-- Hidden input for form submission --}}
-    <input type="hidden" name="{{ $name }}" x-ref="hiddenInput" x-model="selectedValue">
+    <input type="hidden" name="{{ $name }}" x-ref="hiddenInput" :value="selectedValue">
 
     {{-- Trigger Button --}}
     <button type="button"
@@ -69,32 +106,33 @@
          x-transition:leave="transition ease-in duration-100"
          x-transition:leave-start="opacity-100 translate-y-0"
          x-transition:leave-end="opacity-0 -translate-y-1"
-         class="absolute left-0 right-0 z-50 mt-1.5 w-full bg-white border border-bw-200 rounded-xl shadow-lg overflow-hidden"
-         style="display: none;">
+         class="absolute left-0 right-0 mt-1.5 w-full bg-white border border-bw-200 rounded-xl shadow-lg overflow-hidden"
+         style="display: none; z-index: 9999;">
         <div class="max-h-52 overflow-y-auto overscroll-contain py-1">
             @foreach ($options as $opt)
                 <button type="button"
                     @click="
                         selectedValue = '{{ addslashes($opt['value']) }}';
-                        selectedLabel = '{{ addslashes($opt['label']) }}';
                         open = false;
                         @if ($wireClick)
-                            var wireObj = null;
-                            try {
-                                wireObj = $wire;
-                            } catch (e) {
-                                var lwEl = $el.closest('[wire\\:id]');
-                                if (lwEl && window.Livewire) {
-                                    wireObj = window.Livewire.find(lwEl.getAttribute('wire:id'));
+                            (function() {
+                                let wireObj = null;
+                                try {
+                                    wireObj = $wire;
+                                } catch (e) {
+                                    let lwEl = $el.closest('[wire\\:id]');
+                                    if (lwEl && window.Livewire) {
+                                        wireObj = window.Livewire.find(lwEl.getAttribute('wire:id'));
+                                    }
                                 }
-                            }
-                            if (wireObj) {
-                                wireObj.{{ str_replace(':value', "'" . addslashes($opt['value']) . "'", $wireClick) }};
-                            } else {
-                                console.error('expandable-select: Livewire component instance could not be resolved.');
-                            }
+                                if (wireObj) {
+                                    wireObj.{{ str_replace(':value', '\'' . addslashes($opt['value']) . '\'', $wireClick) }};
+                                } else {
+                                    console.error('expandable-select: Livewire instance could not be resolved.');
+                                }
+                            })();
                         @elseif ($onSelect)
-                            {{ $onSelect }}
+                            $nextTick(() => { {{ $onSelect }} });
                         @endif
                     "
                     class="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-left text-sm transition-all duration-150"

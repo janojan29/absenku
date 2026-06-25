@@ -51,6 +51,24 @@ class ReportController extends Controller
             $summaryFilter = [];
 
             [$summaryRows, $summaryFilter] = $this->buildSummaryRecap($request, $paginatedStudents);
+            // Apply summary status filter if provided
+            $summaryStatus = $request->filled('summary_status') ? $request->query('summary_status') : null;
+            if ($summaryStatus) {
+                $summaryRows = $summaryRows->filter(function ($row) use ($summaryStatus) {
+                    switch ($summaryStatus) {
+                        case 'present':
+                            return $row['Hadir'] > 0;
+                        case 'late':
+                            return $row['Telat'] > 0;
+                        case 'leave':
+                            return $row['Izin'] > 0;
+                        case 'absent':
+                            return $row['Alfa'] > 0;
+                        default:
+                            return true;
+                    }
+                })->values();
+            }
         } else {
             // For detail tab, get ALL students matching classroom filter
             $students = StudentProfile::query()

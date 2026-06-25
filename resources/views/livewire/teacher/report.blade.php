@@ -24,7 +24,7 @@
 
         @if ($tab === 'summary')
             {{-- Summary Filter --}}
-            <div class="card animate-fade-slide-up stagger-1">
+            <div class="card animate-fade-slide-up stagger-1 relative z-20">
                 <h3 class="font-semibold text-navy-800 mb-4">Filter Rekap Keterangan</h3>
                 <form id="lwSummaryFilterForm" method="GET" action="{{ route('teacher.report') }}">
                     <input type="hidden" name="tab" value="summary">
@@ -41,20 +41,23 @@
                                     )"
                                     :selected="(string) ($summaryFilter['class_room_id'] ?? '')"
                                     placeholder="Semua Kelas"
-                                    onSelect="document.getElementById('lwSummaryFilterForm').submit()"
                                 />
                             </div>
                             <div class="flex gap-2 flex-1">
                                 <div class="flex-1">
                                     <label class="block text-xs font-semibold uppercase tracking-wider text-bw-400 mb-1">Dari</label>
-                                    <input name="summary_start_date" type="date" class="form-input-clean" style="height:38px; border-radius:10px; font-size:13px; padding-top:0; padding-bottom:0;" value="{{ $summaryFilter['start_date'] ?? now()->toDateString() }}" onchange="document.getElementById('lwSummaryFilterForm').submit()">
+                                    <input name="summary_start_date" type="date" class="form-input-clean" style="height:38px; border-radius:10px; font-size:13px; padding-top:0; padding-bottom:0;" value="{{ $summaryFilter['start_date'] ?? now()->toDateString() }}">
                                 </div>
                                 <div class="flex-1">
                                     <label class="block text-xs font-semibold uppercase tracking-wider text-bw-400 mb-1">Sampai</label>
-                                    <input name="summary_end_date" type="date" class="form-input-clean" style="height:38px; border-radius:10px; font-size:13px; padding-top:0; padding-bottom:0;" value="{{ $summaryFilter['end_date'] ?? now()->toDateString() }}" onchange="document.getElementById('lwSummaryFilterForm').submit()">
+                                    <input name="summary_end_date" type="date" class="form-input-clean" style="height:38px; border-radius:10px; font-size:13px; padding-top:0; padding-bottom:0;" value="{{ $summaryFilter['end_date'] ?? now()->toDateString() }}">
                                 </div>
                             </div>
-                            <div class="sm:w-auto flex items-end">
+                            <div class="sm:w-auto flex items-end gap-2">
+                                <button type="submit" class="btn-primary w-full sm:w-auto flex items-center justify-center gap-1.5" style="height:38px; min-height:38px; border-radius:10px; font-size:12px; padding:0 16px; white-space:nowrap;">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z"/></svg>
+                                    Terapkan
+                                </button>
                                 <a href="{{ route('teacher.report', ['tab' => 'summary']) }}" class="btn-secondary w-full sm:w-auto flex items-center justify-center gap-1" style="height:38px; min-height:38px; border-radius:10px; font-size:12px; padding:0 14px; white-space:nowrap;">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182M2.985 19.644l3.181-3.183"/></svg>
                                     Reset
@@ -99,7 +102,7 @@
 
         @else
             {{-- Detail Filter --}}
-            <div class="card animate-fade-slide-up stagger-1">
+            <div class="card animate-fade-slide-up stagger-1 relative z-20">
                 <h3 class="font-semibold text-navy-800 mb-4">Filter Rekap Absen</h3>
                 <form id="lwDetailFilterForm" method="GET" action="{{ route('teacher.report') }}">
                     <input type="hidden" name="tab" value="detail">
@@ -115,7 +118,6 @@
                                     )"
                                     :selected="(string) request('class_room_id', $classRoomId)"
                                     placeholder="Semua"
-                                    onSelect="document.getElementById('lwDetailFilterForm').submit()"
                                 />
                             </div>
                             <div class="sm:w-48">
@@ -127,11 +129,11 @@
                                         ['value' => 'present', 'label' => 'Hadir'],
                                         ['value' => 'late', 'label' => 'Terlambat'],
                                         ['value' => 'leave', 'label' => 'Izin'],
+                                        ['value' => 'sick', 'label' => 'Sakit'],
                                         ['value' => 'absent', 'label' => 'Alfa'],
                                     ]"
                                     :selected="(string) request('status', $status)"
                                     placeholder="Semua"
-                                    onSelect="document.getElementById('lwDetailFilterForm').submit()"
                                 />
                             </div>
                         </div>
@@ -139,14 +141,18 @@
                             <div class="flex gap-2 flex-1">
                                 <div class="flex-1">
                                     <label class="block text-xs font-semibold uppercase tracking-wider text-bw-400 mb-1">Dari</label>
-                                    <input name="detail_start_date" type="date" class="form-input-clean" style="height:38px; border-radius:10px; font-size:13px; padding-top:0; padding-bottom:0;" value="{{ request('detail_start_date', $startDate->toDateString()) }}" onchange="document.getElementById('lwDetailFilterForm').submit()">
+                                    <input name="detail_start_date" type="date" class="form-input-clean" style="height:38px; border-radius:10px; font-size:13px; padding-top:0; padding-bottom:0;" value="{{ request('detail_start_date', $startDate->toDateString()) }}">
                                 </div>
                                 <div class="flex-1">
                                     <label class="block text-xs font-semibold uppercase tracking-wider text-bw-400 mb-1">Sampai</label>
-                                    <input name="detail_end_date" type="date" class="form-input-clean" style="height:38px; border-radius:10px; font-size:13px; padding-top:0; padding-bottom:0;" value="{{ request('detail_end_date', $endDate->toDateString()) }}" onchange="document.getElementById('lwDetailFilterForm').submit()">
+                                    <input name="detail_end_date" type="date" class="form-input-clean" style="height:38px; border-radius:10px; font-size:13px; padding-top:0; padding-bottom:0;" value="{{ request('detail_end_date', $endDate->toDateString()) }}">
                                 </div>
                             </div>
-                            <div class="sm:w-auto">
+                            <div class="sm:w-auto flex gap-2">
+                                <button type="submit" class="btn-primary w-full sm:w-auto flex items-center justify-center gap-1.5" style="height:38px; min-height:38px; border-radius:10px; font-size:12px; padding:0 16px; white-space:nowrap;">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z"/></svg>
+                                    Terapkan
+                                </button>
                                 <a href="{{ route('teacher.report', ['tab' => 'detail']) }}" class="btn-secondary w-full sm:w-auto flex items-center justify-center gap-1" style="height:38px; min-height:38px; border-radius:10px; font-size:12px; padding:0 14px; white-space:nowrap;">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182M2.985 19.644l3.181-3.183"/></svg>
                                     Reset

@@ -125,6 +125,11 @@ class DashboardController extends Controller
                 'counts' => $counts,
                 'students' => $rows,
                 'class_room_id' => $classRoomId,
+                'classrooms' => ClassRoom::query()->orderBy('name')->get()->map(fn($c) => [
+                    'id' => $c->id,
+                    'name' => $c->name,
+                    'jurusan' => $c->jurusan,
+                ])->values(),
             ],
         ]);
     }
