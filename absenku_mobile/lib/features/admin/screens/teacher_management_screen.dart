@@ -18,7 +18,12 @@ class _TeacherManagementScreenState extends State<TeacherManagementScreen> {
   // Form controllers
   final _nameController = TextEditingController();
   final _nipController = TextEditingController();
-  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _passwordConfirmController = TextEditingController();
+  final _whatsappController = TextEditingController();
+  final _subjectController = TextEditingController();
+  final _waliKelasController = TextEditingController();
+  String _selectedRole = 'guru';
 
   @override
   void initState() {
@@ -36,7 +41,11 @@ class _TeacherManagementScreenState extends State<TeacherManagementScreen> {
     _searchController.dispose();
     _nameController.dispose();
     _nipController.dispose();
-    _emailController.dispose();
+    _passwordController.dispose();
+    _passwordConfirmController.dispose();
+    _whatsappController.dispose();
+    _subjectController.dispose();
+    _waliKelasController.dispose();
     super.dispose();
   }
 
@@ -45,86 +54,181 @@ class _TeacherManagementScreenState extends State<TeacherManagementScreen> {
     if (isEdit) {
       _nameController.text = teacher.name;
       _nipController.text = teacher.nip ?? '';
-      _emailController.text = teacher.email;
+      _whatsappController.text = teacher.whatsappNumber ?? '';
+      _subjectController.text = teacher.subject ?? '';
+      _waliKelasController.text = teacher.waliKelas ?? '';
+      _selectedRole = (teacher.role == 'guru_walikelas') ? 'guru_walikelas' : 'guru';
+      _passwordController.clear();
+      _passwordConfirmController.clear();
     } else {
       _nameController.clear();
       _nipController.clear();
-      _emailController.clear();
+      _whatsappController.clear();
+      _subjectController.clear();
+      _waliKelasController.clear();
+      _passwordController.clear();
+      _passwordConfirmController.clear();
+      _selectedRole = 'guru';
     }
 
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: Text(isEdit ? 'Edit Guru Piket' : 'Tambah Guru Piket'),
-          content: SingleChildScrollView(
-            child: Form(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: _nameController,
-                    decoration: const InputDecoration(labelText: 'Nama Lengkap'),
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: Text(isEdit ? 'Edit Guru' : 'Tambah Guru Baru'),
+              content: SingleChildScrollView(
+                child: Form(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Role select
+                      DropdownButtonFormField<String>(
+                        initialValue: _selectedRole,
+                        decoration: const InputDecoration(labelText: 'Role Guru'),
+                        items: const [
+                          DropdownMenuItem(value: 'guru', child: Text('Guru')),
+                          DropdownMenuItem(value: 'guru_walikelas', child: Text('Guru Walikelas')),
+                        ],
+                        onChanged: (val) {
+                          if (val != null) {
+                            setDialogState(() {
+                              _selectedRole = val;
+                            });
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: _nameController,
+                        decoration: const InputDecoration(labelText: 'Nama Lengkap'),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: _nipController,
+                        decoration: const InputDecoration(labelText: 'NIP'),
+                        keyboardType: TextInputType.number,
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: _whatsappController,
+                        decoration: const InputDecoration(labelText: 'No. WhatsApp (08...)'),
+                        keyboardType: TextInputType.phone,
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: _subjectController,
+                        decoration: const InputDecoration(labelText: 'Mata Pelajaran (Opsional)'),
+                      ),
+                      if (_selectedRole == 'guru_walikelas') ...[
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: _waliKelasController,
+                          decoration: const InputDecoration(labelText: 'Wali Kelas (contoh: X TSM 1)'),
+                        ),
+                      ],
+                      if (!isEdit) ...[
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: _passwordController,
+                          decoration: const InputDecoration(labelText: 'Password'),
+                          obscureText: true,
+                        ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: _passwordConfirmController,
+                          decoration: const InputDecoration(labelText: 'Konfirmasi Password'),
+                          obscureText: true,
+                        ),
+                      ],
+                    ],
                   ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _nipController,
-                    decoration: const InputDecoration(labelText: 'NIP'),
-                    keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _emailController,
-                    decoration: const InputDecoration(labelText: 'Email'),
-                    keyboardType: TextInputType.emailAddress,
-                  ),
-                ],
+                ),
               ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('BATAL', style: TextStyle(color: AppTheme.textMuted)),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (_nameController.text.trim().isEmpty ||
-                    _nipController.text.trim().isEmpty ||
-                    _emailController.text.trim().isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Semua field wajib diisi!')),
-                  );
-                  return;
-                }
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('BATAL', style: TextStyle(color: AppTheme.textMuted)),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (_nameController.text.trim().isEmpty ||
+                        _nipController.text.trim().isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Nama dan NIP wajib diisi!')),
+                      );
+                      return;
+                    }
 
-                if (isEdit) {
-                  await db.updateTeacher(
-                    teacher.id,
-                    _nameController.text,
-                    _nipController.text,
-                    _emailController.text,
-                  );
-                } else {
-                  await db.addTeacher(
-                    _nameController.text,
-                    _nipController.text,
-                    _emailController.text,
-                  );
-                }
+                    if (_selectedRole == 'guru_walikelas' && _waliKelasController.text.trim().isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Keterangan wali kelas wajib diisi!')),
+                      );
+                      return;
+                    }
 
-                if (context.mounted) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(isEdit ? 'Data guru piket diperbarui!' : 'Guru piket baru ditambahkan!'),
-                    ),
-                  );
-                }
-              },
-              child: const Text('SIMPAN'),
-            ),
-          ],
+                    if (!isEdit) {
+                      if (_passwordController.text.isEmpty || _passwordConfirmController.text.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Password wajib diisi!')),
+                        );
+                        return;
+                      }
+                      if (_passwordController.text != _passwordConfirmController.text) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Password dan konfirmasi password tidak cocok!')),
+                        );
+                        return;
+                      }
+                    }
+
+                    try {
+                      if (isEdit) {
+                        await db.updateTeacher(
+                          id: teacher.id,
+                          name: _nameController.text,
+                          teacherRole: _selectedRole,
+                          nip: _nipController.text,
+                          subject: _subjectController.text.isNotEmpty ? _subjectController.text : null,
+                          waliKelas: _selectedRole == 'guru_walikelas' ? _waliKelasController.text : null,
+                          whatsappNumber: _whatsappController.text.isNotEmpty ? _whatsappController.text : null,
+                        );
+                      } else {
+                        await db.addTeacher(
+                          name: _nameController.text,
+                          teacherRole: _selectedRole,
+                          password: _passwordController.text,
+                          passwordConfirmation: _passwordConfirmController.text,
+                          nip: _nipController.text,
+                          subject: _subjectController.text.isNotEmpty ? _subjectController.text : null,
+                          waliKelas: _selectedRole == 'guru_walikelas' ? _waliKelasController.text : null,
+                          whatsappNumber: _whatsappController.text.isNotEmpty ? _whatsappController.text : null,
+                        );
+                      }
+
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(isEdit ? 'Data guru diperbarui!' : 'Guru baru ditambahkan!'),
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(e.toString().replaceAll('Exception:', ''))),
+                        );
+                      }
+                    }
+                  },
+                  child: const Text('SIMPAN'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -138,7 +242,7 @@ class _TeacherManagementScreenState extends State<TeacherManagementScreen> {
         if (_loading) return const Center(child: CircularProgressIndicator());
 
         final db = MockDatabase();
-        final teachers = db.users.where((u) => u.role == 'guru_piket').toList();
+        final teachers = db.users.where((u) => u.role == 'guru' || u.role == 'guru_walikelas' || u.role == 'petugas_piket').toList();
 
         // Apply filters
         final filteredTeachers = teachers.where((teacher) {
@@ -190,8 +294,8 @@ class _TeacherManagementScreenState extends State<TeacherManagementScreen> {
                 Expanded(
                   child: filteredTeachers.isEmpty
                       ? const Center(
-                          child: Text(
-                            'Guru piket tidak ditemukan.',
+                           child: Text(
+                            'Guru tidak ditemukan.',
                             style: TextStyle(color: AppTheme.textMuted),
                           ),
                         )
@@ -207,14 +311,24 @@ class _TeacherManagementScreenState extends State<TeacherManagementScreen> {
                                   radius: 20,
                                   backgroundColor: AppTheme.primaryNavy.withValues(alpha: 0.08),
                                   child: Text(
-                                    teacher.name.substring(0, 1).toUpperCase(),
+                                    teacher.name.isNotEmpty ? teacher.name.substring(0, 1).toUpperCase() : '?',
                                     style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryNavy),
                                   ),
                                 ),
                                 title: Text(teacher.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                                subtitle: Text(
-                                  'NIP: ${teacher.nip ?? "-"} · ${teacher.email}',
-                                  style: const TextStyle(fontSize: 11),
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'NIP: ${teacher.nip ?? "-"} · ${teacher.email} · WA: ${teacher.whatsappNumber ?? "-"}',
+                                      style: const TextStyle(fontSize: 11),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Role: ${teacher.role == "guru_walikelas" ? "Guru Wali Kelas" : (teacher.role == "petugas_piket" ? "Petugas Piket" : "Guru Mapel")} · Mapel: ${teacher.subject ?? "-"} ${teacher.role == "guru_walikelas" && teacher.waliKelas != null ? "(${teacher.waliKelas})" : ""}',
+                                      style: const TextStyle(fontSize: 10, color: AppTheme.textMuted),
+                                    ),
+                                  ],
                                 ),
                                 trailing: Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -233,7 +347,7 @@ class _TeacherManagementScreenState extends State<TeacherManagementScreen> {
                                           context: context,
                                           builder: (context) {
                                             return AlertDialog(
-                                              title: const Text('Hapus Guru Piket'),
+                                              title: const Text('Hapus Guru'),
                                               content: Text('Apakah Anda yakin ingin menghapus data ${teacher.name}?'),
                                               actions: [
                                                 TextButton(
@@ -246,7 +360,7 @@ class _TeacherManagementScreenState extends State<TeacherManagementScreen> {
                                                     if (context.mounted) {
                                                       Navigator.pop(context);
                                                       ScaffoldMessenger.of(context).showSnackBar(
-                                                        const SnackBar(content: Text('Guru piket terhapus!')),
+                                                        const SnackBar(content: Text('Guru terhapus!')),
                                                       );
                                                     }
                                                   },

@@ -109,7 +109,8 @@ class DashboardController extends Controller
             'unknown' => collect($effectiveStatuses)->where(fn ($value) => $value === 'unknown')->count(),
         ];
 
-        $rows = $students->map(function ($sp) use ($effectiveStatuses, $statusLabels, $keteranganMap) {
+        $rows = $students->map(function ($sp) use ($attendances, $effectiveStatuses, $statusLabels, $keteranganMap) {
+            $attendance = $attendances->get($sp->user_id);
             return [
                 'name' => $sp->user?->name ?? '-',
                 'class_room' => $sp->classRoom?->name ?? '-',
@@ -117,6 +118,8 @@ class DashboardController extends Controller
                 'status' => $effectiveStatuses[$sp->user_id] ?? 'unknown',
                 'status_label' => $statusLabels[$sp->user_id] ?? 'Belum Absen',
                 'keterangan' => $keteranganMap[$sp->user_id] ?? '-',
+                'check_in_at' => $attendance?->check_in_at ? Carbon::parse($attendance->check_in_at)->format('H:i') : null,
+                'check_out_at' => $attendance?->check_out_at ? Carbon::parse($attendance->check_out_at)->format('H:i') : null,
             ];
         })->values();
 

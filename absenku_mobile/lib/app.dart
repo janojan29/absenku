@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
           homeScreen = const LoginScreen();
         } else if (user.role == 'siswa') {
           homeScreen = const AttendanceScreen();
-        } else if (user.role == 'guru_piket') {
+        } else if (user.role == 'guru' || user.role == 'guru_walikelas' || user.role == 'petugas_piket') {
           homeScreen = const TeacherDashboardScreen();
         } else if (user.role == 'admin') {
           homeScreen = const AdminMainScreen();

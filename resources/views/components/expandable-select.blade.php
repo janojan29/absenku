@@ -20,61 +20,40 @@
 @endphp
 
 <div class="relative"
-     wire:ignore.self
+     wire:ignore
      wire:key="select-{{ $name }}"
-     data-es-value="{{ $selected }}"
-     data-es-label="{{ $selectedLabel }}"
+     :data-es-value="selectedValue"
+     :data-es-label="selectedLabel"
      data-es-options='{{ $optionsJson }}'
      x-data="{
          open: false,
-         selectedValue: '{{ addslashes((string) $selected) }}',
-         selectedLabel: '{{ addslashes($selectedLabel) }}'
-     }"
-     x-init="
-         // Lookup function to update label based on value
-         let updateLabel = (val) => {
-             let options = JSON.parse($el.getAttribute('data-es-options') || '[]');
-             let opt = options.find(o => String(o.value) === String(val));
-             selectedLabel = opt ? opt.label : '{{ addslashes($placeholder) }}';
-         };
+         selectedValue: (typeof $wire !== 'undefined' && '{{ $name }}' in $wire) ? $wire.entangle('{{ $name }}').live : '{{ addslashes((string) $selected) }}',
+         selectedLabel: '{{ addslashes($selectedLabel) }}',
 
-         // Watch selectedValue to update the hidden input and the selectedLabel
-         $watch('selectedValue', val => {
-             updateLabel(val);
-             
-             let input = $refs.hiddenInput;
-             if (input) {
-                 input.value = val;
-                 input.setAttribute('value', val);
-                 input.dispatchEvent(new Event('change', { bubbles: true }));
-                 input.dispatchEvent(new Event('input', { bubbles: true }));
-             }
-         });
-         
-         // Initialize label on load
-         updateLabel(selectedValue);
-
-         // MutationObserver to watch attribute updates from Livewire (since wire:ignore is present)
-         let observer = new MutationObserver((mutations) => {
-             mutations.forEach((mutation) => {
-                 if (mutation.type === 'attributes') {
-                     if (mutation.attributeName === 'data-es-value') {
-                         let val = $el.getAttribute('data-es-value') || '';
-                         if (String(selectedValue) !== String(val)) {
-                             selectedValue = val;
-                         }
-                     }
-                     if (mutation.attributeName === 'data-es-label') {
-                         let lbl = $el.getAttribute('data-es-label') || '{{ addslashes($placeholder) }}';
-                         if (selectedLabel !== lbl) {
-                             selectedLabel = lbl;
-                         }
-                     }
+         init() {
+             // Watch selectedValue to update the hidden input and the selectedLabel
+             this.$watch('selectedValue', val => {
+                 this.updateLabel(val);
+                 
+                 let input = this.$refs.hiddenInput;
+                 if (input) {
+                     input.value = val;
+                     input.setAttribute('value', val);
+                     input.dispatchEvent(new Event('change', { bubbles: true }));
+                     input.dispatchEvent(new Event('input', { bubbles: true }));
                  }
              });
-         });
-         observer.observe($el, { attributes: true, attributeFilter: ['data-es-value', 'data-es-label'] });
-     "
+             
+             // Initialize label on load
+             this.updateLabel(this.selectedValue);
+         },
+
+         updateLabel(val) {
+             let options = JSON.parse($el.getAttribute('data-es-options') || '[]');
+             let opt = options.find(o => String(o.value) === String(val));
+             this.selectedLabel = opt ? opt.label : '{{ addslashes($placeholder) }}';
+         }
+     }"
      @click.outside="open = false"
      @keydown.escape.window="open = false"
      @reset-select-filters.window="

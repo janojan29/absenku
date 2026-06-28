@@ -567,14 +567,7 @@ class MockDatabase extends ChangeNotifier {
         final data = response.data['data'] as List? ?? [];
         _users = data.map((item) {
           final map = item as Map<String, dynamic>;
-          return User(
-            id: map['id'].toString(),
-            name: map['name'] as String? ?? '',
-            email: map['email'] as String? ?? '',
-            role: 'siswa',
-            nis: map['nis'] as String? ?? (map['student_profile'] as Map?)?['nis'] as String?,
-            classRoomId: map['class_room_id']?.toString() ?? (map['student_profile'] as Map?)?['class_room_id']?.toString(),
-          );
+          return User.fromApiJson(map);
         }).toList();
         notifyListeners();
       }
@@ -583,48 +576,78 @@ class MockDatabase extends ChangeNotifier {
     }
   }
 
-  Future<void> addStudent(String name, String nis, String classRoomId, String email) async {
+  Future<void> addStudent({
+    required String name,
+    required String nis,
+    required String classRoomId,
+    required String password,
+    required String passwordConfirmation,
+    String? whatsappNumber,
+    String? parentPhoneWa,
+  }) async {
     try {
+      final classroom = _classrooms.firstWhere((c) => c.id == classRoomId);
+      final jurusan = classroom.jurusan;
       await _dio.post('/admin/students', data: {
         'name': name,
         'nis': nis,
         'class_room_id': classRoomId,
-        'email': email,
-        'password': 'password',
+        'jurusan': jurusan,
+        'password': password,
+        'password_confirmation': passwordConfirmation,
+        'whatsapp_number': whatsappNumber,
+        'parent_phone_wa': parentPhoneWa,
       });
       await fetchStudents();
-    } on DioException catch (e) {
-      if (e.response?.data != null && e.response?.data['message'] != null) {
+    } catch (e) {
+      if (e is DioException && e.response?.data != null) {
         throw Exception(e.response!.data['message'].toString());
       }
       throw Exception('Gagal menambahkan siswa.');
     }
   }
 
-  Future<void> updateStudent(String id, String name, String nis, String classRoomId, String email) async {
+  Future<void> updateStudent({
+    required String id,
+    required String name,
+    required String nis,
+    required String classRoomId,
+    String? password,
+    String? passwordConfirmation,
+    String? whatsappNumber,
+    String? parentPhoneWa,
+  }) async {
     try {
-      await _dio.patch('/admin/students/$id', data: {
+      final classroom = _classrooms.firstWhere((c) => c.id == classRoomId);
+      final jurusan = classroom.jurusan;
+      final data = <String, dynamic>{
         'name': name,
         'nis': nis,
         'class_room_id': classRoomId,
-        'email': email,
-      });
+        'jurusan': jurusan,
+        if (password != null && password.isNotEmpty) 'password': password,
+        if (passwordConfirmation != null && passwordConfirmation.isNotEmpty)
+          'password_confirmation': passwordConfirmation,
+        'whatsapp_number': whatsappNumber,
+        'parent_phone_wa': parentPhoneWa,
+      };
+
+      await _dio.patch('/admin/students/$id', data: data);
       await fetchStudents();
-    } on DioException catch (e) {
-      if (e.response?.data != null && e.response?.data['message'] != null) {
+    } catch (e) {
+      if (e is DioException && e.response?.data != null) {
         throw Exception(e.response!.data['message'].toString());
       }
-      throw Exception('Gagal mengubah data siswa.');
+      throw Exception('Gagal memperbarui siswa.');
     }
   }
 
   Future<void> deleteStudent(String id) async {
     try {
-      await _dio.delete('/admin/users/$id');
-      _users.removeWhere((u) => u.id == id);
-      notifyListeners();
-    } on DioException catch (e) {
-      if (e.response?.data != null && e.response?.data['message'] != null) {
+      await _dio.delete('/admin/students/$id');
+      await fetchStudents();
+    } catch (e) {
+      if (e is DioException && e.response?.data != null) {
         throw Exception(e.response!.data['message'].toString());
       }
       throw Exception('Gagal menghapus siswa.');
@@ -640,16 +663,10 @@ class MockDatabase extends ChangeNotifier {
         // Don't overwrite _users, add teacher users separately
         final teacherUsers = data.map((item) {
           final map = item as Map<String, dynamic>;
-          return User(
-            id: map['id'].toString(),
-            name: map['name'] as String? ?? '',
-            email: map['email'] as String? ?? '',
-            role: 'guru_piket',
-            nip: map['nip'] as String? ?? (map['teacher'] as Map?)?['nip'] as String?,
-          );
+          return User.fromApiJson(map);
         }).toList();
         // Remove existing teacher users from _users and add new ones
-        _users.removeWhere((u) => u.role == 'guru_piket');
+        _users.removeWhere((u) => u.role == 'guru' || u.role == 'guru_walikelas' || u.role == 'petugas_piket');
         _users.addAll(teacherUsers);
         notifyListeners();
       }
@@ -658,34 +675,66 @@ class MockDatabase extends ChangeNotifier {
     }
   }
 
-  Future<void> addTeacher(String name, String nip, String email) async {
+  Future<void> addTeacher({
+    required String name,
+    required String teacherRole,
+    required String password,
+    required String passwordConfirmation,
+    required String nip,
+    String? subject,
+    String? waliKelas,
+    String? whatsappNumber,
+  }) async {
     try {
       await _dio.post('/admin/teachers', data: {
         'name': name,
+        'teacher_role': teacherRole,
+        'password': password,
+        'password_confirmation': passwordConfirmation,
         'nip': nip,
-        'email': email,
-        'password': 'password',
+        'subject': subject,
+        'wali_kelas': waliKelas,
+        'whatsapp_number': whatsappNumber,
       });
       await fetchTeachers();
     } on DioException catch (e) {
       if (e.response?.data != null && e.response?.data['message'] != null) {
         throw Exception(e.response!.data['message'].toString());
       }
+      if (e.response?.data != null && e.response?.data['errors'] != null) {
+        final errors = e.response!.data['errors'] as Map<String, dynamic>;
+        throw Exception(errors.values.expand((v) => v as List).join('\n'));
+      }
       throw Exception('Gagal menambahkan guru.');
     }
   }
 
-  Future<void> updateTeacher(String id, String name, String nip, String email) async {
+  Future<void> updateTeacher({
+    required String id,
+    required String name,
+    required String teacherRole,
+    required String nip,
+    String? subject,
+    String? waliKelas,
+    String? whatsappNumber,
+  }) async {
     try {
       await _dio.patch('/admin/teachers/$id', data: {
         'name': name,
+        'teacher_role': teacherRole,
         'nip': nip,
-        'email': email,
+        'subject': subject,
+        'wali_kelas': waliKelas,
+        'whatsapp_number': whatsappNumber,
       });
       await fetchTeachers();
     } on DioException catch (e) {
       if (e.response?.data != null && e.response?.data['message'] != null) {
         throw Exception(e.response!.data['message'].toString());
+      }
+      if (e.response?.data != null && e.response?.data['errors'] != null) {
+        final errors = e.response!.data['errors'] as Map<String, dynamic>;
+        throw Exception(errors.values.expand((v) => v as List).join('\n'));
       }
       throw Exception('Gagal mengubah data guru.');
     }

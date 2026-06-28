@@ -193,7 +193,21 @@
                                 <tr class="table-row">
                                     <td class="py-3 px-4 text-sm text-navy-700">{{ $row['Tanggal'] }}</td>
                                     <td class="py-3 px-4 text-sm text-navy-600 hidden sm:table-cell">{{ $row['Kelas'] }}</td>
-                                    <td class="py-3 px-4 text-sm font-medium text-navy-800">{{ $row['Nama'] }}</td>
+                                    <td class="py-3 px-4">
+                                        <div class="text-sm font-medium text-navy-800">{{ $row['Nama'] }}</div>
+                                        <div class="sm:hidden text-xs text-navy-600 font-medium mt-0.5">
+                                            {{ $row['Kelas'] }}
+                                        </div>
+                                        {{-- Responsive time badges for mobile/tablet screens --}}
+                                        <div class="md:hidden text-[11px] text-bw-500 mt-1 flex items-center gap-2">
+                                            <span class="bg-bw-100 px-1.5 py-0.5 rounded text-navy-700">
+                                                Masuk: {{ $row['Masuk'] ?: '-' }}
+                                            </span>
+                                            <span class="bg-bw-100 px-1.5 py-0.5 rounded text-navy-700">
+                                                Pulang: {{ $row['Pulang'] ?: '-' }}
+                                            </span>
+                                        </div>
+                                    </td>
                                     <td class="py-3 px-4">
                                         @php
                                             $statusLower = strtolower($row['Status']);

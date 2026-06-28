@@ -67,7 +67,20 @@
                                     </div>
                                     <div>
                                         <div class="text-sm font-semibold text-navy-800 truncate">{{ $student->user?->name ?? '-' }}</div>
-                                        <div class="text-xs text-bw-400">{{ $student->nis ?? '-' }}</div>
+                                        <div class="text-xs text-bw-400 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                                            <span>{{ $student->nis ?? '-' }}</span>
+                                            <span class="sm:hidden text-bw-300">•</span>
+                                            <span class="sm:hidden font-medium text-navy-600">{{ $student->classRoom?->name ?? '-' }}</span>
+                                        </div>
+                                        {{-- Responsive time badges for mobile/tablet screens --}}
+                                        <div class="md:hidden text-[11px] text-bw-500 mt-1 flex items-center gap-2">
+                                            <span class="bg-bw-100 px-1.5 py-0.5 rounded text-navy-700">
+                                                Masuk: {{ $attendance?->check_in_at ? \Illuminate\Support\Carbon::parse($attendance->check_in_at)->format('H:i') : '-' }}
+                                            </span>
+                                            <span class="bg-bw-100 px-1.5 py-0.5 rounded text-navy-700">
+                                                Pulang: {{ $attendance?->check_out_at ? \Illuminate\Support\Carbon::parse($attendance->check_out_at)->format('H:i') : '-' }}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
                             </td>

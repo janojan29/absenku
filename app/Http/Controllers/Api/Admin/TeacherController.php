@@ -111,6 +111,7 @@ class TeacherController extends Controller
 
         $data = $request->validate([
             'teacher_role' => ['required', 'string', 'in:guru,guru_walikelas'],
+            'name' => ['required', 'string', 'max:255'],
             'nip' => [
                 'nullable',
                 'string',
@@ -132,6 +133,7 @@ class TeacherController extends Controller
         }
 
         $user->update([
+            'name' => $data['name'],
             'whatsapp_number' => $data['whatsapp_number'] ?? null,
         ]);
         $user->syncRoles([$data['teacher_role']]);

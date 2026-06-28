@@ -20,7 +20,10 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
   // Form controllers
   final _nameController = TextEditingController();
   final _nisController = TextEditingController();
-  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _passwordConfirmController = TextEditingController();
+  final _whatsappController = TextEditingController();
+  final _parentWhatsappController = TextEditingController();
   String _formClassRoomId = '';
 
   @override
@@ -40,7 +43,10 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
     _searchController.dispose();
     _nameController.dispose();
     _nisController.dispose();
-    _emailController.dispose();
+    _passwordController.dispose();
+    _passwordConfirmController.dispose();
+    _whatsappController.dispose();
+    _parentWhatsappController.dispose();
     super.dispose();
   }
 
@@ -49,13 +55,19 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
     if (isEdit) {
       _nameController.text = student.name;
       _nisController.text = student.nis ?? '';
-      _emailController.text = student.email;
+      _whatsappController.text = student.whatsappNumber ?? '';
+      _parentWhatsappController.text = student.parentPhoneWa ?? '';
       _formClassRoomId = student.classRoomId ?? '';
+      _passwordController.clear();
+      _passwordConfirmController.clear();
     } else {
       _nameController.clear();
       _nisController.clear();
-      _emailController.clear();
+      _whatsappController.clear();
+      _parentWhatsappController.clear();
       _formClassRoomId = db.classrooms.isNotEmpty ? db.classrooms.first.id : '';
+      _passwordController.clear();
+      _passwordConfirmController.clear();
     }
 
     showDialog(
@@ -64,7 +76,7 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              title: Text(isEdit ? 'Edit Siswa' : 'Tambah Siswa'),
+              title: Text(isEdit ? 'Edit Siswa' : 'Tambah Siswa Baru'),
               content: SingleChildScrollView(
                 child: Form(
                   child: Column(
@@ -77,14 +89,8 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                       const SizedBox(height: 12),
                       TextField(
                         controller: _nisController,
-                        decoration: const InputDecoration(labelText: 'NIS'),
+                        decoration: const InputDecoration(labelText: 'NISN'),
                         keyboardType: TextInputType.number,
-                      ),
-                      const SizedBox(height: 12),
-                      TextField(
-                        controller: _emailController,
-                        decoration: const InputDecoration(labelText: 'Email'),
-                        keyboardType: TextInputType.emailAddress,
                       ),
                       const SizedBox(height: 12),
                       DropdownButtonFormField<String>(
@@ -99,6 +105,32 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                           });
                         },
                       ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: _whatsappController,
+                        decoration: const InputDecoration(labelText: 'No. WhatsApp Siswa (08...)'),
+                        keyboardType: TextInputType.phone,
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: _parentWhatsappController,
+                        decoration: const InputDecoration(labelText: 'No. WhatsApp Orang Tua (08...)'),
+                        keyboardType: TextInputType.phone,
+                      ),
+                      if (!isEdit) ...[
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: _passwordController,
+                          decoration: const InputDecoration(labelText: 'Password'),
+                          obscureText: true,
+                        ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: _passwordConfirmController,
+                          decoration: const InputDecoration(labelText: 'Konfirmasi Password'),
+                          obscureText: true,
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -112,38 +144,64 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                   onPressed: () async {
                     if (_nameController.text.trim().isEmpty ||
                         _nisController.text.trim().isEmpty ||
-                        _emailController.text.trim().isEmpty ||
                         _formClassRoomId.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Semua field wajib diisi!')),
+                        const SnackBar(content: Text('Nama, NISN, dan Kelas wajib diisi!')),
                       );
                       return;
                     }
 
-                    if (isEdit) {
-                      await db.updateStudent(
-                        student.id,
-                        _nameController.text,
-                        _nisController.text,
-                        _formClassRoomId,
-                        _emailController.text,
-                      );
-                    } else {
-                      await db.addStudent(
-                        _nameController.text,
-                        _nisController.text,
-                        _formClassRoomId,
-                        _emailController.text,
-                      );
+                    if (!isEdit) {
+                      if (_passwordController.text.isEmpty || _passwordConfirmController.text.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Password wajib diisi!')),
+                        );
+                        return;
+                      }
+                      if (_passwordController.text != _passwordConfirmController.text) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Password dan konfirmasi password tidak cocok!')),
+                        );
+                        return;
+                      }
                     }
 
-                    if (context.mounted) {
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(isEdit ? 'Data siswa diperbarui!' : 'Siswa baru ditambahkan!'),
-                        ),
-                      );
+                    try {
+                      if (isEdit) {
+                        await db.updateStudent(
+                          id: student.id,
+                          name: _nameController.text,
+                          nis: _nisController.text,
+                          classRoomId: _formClassRoomId,
+                          whatsappNumber: _whatsappController.text.isNotEmpty ? _whatsappController.text : null,
+                          parentPhoneWa: _parentWhatsappController.text.isNotEmpty ? _parentWhatsappController.text : null,
+                        );
+                      } else {
+                        await db.addStudent(
+                          name: _nameController.text,
+                          nis: _nisController.text,
+                          classRoomId: _formClassRoomId,
+                          password: _passwordController.text,
+                          passwordConfirmation: _passwordConfirmController.text,
+                          whatsappNumber: _whatsappController.text.isNotEmpty ? _whatsappController.text : null,
+                          parentPhoneWa: _parentWhatsappController.text.isNotEmpty ? _parentWhatsappController.text : null,
+                        );
+                      }
+
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(isEdit ? 'Data siswa diperbarui!' : 'Siswa baru ditambahkan!'),
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(e.toString().replaceAll('Exception:', ''))),
+                        );
+                      }
                     }
                   },
                   child: const Text('SIMPAN'),
@@ -381,16 +439,7 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                           side: const BorderSide(color: AppTheme.statusAbsent),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      OutlinedButton.icon(
-                        onPressed: () => _showImportExcelDialog(db),
-                        icon: const Icon(Icons.upload_file, size: 16, color: Colors.green),
-                        label: const Text('Import Excel', style: TextStyle(fontSize: 12, color: Colors.green)),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          side: const BorderSide(color: Colors.green),
-                        ),
-                      ),
+
                     ],
                   ),
                 ),
@@ -432,9 +481,19 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                                   },
                                 ),
                                 title: Text(student.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                                subtitle: Text(
-                                  'NIS: ${student.nis ?? "-"} · Kelas: ${classRoom.name} · ${student.email}',
-                                  style: const TextStyle(fontSize: 11),
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'NISN: ${student.nis ?? "-"} · Kelas: ${classRoom.name} (${student.jurusan ?? classRoom.jurusan}) · ${student.email}',
+                                      style: const TextStyle(fontSize: 11),
+                                    ),
+                                    if (student.whatsappNumber != null && student.whatsappNumber!.isNotEmpty)
+                                      Text(
+                                        'WA Siswa: ${student.whatsappNumber} · WA Ortu: ${student.parentPhoneWa ?? "-"}',
+                                        style: const TextStyle(fontSize: 10, color: AppTheme.textMuted),
+                                      ),
+                                  ],
                                 ),
                                 trailing: Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -496,138 +555,5 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
     );
   }
 
-  void _showImportExcelDialog(MockDatabase db) {
-    String? selectedFileName;
-    
-    showDialog(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              title: const Row(
-                children: [
-                  Icon(Icons.upload_file, color: Colors.green),
-                  SizedBox(width: 8),
-                  Text('Impor Data Siswa'),
-                ],
-              ),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const Text(
-                      'Panduan Impor',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                    ),
-                    const SizedBox(height: 6),
-                    const Text(
-                      '1. Pilih file template Excel/CSV yang sesuai.\n'
-                      '2. Pastikan kolom nama, nisn, kelas, dan jurusan diisi.\n'
-                      '3. Klik Impor Data untuk memproses data siswa.',
-                      style: TextStyle(fontSize: 11, color: AppTheme.textMuted, height: 1.4),
-                    ),
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        border: Border.all(color: Colors.black.withValues(alpha: 0.1)),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Format Kolom:', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-                          SizedBox(height: 2),
-                          Text('nama | nisn | kelas | jurusan | nohp orangtua | no hp siswa', style: TextStyle(fontSize: 9, fontFamily: 'monospace')),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    const Text('Pilih Mock File untuk Di-impor:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                    const SizedBox(height: 8),
-                    DropdownButtonFormField<String>(
-                      hint: const Text('Pilih file Excel...', style: TextStyle(fontSize: 12)),
-                      items: const [
-                        DropdownMenuItem(value: 'rpl_1', child: Text('data_siswa_XI_RPL_1.xlsx', style: TextStyle(fontSize: 12))),
-                        DropdownMenuItem(value: 'tsm_1', child: Text('data_siswa_XI_TSM_1.xlsx', style: TextStyle(fontSize: 12))),
-                        DropdownMenuItem(value: 'baru', child: Text('data_siswa_baru.csv', style: TextStyle(fontSize: 12))),
-                      ],
-                      onChanged: (val) {
-                        setDialogState(() {
-                          selectedFileName = val;
-                        });
-                      },
-                      decoration: const InputDecoration(contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8)),
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('BATAL', style: TextStyle(color: AppTheme.textMuted)),
-                ),
-                ElevatedButton(
-                  onPressed: selectedFileName == null
-                      ? null
-                      : () async {
-                          Navigator.pop(context);
-                          // Show loading overlay
-                          showDialog(
-                            context: context,
-                            barrierDismissible: false,
-                            builder: (context) => const Center(
-                              child: Card(
-                                child: Padding(
-                                  padding: EdgeInsets.all(24.0),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.green)),
-                                      SizedBox(height: 16),
-                                      Text('Memproses file impor...', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          );
 
-                          // Simulate network delay
-                          await Future.delayed(const Duration(milliseconds: 1200));
-                          
-                          if (selectedFileName == 'rpl_1') {
-                            await db.addStudent('Dina Mariana', '12353', 'c1', 'dina@gmail.com');
-                            await db.addStudent('Farhan Saputra', '12354', 'c1', 'farhan@gmail.com');
-                          } else if (selectedFileName == 'tsm_1') {
-                            await db.addStudent('Gilang Ramadhan', '12355', 'c2', 'gilang@gmail.com');
-                            await db.addStudent('Hendra Wijaya', '12356', 'c2', 'hendra@gmail.com');
-                          } else if (selectedFileName == 'baru') {
-                            await db.addStudent('Indah Permata', '12357', 'c3', 'indah@gmail.com');
-                            await db.addStudent('Joko Susilo', '12358', 'c3', 'joko@gmail.com');
-                          }
-
-                          if (context.mounted) {
-                            Navigator.pop(context); // Pop loading dialog
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                backgroundColor: Colors.green.shade700,
-                                content: const Text('Data siswa berhasil di-impor dari Excel!'),
-                              ),
-                            );
-                          }
-                        },
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                  child: const Text('IMPOR DATA'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
 }

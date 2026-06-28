@@ -31,6 +31,11 @@ class User {
   final String? nis; // For students
   final String? classRoomId; // For students
   final String? classRoomName; // For students (from nested class_room)
+  final String? whatsappNumber;
+  final String? parentPhoneWa;
+  final String? jurusan;
+  final String? subject; // For teachers
+  final String? waliKelas; // For teachers
 
   User({
     required this.id,
@@ -41,6 +46,11 @@ class User {
     this.nis,
     this.classRoomId,
     this.classRoomName,
+    this.whatsappNumber,
+    this.parentPhoneWa,
+    this.jurusan,
+    this.subject,
+    this.waliKelas,
   });
 
   Map<String, dynamic> toJson() => {
@@ -51,6 +61,11 @@ class User {
         'nip': nip,
         'nis': nis,
         'classRoomId': classRoomId,
+        'whatsappNumber': whatsappNumber,
+        'parentPhoneWa': parentPhoneWa,
+        'jurusan': jurusan,
+        'subject': subject,
+        'waliKelas': waliKelas,
       };
 
   /// Parse User from mock-style flat JSON (backwards compatible)
@@ -62,6 +77,11 @@ class User {
         nip: json['nip'] as String?,
         nis: json['nis'] as String?,
         classRoomId: json['classRoomId']?.toString() ?? json['class_room_id']?.toString(),
+        whatsappNumber: json['whatsappNumber'] as String? ?? json['whatsapp_number'] as String?,
+        parentPhoneWa: json['parentPhoneWa'] as String? ?? json['parent_phone_wa'] as String?,
+        jurusan: json['jurusan'] as String?,
+        subject: json['subject'] as String?,
+        waliKelas: json['waliKelas'] as String? ?? json['wali_kelas'] as String?,
       );
 
   /// Parse User from Laravel API response (nested structure with student_profile / teacher)
@@ -77,14 +97,14 @@ class User {
       role = (json['roles'] as List).first.toString();
     }
 
-    // Map 'guru_walikelas' and 'guru' roles to the display-compatible 'guru_piket' for teacher screens
-    // (The app's routing uses 'guru_piket' for teacher dashboard access)
-    final normalizedRole = _normalizeRole(role);
-
     String? classRoomName;
     String? classRoomId;
+    String? jurusan;
+    String? parentPhoneWa;
     if (studentProfile != null) {
       classRoomId = studentProfile['class_room_id']?.toString();
+      jurusan = studentProfile['jurusan'] as String?;
+      parentPhoneWa = studentProfile['parent_phone_wa'] as String?;
       final classRoom = studentProfile['class_room'] as Map<String, dynamic>?;
       if (classRoom != null) {
         classRoomName = classRoom['name'] as String?;
@@ -95,19 +115,16 @@ class User {
       id: json['id'].toString(),
       name: json['name'] as String? ?? '',
       email: json['email'] as String? ?? '',
-      role: normalizedRole,
+      role: role,
       nip: teacher?['nip'] as String?,
       nis: studentProfile?['nis'] as String?,
       classRoomId: classRoomId,
       classRoomName: classRoomName,
+      whatsappNumber: json['whatsapp_number'] as String?,
+      parentPhoneWa: parentPhoneWa,
+      jurusan: jurusan,
+      subject: teacher?['subject'] as String?,
+      waliKelas: teacher?['wali_kelas'] as String?,
     );
-  }
-
-  static String _normalizeRole(String role) {
-    // The Flutter app uses 'guru_piket' for all teacher/picket roles
-    if (role == 'petugas_piket' || role == 'guru' || role == 'guru_walikelas') {
-      return 'guru_piket';
-    }
-    return role;
   }
 }

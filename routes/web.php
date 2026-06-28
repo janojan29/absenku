@@ -87,9 +87,9 @@ Route::middleware('auth')->group(function () {
     Route::prefix('guru')->group(function () {
         Route::get('/dashboard', function () {
             return view('teacher.dashboard');
-        })->middleware('role:guru|guru_walikelas|petugas_piket')->name('teacher.dashboard');
+        })->middleware('role:guru|guru_walikelas|petugas_piket|admin')->name('teacher.dashboard');
 
-        Route::middleware('role:guru_walikelas|petugas_piket')->group(function () {
+        Route::middleware('role:guru_walikelas|petugas_piket|admin')->group(function () {
             Route::get('/reports/attendance', [ReportController::class, 'index'])->name('teacher.report');
             Route::get('/reports/attendance/excel', [ReportController::class, 'exportExcel'])->name('teacher.report.excel');
             Route::get('/reports/attendance/pdf', [ReportController::class, 'exportPdf'])->name('teacher.report.pdf');

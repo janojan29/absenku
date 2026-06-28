@@ -118,6 +118,8 @@ class StudentController extends Controller
         }
 
         $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'whatsapp_number' => ['nullable', 'string', 'max:30'],
             'jurusan' => ['required', 'string', 'max:100'],
             'class_room_id' => ['required', 'integer', 'exists:class_rooms,id'],
             'nis' => ['nullable', 'string', 'max:50'],
@@ -135,6 +137,11 @@ class StudentController extends Controller
         }
 
         $data['jurusan'] = $selectedClass->jurusan;
+
+        $user->update([
+            'name' => $data['name'],
+            'whatsapp_number' => $data['whatsapp_number'] ?? null,
+        ]);
 
         StudentProfile::query()->updateOrCreate(
             ['user_id' => $user->id],
