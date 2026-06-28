@@ -31,11 +31,13 @@ class AttendanceService {
     return distance <= _db.radiusMeters;
   }
 
-  Future<void> checkIn(double lat, double lng) async {
-    await _db.checkIn(lat, lng);
+  /// Check in via API — sends coordinates to Laravel
+  Future<String> checkIn(double lat, double lng) async {
+    return await _db.checkIn(lat, lng);
   }
 
-  Future<void> checkOut(double lat, double lng) async {
-    await _db.checkOut(lat, lng);
+  /// Check out via API — sends coordinates to Laravel
+  Future<String> checkOut(double lat, double lng) async {
+    return await _db.checkOut(lat, lng);
   }
 }

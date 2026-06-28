@@ -15,12 +15,25 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
   String _searchQuery = '';
   final _searchController = TextEditingController();
   final List<String> _selectedStudentIds = [];
+  bool _loading = true;
 
   // Form controllers
   final _nameController = TextEditingController();
   final _nisController = TextEditingController();
   final _emailController = TextEditingController();
   String _formClassRoomId = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    final db = MockDatabase();
+    await Future.wait([db.fetchStudents(), db.fetchClassrooms()]);
+    if (mounted) setState(() => _loading = false);
+  }
 
   @override
   void dispose() {
@@ -275,6 +288,8 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
     return ListenableBuilder(
       listenable: MockDatabase(),
       builder: (context, _) {
+        if (_loading) return const Center(child: CircularProgressIndicator());
+
         final db = MockDatabase();
         final students = db.users.where((u) => u.role == 'siswa').toList();
 

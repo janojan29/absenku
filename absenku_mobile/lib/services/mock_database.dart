@@ -1,26 +1,30 @@
-import 'dart:convert';
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user.dart';
 import '../models/attendance.dart';
 import '../core/config/app_config.dart';
+import 'api_client.dart';
 
+/// API-backed database that replaces the mock database.
+/// Maintains the same ChangeNotifier interface so all screens keep working
+/// without modifications. Data is now fetched from the Laravel backend
+/// via the ngrok tunnel.
 class MockDatabase extends ChangeNotifier {
   static final MockDatabase _instance = MockDatabase._internal();
   factory MockDatabase() => _instance;
   MockDatabase._internal();
 
-  SharedPreferences? _prefs;
   bool _initialized = false;
+  bool _isLoading = false;
 
-  // State Lists
+  // State
   List<ClassRoom> _classrooms = [];
   List<User> _users = [];
   List<Attendance> _attendance = [];
   List<LeaveRequest> _leaveRequests = [];
   User? _currentUser;
-  
-  // Settings
+
+  // Settings (loaded from API /attendance endpoint's school setting)
   double _latitude = AppConfig.defaultLatitude;
   double _longitude = AppConfig.defaultLongitude;
   int _radiusMeters = AppConfig.defaultRadiusMeters;
@@ -29,9 +33,28 @@ class MockDatabase extends ChangeNotifier {
   String _checkOutStart = AppConfig.defaultCheckOutStartTime;
   String _checkOutEnd = AppConfig.defaultCheckOutEndTime;
 
-  // Simulated Device Coordinates
+  // Simulated Device Coordinates (still local — GPS)
   double _deviceLatitude = AppConfig.defaultLatitude;
   double _deviceLongitude = AppConfig.defaultLongitude;
+
+  // Attendance page API data
+  bool _canCheckInNow = false;
+  bool _canCheckOutNow = false;
+  bool _hasReachedCheckInStart = false;
+  bool _isAfterCheckInEnd = false;
+  bool _isAfterCheckOutEnd = false;
+  bool _hasApprovedAbsentLeaveToday = false;
+  bool _showLeaveForm = true;
+  bool _isHolidayToday = false;
+  Attendance? _todayAttendance;
+  LeaveRequest? _todayLeaveSubmission;
+  List<String> _absentBlockedDates = [];
+  bool _earlyLeaveBlockedToday = false;
+
+  // Teacher dashboard data
+  Map<String, int> _dashboardCounts = {};
+  List<Map<String, dynamic>> _dashboardStudents = [];
+  String? _dashboardClassRoomId;
 
   // Getters
   List<ClassRoom> get classrooms => _classrooms;
@@ -39,6 +62,7 @@ class MockDatabase extends ChangeNotifier {
   List<Attendance> get attendance => _attendance;
   List<LeaveRequest> get leaveRequests => _leaveRequests;
   User? get currentUser => _currentUser;
+  bool get isLoading => _isLoading;
 
   double get latitude => _latitude;
   double get longitude => _longitude;
@@ -51,6 +75,25 @@ class MockDatabase extends ChangeNotifier {
   double get deviceLatitude => _deviceLatitude;
   double get deviceLongitude => _deviceLongitude;
 
+  bool get canCheckInNow => _canCheckInNow;
+  bool get canCheckOutNow => _canCheckOutNow;
+  bool get hasReachedCheckInStart => _hasReachedCheckInStart;
+  bool get isAfterCheckInEnd => _isAfterCheckInEnd;
+  bool get isAfterCheckOutEnd => _isAfterCheckOutEnd;
+  bool get hasApprovedAbsentLeaveToday => _hasApprovedAbsentLeaveToday;
+  bool get showLeaveForm => _showLeaveForm;
+  bool get isHolidayToday => _isHolidayToday;
+  Attendance? get todayAttendance => _todayAttendance;
+  LeaveRequest? get todayLeaveSubmission => _todayLeaveSubmission;
+  List<String> get absentBlockedDates => _absentBlockedDates;
+  bool get earlyLeaveBlockedToday => _earlyLeaveBlockedToday;
+
+  Map<String, int> get dashboardCounts => _dashboardCounts;
+  List<Map<String, dynamic>> get dashboardStudents => _dashboardStudents;
+  String? get dashboardClassRoomId => _dashboardClassRoomId;
+
+  Dio get _dio => ApiClient().dio;
+
   void setDeviceLocation(double lat, double lng) {
     _deviceLatitude = lat;
     _deviceLongitude = lng;
@@ -59,437 +102,385 @@ class MockDatabase extends ChangeNotifier {
 
   Future<void> init() async {
     if (_initialized) return;
-    _prefs = await SharedPreferences.getInstance();
-    
-    // Load Classrooms
-    final classroomsJson = _prefs?.getString('classrooms');
-    if (classroomsJson != null) {
-      final List decoded = json.decode(classroomsJson);
-      _classrooms = decoded.map((item) => ClassRoom.fromJson(item)).toList();
-    } else {
-      _classrooms = [
-        ClassRoom(id: 'c1', name: 'XI RPL 1', jurusan: 'Rekayasa Perangkat Lunak'),
-        ClassRoom(id: 'c2', name: 'XI TSM 1', jurusan: 'Teknik Sepeda Motor'),
-        ClassRoom(id: 'c3', name: 'X RPL 1', jurusan: 'Rekayasa Perangkat Lunak'),
-        ClassRoom(id: 'c4', name: 'XII RPL 1', jurusan: 'Rekayasa Perangkat Lunak'),
-      ];
-      await _saveClassrooms();
-    }
+    await ApiClient().init();
 
-    // Load Users
-    final usersJson = _prefs?.getString('users');
-    if (usersJson != null) {
-      final List decoded = json.decode(usersJson);
-      _users = decoded.map((item) => User.fromJson(item)).toList();
-    } else {
-      _users = [
-        User(id: 'u1', name: 'Admin Absenku', email: 'admin@gmail.com', role: 'admin'),
-        User(id: 'u2', name: 'Budi Santoso, S.Pd.', email: 'budi@gmail.com', role: 'guru_piket', nip: '198205122010011003'),
-        User(id: 'u3', name: 'Rian Hidayat', email: 'rian@gmail.com', role: 'siswa', nis: '12345', classRoomId: 'c1'),
-        User(id: 'u4', name: 'Aisyah Putri', email: 'aisyah@gmail.com', role: 'siswa', nis: '12346', classRoomId: 'c1'),
-        User(id: 'u5', name: 'Dedi Wijaya', email: 'dedi@gmail.com', role: 'siswa', nis: '12347', classRoomId: 'c2'),
-        User(id: 'u6', name: 'Siti Aminah', email: 'siti@gmail.com', role: 'siswa', nis: '12348', classRoomId: 'c2'),
-      ];
-      await _saveUsers();
-    }
-
-    // Load Settings
-    _latitude = _prefs?.getDouble('latitude') ?? AppConfig.defaultLatitude;
-    _longitude = _prefs?.getDouble('longitude') ?? AppConfig.defaultLongitude;
-    _radiusMeters = _prefs?.getInt('radiusMeters') ?? AppConfig.defaultRadiusMeters;
-    _checkInStart = _prefs?.getString('checkInStart') ?? AppConfig.defaultCheckInStartTime;
-    _checkInEnd = _prefs?.getString('checkInEnd') ?? AppConfig.defaultCheckInEndTime;
-    _checkOutStart = _prefs?.getString('checkOutStart') ?? AppConfig.defaultCheckOutStartTime;
-    _checkOutEnd = _prefs?.getString('checkOutEnd') ?? AppConfig.defaultCheckOutEndTime;
-
-    // Load Attendance
-    final attendanceJson = _prefs?.getString('attendance');
-    if (attendanceJson != null) {
-      final List decoded = json.decode(attendanceJson);
-      _attendance = decoded.map((item) => Attendance.fromJson(item)).toList();
-    } else {
-      // Generate some historical logs for the past 7 days (excluding today) for our students
-      _attendance = [];
-      final now = DateTime.now();
-      for (int i = 1; i <= 7; i++) {
-        final date = DateTime(now.year, now.month, now.day - i);
-        // Exclude Sunday (day 7 of week in Dart is Sunday)
-        if (date.weekday == DateTime.sunday) continue;
-        
-        // Rian (u3): Present every day, some late
-        _attendance.add(Attendance(
-          id: 'a_u3_$i',
-          userId: 'u3',
-          checkInAt: DateTime(date.year, date.month, date.day, 6, 45 + (i % 3 == 0 ? 30 : 0)), // i % 3 == 0 is late (07:15)
-          checkOutAt: DateTime(date.year, date.month, date.day, 15, 5 + (i * 2)),
-          date: date,
-          status: i % 3 == 0 ? 'late' : 'present',
-          latitude: _latitude,
-          longitude: _longitude,
-        ));
-
-        // Aisyah (u4): Had a leave on day 2
-        if (i == 2) {
-          _attendance.add(Attendance(
-            id: 'a_u4_$i',
-            userId: 'u4',
-            date: date,
-            status: 'leave',
-          ));
-        } else {
-          _attendance.add(Attendance(
-            id: 'a_u4_$i',
-            userId: 'u4',
-            checkInAt: DateTime(date.year, date.month, date.day, 6, 50),
-            checkOutAt: DateTime(date.year, date.month, date.day, 15, 10),
-            date: date,
-            status: 'present',
-            latitude: _latitude,
-            longitude: _longitude,
-          ));
+    // Try to restore session if token exists
+    final hasToken = await ApiClient().hasToken();
+    if (hasToken) {
+      try {
+        final response = await _dio.get('/user');
+        if (response.statusCode == 200) {
+          final userData = response.data['data']['user'] as Map<String, dynamic>;
+          _currentUser = User.fromApiJson(userData);
         }
-
-        // Dedi (u5): Absent (Alfa) on day 4
-        if (i == 4) {
-          _attendance.add(Attendance(
-            id: 'a_u5_$i',
-            userId: 'u5',
-            date: date,
-            status: 'absent',
-          ));
-        } else {
-          _attendance.add(Attendance(
-            id: 'a_u5_$i',
-            userId: 'u5',
-            checkInAt: DateTime(date.year, date.month, date.day, 7, 10), // Late
-            checkOutAt: DateTime(date.year, date.month, date.day, 15, 2),
-            date: date,
-            status: 'late',
-            latitude: _latitude,
-            longitude: _longitude,
-          ));
-        }
+      } catch (e) {
+        // Token expired or invalid, clear it
+        await ApiClient().clearToken();
+        _currentUser = null;
       }
-      await _saveAttendance();
-    }
-
-    // Load Leave Requests
-    final leavesJson = _prefs?.getString('leaveRequests');
-    if (leavesJson != null) {
-      final List decoded = json.decode(leavesJson);
-      _leaveRequests = decoded.map((item) => LeaveRequest.fromJson(item)).toList();
-    } else {
-      final now = DateTime.now();
-      _leaveRequests = [
-        // u4 has a leave request for yesterday (approved)
-        LeaveRequest(
-          id: 'l1',
-          userId: 'u4',
-          type: 'absent',
-          date: DateTime(now.year, now.month, now.day - 2),
-          reason: 'sick',
-          keterangan: 'Sakit demam, disarankan dokter istirahat.',
-          status: 'approved',
-          decidedAt: DateTime(now.year, now.month, now.day - 2, 8, 30),
-          decidedById: 'u2',
-          decisionNote: 'ACC. Semoga lekas sembuh.',
-        ),
-        // u5 has a pending leave request for Today
-        LeaveRequest(
-          id: 'l2',
-          userId: 'u5',
-          type: 'absent',
-          date: DateTime(now.year, now.month, now.day),
-          reason: 'urgent',
-          keterangan: 'Ada urusan keluarga penting ke luar kota.',
-          status: 'pending',
-        ),
-      ];
-      await _saveLeaveRequests();
-    }
-
-    // Restore login session if saved
-    final savedUserId = _prefs?.getString('currentUserId');
-    if (savedUserId != null) {
-      _currentUser = _users.firstWhere((u) => u.id == savedUserId, orElse: () => _users[2]); // Default to Rian if not found
     }
 
     _initialized = true;
     notifyListeners();
   }
 
+  // ──────────────────────────────────────────────
   // Auth Operations
-  Future<User?> login(String email, String password) async {
-    // Basic password matching, for testing email is user email, password is "password"
-    final matchedUser = _users.firstWhere(
-      (u) => u.email.toLowerCase().trim() == email.toLowerCase().trim() && password == 'password',
-      orElse: () => throw Exception('Email atau password salah. (Gunakan password "password")'),
-    );
-    _currentUser = matchedUser;
-    await _prefs?.setString('currentUserId', matchedUser.id);
-    notifyListeners();
-    return matchedUser;
+  // ──────────────────────────────────────────────
+
+  Future<User?> login(String loginIdentifier, String password) async {
+    try {
+      final response = await _dio.post('/login', data: {
+        'login_identifier': loginIdentifier,
+        'password': password,
+        'device_name': 'flutter_mobile',
+      });
+
+      if (response.statusCode == 200) {
+        final token = response.data['token'] as String;
+        await ApiClient().saveToken(token);
+
+        final userData = response.data['user'] as Map<String, dynamic>;
+        _currentUser = User.fromApiJson(userData);
+        notifyListeners();
+        return _currentUser;
+      }
+      throw Exception('Login gagal. Periksa kembali identitas dan password.');
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 422) {
+        // Validation error from Laravel
+        final errors = e.response?.data;
+        String message = 'Login gagal.';
+        if (errors is Map && errors['errors'] != null) {
+          final errorMap = errors['errors'] as Map<String, dynamic>;
+          final firstError = errorMap.values.first;
+          if (firstError is List && firstError.isNotEmpty) {
+            message = firstError.first.toString();
+          }
+        } else if (errors is Map && errors['message'] != null) {
+          message = errors['message'].toString();
+        }
+        throw Exception(message);
+      }
+      throw Exception('Tidak dapat terhubung ke server. Periksa koneksi internet.');
+    }
   }
 
   Future<void> logout() async {
+    try {
+      await _dio.post('/logout');
+    } catch (_) {
+      // Even if logout API fails, clear local state
+    }
+    await ApiClient().clearToken();
     _currentUser = null;
-    await _prefs?.remove('currentUserId');
+    _attendance = [];
+    _leaveRequests = [];
+    _todayAttendance = null;
+    _todayLeaveSubmission = null;
+    _absentBlockedDates = [];
+    _earlyLeaveBlockedToday = false;
     notifyListeners();
   }
 
-  // Attendance Operations
-  Future<void> checkIn(double lat, double lng) async {
-    if (_currentUser == null || _currentUser!.role != 'siswa') return;
-    
-    final today = DateTime.now();
-    final todayStart = DateTime(today.year, today.month, today.day);
-    
-    // Check if check-in already exists
-    final idx = _attendance.indexWhere(
-        (a) => a.userId == _currentUser!.id && 
-               a.date.year == today.year && 
-               a.date.month == today.month && 
-               a.date.day == today.day);
+  // ──────────────────────────────────────────────
+  // Student Attendance Operations
+  // ──────────────────────────────────────────────
 
-    // Determine status (present or late)
-    final checkInLimit = _timeToDateTime(today, _checkInEnd);
-    final status = today.isAfter(checkInLimit) ? 'late' : 'present';
+  /// Fetch attendance data for current student from API
+  Future<void> fetchAttendanceData() async {
+    if (_currentUser == null) return;
+    _isLoading = true;
+    notifyListeners();
 
-    if (idx != -1) {
-      // Update check in time
-      if (_attendance[idx].checkInAt == null) {
-        _attendance[idx] = _attendance[idx].copyWith(
-          checkInAt: today,
-          status: status,
-          latitude: lat,
-          longitude: lng,
-        );
+    try {
+      final response = await _dio.get('/attendance');
+      if (response.statusCode == 200) {
+        final data = response.data['data'] as Map<String, dynamic>;
+
+        // Parse today's attendance
+        if (data['attendance'] != null) {
+          _todayAttendance = Attendance.fromApiJson(data['attendance'] as Map<String, dynamic>);
+        } else {
+          _todayAttendance = null;
+        }
+
+        // Parse recent history
+        final recentList = data['recent'] as List? ?? [];
+        _attendance = recentList
+            .map((item) => Attendance.fromApiJson(item as Map<String, dynamic>))
+            .toList();
+
+        // Parse school setting
+        final setting = data['setting'] as Map<String, dynamic>?;
+        if (setting != null) {
+          _latitude = (setting['latitude'] as num?)?.toDouble() ?? _latitude;
+          _longitude = (setting['longitude'] as num?)?.toDouble() ?? _longitude;
+          _radiusMeters = (setting['radius_meters'] as num?)?.toInt() ?? _radiusMeters;
+          _checkInStart = setting['check_in_start_time'] as String? ?? _checkInStart;
+          _checkInEnd = setting['check_in_end_time'] as String? ?? _checkInEnd;
+          _checkOutStart = setting['check_out_start_time'] as String? ?? _checkOutStart;
+          _checkOutEnd = setting['check_out_end_time'] as String? ?? _checkOutEnd;
+        }
+
+        // Parse boolean flags from server
+        _canCheckInNow = data['can_check_in_now'] as bool? ?? false;
+        _canCheckOutNow = data['can_check_out_now'] as bool? ?? false;
+        _hasReachedCheckInStart = data['has_reached_check_in_start'] as bool? ?? false;
+        _isAfterCheckInEnd = data['is_after_check_in_end'] as bool? ?? false;
+        _isAfterCheckOutEnd = data['is_after_check_out_end'] as bool? ?? false;
+        _hasApprovedAbsentLeaveToday = data['has_approved_absent_leave_today'] as bool? ?? false;
+        _showLeaveForm = data['show_leave_form'] as bool? ?? true;
+        _isHolidayToday = data['is_holiday_today'] as bool? ?? false;
+        _absentBlockedDates = (data['absent_blocked_dates'] as List?)?.map((e) => e.toString()).toList() ?? [];
+        _earlyLeaveBlockedToday = data['early_leave_blocked_today'] as bool? ?? false;
+
+        // Parse today's leave submission
+        if (data['today_leave_submission'] != null) {
+          _todayLeaveSubmission = LeaveRequest.fromApiJson(
+            data['today_leave_submission'] as Map<String, dynamic>,
+          );
+        } else {
+          _todayLeaveSubmission = null;
+        }
       }
-    } else {
-      // Create new record
-      _attendance.add(Attendance(
-        id: 'att_${_currentUser!.id}_${today.millisecondsSinceEpoch}',
-        userId: _currentUser!.id,
-        checkInAt: today,
-        date: todayStart,
-        status: status,
-        latitude: lat,
-        longitude: lng,
-      ));
+    } catch (e) {
+      debugPrint('Error fetching attendance data: $e');
     }
-    
-    await _saveAttendance();
+
+    _isLoading = false;
     notifyListeners();
   }
 
-  Future<void> checkOut(double lat, double lng) async {
-    if (_currentUser == null || _currentUser!.role != 'siswa') return;
-    
-    final today = DateTime.now();
-    final idx = _attendance.indexWhere(
-        (a) => a.userId == _currentUser!.id && 
-               a.date.year == today.year && 
-               a.date.month == today.month && 
-               a.date.day == today.day);
-
-    if (idx != -1) {
-      _attendance[idx] = _attendance[idx].copyWith(
-        checkOutAt: today,
-      );
-    } else {
-      // checkout without checkin? (should not happen normally but let's handle it)
-      _attendance.add(Attendance(
-        id: 'att_${_currentUser!.id}_${today.millisecondsSinceEpoch}',
-        userId: _currentUser!.id,
-        checkOutAt: today,
-        date: DateTime(today.year, today.month, today.day),
-        status: 'present',
-        latitude: lat,
-        longitude: lng,
-      ));
+  Future<String> checkIn(double lat, double lng) async {
+    try {
+      final response = await _dio.post('/attendance/check-in', data: {
+        'latitude': lat,
+        'longitude': lng,
+        'accuracy': 10.0,
+      });
+      await fetchAttendanceData(); // Refresh data
+      return response.data['message'] as String? ?? 'Berhasil Absen Masuk!';
+    } on DioException catch (e) {
+      if (e.response?.data != null && e.response?.data['message'] != null) {
+        throw Exception(e.response!.data['message'].toString());
+      }
+      throw Exception('Gagal melakukan check-in. Periksa koneksi.');
     }
-
-    await _saveAttendance();
-    notifyListeners();
   }
 
+  Future<String> checkOut(double lat, double lng) async {
+    try {
+      final response = await _dio.post('/attendance/check-out', data: {
+        'latitude': lat,
+        'longitude': lng,
+        'accuracy': 10.0,
+      });
+      await fetchAttendanceData(); // Refresh data
+      return response.data['message'] as String? ?? 'Berhasil Absen Pulang!';
+    } on DioException catch (e) {
+      if (e.response?.data != null && e.response?.data['message'] != null) {
+        throw Exception(e.response!.data['message'].toString());
+      }
+      throw Exception('Gagal melakukan check-out. Periksa koneksi.');
+    }
+  }
+
+  // ──────────────────────────────────────────────
   // Leave Requests Operations
+  // ──────────────────────────────────────────────
+
   Future<void> submitLeaveRequest(String type, DateTime date, String reason, String keterangan) async {
-    if (_currentUser == null || _currentUser!.role != 'siswa') return;
+    try {
+      await _dio.post('/leave-requests', data: {
+        'type': type,
+        'reason': reason,
+        'keterangan': keterangan,
+        'leave_date': '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}',
+      });
+      // Refresh attendance data to update leave status
+      await fetchAttendanceData();
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 422) {
+        final errors = e.response?.data;
+        String message = 'Gagal mengajukan izin.';
+        if (errors is Map && errors['errors'] != null) {
+          final errorMap = errors['errors'] as Map<String, dynamic>;
+          final firstError = errorMap.values.first;
+          if (firstError is List && firstError.isNotEmpty) {
+            message = firstError.first.toString();
+          }
+        } else if (errors is Map && errors['message'] != null) {
+          message = errors['message'].toString();
+        }
+        throw Exception(message);
+      }
+      throw Exception('Gagal mengajukan izin. Periksa koneksi.');
+    }
+  }
 
-    // Check if already submitted for this date
-    final dateOnly = DateTime(date.year, date.month, date.day);
-    final exists = _leaveRequests.any(
-      (l) => l.userId == _currentUser!.id && 
-             l.date.year == dateOnly.year && 
-             l.date.month == dateOnly.month && 
-             l.date.day == dateOnly.day
-    );
+  // ──────────────────────────────────────────────
+  // Picket Officer — Leave Queue Operations
+  // ──────────────────────────────────────────────
 
-    if (exists) {
-      throw Exception('Anda sudah mengajukan izin untuk tanggal ini.');
+  Future<void> fetchLeaveQueue() async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final response = await _dio.get('/picket/leave-requests');
+      if (response.statusCode == 200) {
+        final pendingData = response.data['pending']['data'] as List? ?? [];
+        final historyData = response.data['history']['data'] as List? ?? [];
+
+        _leaveRequests = [
+          ...pendingData.map((item) => LeaveRequest.fromApiJson(item as Map<String, dynamic>)),
+          ...historyData.map((item) => LeaveRequest.fromApiJson(item as Map<String, dynamic>)),
+        ];
+      }
+    } catch (e) {
+      debugPrint('Error fetching leave queue: $e');
     }
 
-    final newReq = LeaveRequest(
-      id: 'leave_${_currentUser!.id}_${DateTime.now().millisecondsSinceEpoch}',
-      userId: _currentUser!.id,
-      type: type,
-      date: dateOnly,
-      reason: reason,
-      keterangan: keterangan,
-      status: 'pending',
-    );
-
-    _leaveRequests.insert(0, newReq); // Add to beginning of list
-    await _saveLeaveRequests();
+    _isLoading = false;
     notifyListeners();
   }
 
   Future<void> approveLeaveRequest(String id, String decidedById, String note) async {
-    final idx = _leaveRequests.indexWhere((l) => l.id == id);
-    if (idx == -1) return;
-
-    final updated = _leaveRequests[idx].copyWith(
-      status: 'approved',
-      decidedAt: DateTime.now(),
-      decidedById: decidedById,
-      decisionNote: note,
-    );
-    _leaveRequests[idx] = updated;
-    await _saveLeaveRequests();
-
-    // Lock attendance for this date as 'leave'
-    final leaveDate = updated.date;
-    final attIdx = _attendance.indexWhere(
-      (a) => a.userId == updated.userId &&
-             a.date.year == leaveDate.year &&
-             a.date.month == leaveDate.month &&
-             a.date.day == leaveDate.day
-    );
-
-    if (attIdx != -1) {
-      _attendance[attIdx] = _attendance[attIdx].copyWith(status: 'leave');
-    } else {
-      _attendance.add(Attendance(
-        id: 'att_${updated.userId}_${leaveDate.millisecondsSinceEpoch}',
-        userId: updated.userId,
-        date: leaveDate,
-        status: 'leave',
-      ));
+    try {
+      await _dio.post('/picket/leave-requests/$id/approve', data: {
+        'decision_note': note,
+      });
+      await fetchLeaveQueue(); // Refresh
+    } on DioException catch (e) {
+      if (e.response?.data != null && e.response?.data['message'] != null) {
+        throw Exception(e.response!.data['message'].toString());
+      }
+      throw Exception('Gagal menyetujui izin.');
     }
-    await _saveAttendance();
-    notifyListeners();
   }
 
   Future<void> rejectLeaveRequest(String id, String decidedById, String note) async {
-    final idx = _leaveRequests.indexWhere((l) => l.id == id);
-    if (idx == -1) return;
+    try {
+      await _dio.post('/picket/leave-requests/$id/reject', data: {
+        'decision_note': note,
+      });
+      await fetchLeaveQueue(); // Refresh
+    } on DioException catch (e) {
+      if (e.response?.data != null && e.response?.data['message'] != null) {
+        throw Exception(e.response!.data['message'].toString());
+      }
+      throw Exception('Gagal menolak izin.');
+    }
+  }
 
-    _leaveRequests[idx] = _leaveRequests[idx].copyWith(
-      status: 'rejected',
-      decidedAt: DateTime.now(),
-      decidedById: decidedById,
-      decisionNote: note,
-    );
-    await _saveLeaveRequests();
+  // ──────────────────────────────────────────────
+  // Teacher Dashboard
+  // ──────────────────────────────────────────────
+
+  Future<void> fetchTeacherDashboard({String? classRoomId}) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final queryParams = <String, dynamic>{};
+      if (classRoomId != null) {
+        queryParams['class_room_id'] = classRoomId;
+      }
+
+      final response = await _dio.get('/teacher/dashboard', queryParameters: queryParams);
+      if (response.statusCode == 200) {
+        final data = response.data['data'] as Map<String, dynamic>;
+
+        // Parse counts
+        final counts = data['counts'] as Map<String, dynamic>?;
+        if (counts != null) {
+          _dashboardCounts = counts.map((k, v) => MapEntry(k, (v as num).toInt()));
+        }
+
+        // Parse students
+        _dashboardStudents = (data['students'] as List? ?? [])
+            .map((item) => Map<String, dynamic>.from(item as Map))
+            .toList();
+
+        _dashboardClassRoomId = data['class_room_id']?.toString();
+
+        // Parse classrooms list
+        final classroomsList = data['classrooms'] as List? ?? [];
+        _classrooms = classroomsList
+            .map((item) => ClassRoom.fromJson(item as Map<String, dynamic>))
+            .toList();
+      }
+    } catch (e) {
+      debugPrint('Error fetching teacher dashboard: $e');
+    }
+
+    _isLoading = false;
     notifyListeners();
   }
 
-  // Admin Classroom Operations
-  Future<void> addClassRoom(String name, String jurusan) async {
-    final newClass = ClassRoom(
-      id: 'c_${DateTime.now().millisecondsSinceEpoch}',
-      name: name,
-      jurusan: jurusan,
-    );
-    _classrooms.add(newClass);
-    await _saveClassrooms();
-    notifyListeners();
+  // ──────────────────────────────────────────────
+  // Teacher Reports
+  // ──────────────────────────────────────────────
+
+  Future<List<dynamic>> fetchTeacherReport({
+    String? classRoomId,
+    String? startDate,
+    String? endDate,
+    String? status,
+  }) async {
+    try {
+      final queryParams = <String, dynamic>{};
+      if (classRoomId != null && classRoomId.isNotEmpty) {
+        queryParams['class_room_id'] = classRoomId;
+      }
+      if (startDate != null && startDate.isNotEmpty) {
+        queryParams['detail_start_date'] = startDate;
+      }
+      if (endDate != null && endDate.isNotEmpty) {
+        queryParams['detail_end_date'] = endDate;
+      }
+      if (status != null && status.isNotEmpty) {
+        queryParams['status'] = status;
+      }
+
+      final response = await _dio.get('/teacher/reports/attendance', queryParameters: queryParams);
+      if (response.statusCode == 200 && response.data != null) {
+        final dataMap = response.data as Map<String, dynamic>;
+        final data = dataMap['data'] as Map<String, dynamic>?;
+        if (data != null && data['rows'] != null) {
+          return data['rows'] as List<dynamic>;
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching teacher report: $e');
+    }
+    return [];
   }
 
-  Future<void> deleteClassRoom(String id) async {
-    _classrooms.removeWhere((c) => c.id == id);
-    await _saveClassrooms();
-    notifyListeners();
+  // ──────────────────────────────────────────────
+  // Admin Operations
+  // ──────────────────────────────────────────────
+
+  Future<void> fetchAdminSettings() async {
+    try {
+      final response = await _dio.get('/admin/settings');
+      if (response.statusCode == 200) {
+        final data = response.data['data'] as Map<String, dynamic>? ?? response.data as Map<String, dynamic>;
+        _latitude = (data['latitude'] as num?)?.toDouble() ?? _latitude;
+        _longitude = (data['longitude'] as num?)?.toDouble() ?? _longitude;
+        _radiusMeters = (data['radius_meters'] as num?)?.toInt() ?? _radiusMeters;
+        _checkInStart = data['check_in_start_time'] as String? ?? _checkInStart;
+        _checkInEnd = data['check_in_end_time'] as String? ?? _checkInEnd;
+        _checkOutStart = data['check_out_start_time'] as String? ?? _checkOutStart;
+        _checkOutEnd = data['check_out_end_time'] as String? ?? _checkOutEnd;
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Error fetching admin settings: $e');
+    }
   }
 
-  // Admin Student Operations
-  Future<void> addStudent(String name, String nis, String classRoomId, String email) async {
-    final newStudent = User(
-      id: 'u_${DateTime.now().millisecondsSinceEpoch}',
-      name: name,
-      email: email,
-      role: 'siswa',
-      nis: nis,
-      classRoomId: classRoomId,
-    );
-    _users.add(newStudent);
-    await _saveUsers();
-    notifyListeners();
-  }
-
-  Future<void> updateStudent(String id, String name, String nis, String classRoomId, String email) async {
-    final idx = _users.indexWhere((u) => u.id == id);
-    if (idx == -1) return;
-
-    _users[idx] = User(
-      id: id,
-      name: name,
-      email: email,
-      role: 'siswa',
-      nis: nis,
-      classRoomId: classRoomId,
-    );
-    await _saveUsers();
-    notifyListeners();
-  }
-
-  Future<void> deleteStudent(String id) async {
-    _users.removeWhere((u) => u.id == id);
-    _attendance.removeWhere((a) => a.userId == id);
-    _leaveRequests.removeWhere((l) => l.userId == id);
-    await _saveUsers();
-    await _saveAttendance();
-    await _saveLeaveRequests();
-    notifyListeners();
-  }
-
-  // Admin Teacher Operations
-  Future<void> addTeacher(String name, String nip, String email) async {
-    final newTeacher = User(
-      id: 'u_${DateTime.now().millisecondsSinceEpoch}',
-      name: name,
-      email: email,
-      role: 'guru_piket',
-      nip: nip,
-    );
-    _users.add(newTeacher);
-    await _saveUsers();
-    notifyListeners();
-  }
-
-  Future<void> updateTeacher(String id, String name, String nip, String email) async {
-    final idx = _users.indexWhere((u) => u.id == id);
-    if (idx == -1) return;
-
-    _users[idx] = User(
-      id: id,
-      name: name,
-      email: email,
-      role: 'guru_piket',
-      nip: nip,
-    );
-    await _saveUsers();
-    notifyListeners();
-  }
-
-  Future<void> deleteTeacher(String id) async {
-    _users.removeWhere((u) => u.id == id);
-    await _saveUsers();
-    notifyListeners();
-  }
-
-  // Admin Settings Operations
   Future<void> updateSettings({
     required double latitude,
     required double longitude,
@@ -499,80 +490,244 @@ class MockDatabase extends ChangeNotifier {
     required String checkOutStart,
     required String checkOutEnd,
   }) async {
-    _latitude = latitude;
-    _longitude = longitude;
-    _radiusMeters = radiusMeters;
-    _checkInStart = checkInStart;
-    _checkInEnd = checkInEnd;
-    _checkOutStart = checkOutStart;
-    _checkOutEnd = checkOutEnd;
+    try {
+      await _dio.patch('/admin/settings', data: {
+        'latitude': latitude,
+        'longitude': longitude,
+        'radius_meters': radiusMeters,
+        'check_in_start_time': checkInStart,
+        'check_in_end_time': checkInEnd,
+        'check_out_start_time': checkOutStart,
+        'check_out_end_time': checkOutEnd,
+      });
 
-    await _prefs?.setDouble('latitude', latitude);
-    await _prefs?.setDouble('longitude', longitude);
-    await _prefs?.setInt('radiusMeters', radiusMeters);
-    await _prefs?.setString('checkInStart', checkInStart);
-    await _prefs?.setString('checkInEnd', checkInEnd);
-    await _prefs?.setString('checkOutStart', checkOutStart);
-    await _prefs?.setString('checkOutEnd', checkOutEnd);
-
-    notifyListeners();
+      _latitude = latitude;
+      _longitude = longitude;
+      _radiusMeters = radiusMeters;
+      _checkInStart = checkInStart;
+      _checkInEnd = checkInEnd;
+      _checkOutStart = checkOutStart;
+      _checkOutEnd = checkOutEnd;
+      notifyListeners();
+    } on DioException catch (e) {
+      if (e.response?.data != null && e.response?.data['message'] != null) {
+        throw Exception(e.response!.data['message'].toString());
+      }
+      throw Exception('Gagal menyimpan pengaturan.');
+    }
   }
 
-  // Bulk Actions
+  // Admin Classroom Operations
+  Future<void> fetchClassrooms() async {
+    try {
+      final response = await _dio.get('/admin/class-rooms');
+      if (response.statusCode == 200) {
+        final data = response.data['data'] as List? ?? response.data as List? ?? [];
+        _classrooms = data.map((item) => ClassRoom.fromJson(item as Map<String, dynamic>)).toList();
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Error fetching classrooms: $e');
+    }
+  }
+
+  Future<void> addClassRoom(String name, String jurusan) async {
+    try {
+      await _dio.post('/admin/class-rooms', data: {
+        'name': name,
+        'jurusan': jurusan,
+      });
+      await fetchClassrooms();
+    } on DioException catch (e) {
+      if (e.response?.data != null && e.response?.data['message'] != null) {
+        throw Exception(e.response!.data['message'].toString());
+      }
+      throw Exception('Gagal menambahkan kelas.');
+    }
+  }
+
+  Future<void> deleteClassRoom(String id) async {
+    try {
+      await _dio.delete('/admin/class-rooms/$id');
+      _classrooms.removeWhere((c) => c.id == id);
+      notifyListeners();
+    } on DioException catch (e) {
+      if (e.response?.data != null && e.response?.data['message'] != null) {
+        throw Exception(e.response!.data['message'].toString());
+      }
+      throw Exception('Gagal menghapus kelas.');
+    }
+  }
+
+  // Admin Student Operations
+  Future<void> fetchStudents() async {
+    try {
+      final response = await _dio.get('/admin/students');
+      if (response.statusCode == 200) {
+        final data = response.data['data'] as List? ?? [];
+        _users = data.map((item) {
+          final map = item as Map<String, dynamic>;
+          return User(
+            id: map['id'].toString(),
+            name: map['name'] as String? ?? '',
+            email: map['email'] as String? ?? '',
+            role: 'siswa',
+            nis: map['nis'] as String? ?? (map['student_profile'] as Map?)?['nis'] as String?,
+            classRoomId: map['class_room_id']?.toString() ?? (map['student_profile'] as Map?)?['class_room_id']?.toString(),
+          );
+        }).toList();
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Error fetching students: $e');
+    }
+  }
+
+  Future<void> addStudent(String name, String nis, String classRoomId, String email) async {
+    try {
+      await _dio.post('/admin/students', data: {
+        'name': name,
+        'nis': nis,
+        'class_room_id': classRoomId,
+        'email': email,
+        'password': 'password',
+      });
+      await fetchStudents();
+    } on DioException catch (e) {
+      if (e.response?.data != null && e.response?.data['message'] != null) {
+        throw Exception(e.response!.data['message'].toString());
+      }
+      throw Exception('Gagal menambahkan siswa.');
+    }
+  }
+
+  Future<void> updateStudent(String id, String name, String nis, String classRoomId, String email) async {
+    try {
+      await _dio.patch('/admin/students/$id', data: {
+        'name': name,
+        'nis': nis,
+        'class_room_id': classRoomId,
+        'email': email,
+      });
+      await fetchStudents();
+    } on DioException catch (e) {
+      if (e.response?.data != null && e.response?.data['message'] != null) {
+        throw Exception(e.response!.data['message'].toString());
+      }
+      throw Exception('Gagal mengubah data siswa.');
+    }
+  }
+
+  Future<void> deleteStudent(String id) async {
+    try {
+      await _dio.delete('/admin/users/$id');
+      _users.removeWhere((u) => u.id == id);
+      notifyListeners();
+    } on DioException catch (e) {
+      if (e.response?.data != null && e.response?.data['message'] != null) {
+        throw Exception(e.response!.data['message'].toString());
+      }
+      throw Exception('Gagal menghapus siswa.');
+    }
+  }
+
+  // Admin Teacher Operations
+  Future<void> fetchTeachers() async {
+    try {
+      final response = await _dio.get('/admin/teachers');
+      if (response.statusCode == 200) {
+        final data = response.data['data'] as List? ?? [];
+        // Don't overwrite _users, add teacher users separately
+        final teacherUsers = data.map((item) {
+          final map = item as Map<String, dynamic>;
+          return User(
+            id: map['id'].toString(),
+            name: map['name'] as String? ?? '',
+            email: map['email'] as String? ?? '',
+            role: 'guru_piket',
+            nip: map['nip'] as String? ?? (map['teacher'] as Map?)?['nip'] as String?,
+          );
+        }).toList();
+        // Remove existing teacher users from _users and add new ones
+        _users.removeWhere((u) => u.role == 'guru_piket');
+        _users.addAll(teacherUsers);
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Error fetching teachers: $e');
+    }
+  }
+
+  Future<void> addTeacher(String name, String nip, String email) async {
+    try {
+      await _dio.post('/admin/teachers', data: {
+        'name': name,
+        'nip': nip,
+        'email': email,
+        'password': 'password',
+      });
+      await fetchTeachers();
+    } on DioException catch (e) {
+      if (e.response?.data != null && e.response?.data['message'] != null) {
+        throw Exception(e.response!.data['message'].toString());
+      }
+      throw Exception('Gagal menambahkan guru.');
+    }
+  }
+
+  Future<void> updateTeacher(String id, String name, String nip, String email) async {
+    try {
+      await _dio.patch('/admin/teachers/$id', data: {
+        'name': name,
+        'nip': nip,
+        'email': email,
+      });
+      await fetchTeachers();
+    } on DioException catch (e) {
+      if (e.response?.data != null && e.response?.data['message'] != null) {
+        throw Exception(e.response!.data['message'].toString());
+      }
+      throw Exception('Gagal mengubah data guru.');
+    }
+  }
+
+  Future<void> deleteTeacher(String id) async {
+    try {
+      await _dio.delete('/admin/users/$id');
+      _users.removeWhere((u) => u.id == id);
+      notifyListeners();
+    } on DioException catch (e) {
+      if (e.response?.data != null && e.response?.data['message'] != null) {
+        throw Exception(e.response!.data['message'].toString());
+      }
+      throw Exception('Gagal menghapus guru.');
+    }
+  }
+
+  // Bulk Operations — delegated to admin endpoints
   Future<void> bulkUpdateClass(List<String> studentIds, String newClassId) async {
+    // The admin API may not have a bulk endpoint, update one by one
     for (var id in studentIds) {
-      final idx = _users.indexWhere((u) => u.id == id);
-      if (idx != -1) {
-        _users[idx] = User(
-          id: _users[idx].id,
-          name: _users[idx].name,
-          email: _users[idx].email,
-          role: 'siswa',
-          nis: _users[idx].nis,
-          classRoomId: newClassId,
-        );
+      final student = _users.firstWhere((u) => u.id == id, orElse: () => User(id: '', name: '', email: '', role: 'siswa'));
+      if (student.id.isNotEmpty) {
+        try {
+          await _dio.patch('/admin/students/$id', data: {
+            'class_room_id': newClassId,
+          });
+        } catch (_) {}
       }
     }
-    await _saveUsers();
-    notifyListeners();
+    await fetchStudents();
   }
 
   Future<void> bulkDeleteByClass(String classId) async {
-    final studentIds = _users.where((u) => u.classRoomId == classId).map((u) => u.id).toList();
+    final studentsInClass = _users.where((u) => u.classRoomId == classId).toList();
+    for (var student in studentsInClass) {
+      try {
+        await _dio.delete('/admin/users/${student.id}');
+      } catch (_) {}
+    }
     _users.removeWhere((u) => u.classRoomId == classId);
-    _attendance.removeWhere((a) => studentIds.contains(a.userId));
-    _leaveRequests.removeWhere((l) => studentIds.contains(l.userId));
-    await _saveUsers();
-    await _saveAttendance();
-    await _saveLeaveRequests();
     notifyListeners();
-  }
-
-  // Helper Serialization Methods
-  Future<void> _saveClassrooms() async {
-    final list = _classrooms.map((c) => c.toJson()).toList();
-    await _prefs?.setString('classrooms', json.encode(list));
-  }
-
-  Future<void> _saveUsers() async {
-    final list = _users.map((u) => u.toJson()).toList();
-    await _prefs?.setString('users', json.encode(list));
-  }
-
-  Future<void> _saveAttendance() async {
-    final list = _attendance.map((a) => a.toJson()).toList();
-    await _prefs?.setString('attendance', json.encode(list));
-  }
-
-  Future<void> _saveLeaveRequests() async {
-    final list = _leaveRequests.map((l) => l.toJson()).toList();
-    await _prefs?.setString('leaveRequests', json.encode(list));
-  }
-
-  DateTime _timeToDateTime(DateTime date, String timeStr) {
-    final parts = timeStr.split(':');
-    final hour = int.parse(parts[0]);
-    final minute = int.parse(parts[1]);
-    return DateTime(date.year, date.month, date.day, hour, minute);
   }
 }

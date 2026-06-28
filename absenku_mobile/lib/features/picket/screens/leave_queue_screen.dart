@@ -14,6 +14,20 @@ class LeaveQueueScreen extends StatefulWidget {
 
 class _LeaveQueueScreenState extends State<LeaveQueueScreen> {
   final TeacherService _teacherService = TeacherService();
+  bool _initialLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    await MockDatabase().fetchLeaveQueue();
+    if (mounted) {
+      setState(() => _initialLoading = false);
+    }
+  }
   
   // Filter States
   String _searchQuery = '';
@@ -116,6 +130,10 @@ class _LeaveQueueScreenState extends State<LeaveQueueScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_initialLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
     return ListenableBuilder(
       listenable: MockDatabase(),
       builder: (context, _) {
@@ -125,12 +143,12 @@ class _LeaveQueueScreenState extends State<LeaveQueueScreen> {
 
         // Apply filters to processed leaves
         final filteredLeaves = processedLeaves.where((leave) {
-          final student = db.users.firstWhere(
+          final studentName = leave.userName ?? db.users.firstWhere(
             (u) => u.id == leave.userId,
             orElse: () => User(id: '', name: 'Unknown', email: '', role: 'siswa'),
-          );
+          ).name;
           
-          final matchesSearch = student.name.toLowerCase().contains(_searchQuery.toLowerCase());
+          final matchesSearch = studentName.toLowerCase().contains(_searchQuery.toLowerCase());
           final matchesStatus = _filterStatus.isEmpty || leave.status == _filterStatus;
           final matchesType = _filterType.isEmpty || leave.type == _filterType;
           
@@ -199,14 +217,8 @@ class _LeaveQueueScreenState extends State<LeaveQueueScreen> {
                   itemCount: pendingLeaves.length,
                   itemBuilder: (context, index) {
                     final leave = pendingLeaves[index];
-                    final student = db.users.firstWhere(
-                      (u) => u.id == leave.userId,
-                      orElse: () => User(id: '', name: 'Unknown', email: '', role: 'siswa'),
-                    );
-                    final classRoom = db.classrooms.firstWhere(
-                      (c) => c.id == student.classRoomId,
-                      orElse: () => ClassRoom(id: '', name: '-', jurusan: '-'),
-                    );
+                    final studentName = leave.userName ?? 'Unknown';
+                    final className = leave.userClassName ?? '-';
                     final dateStr = DateFormat('dd/MM/yyyy').format(leave.date);
 
                     return Card(
@@ -232,11 +244,11 @@ class _LeaveQueueScreenState extends State<LeaveQueueScreen> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        student.name,
+                                        studentName,
                                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                       ),
                                       Text(
-                                        'Kelas: ${classRoom.name} · Tanggal: $dateStr',
+                                        'Kelas: $className · Tanggal: $dateStr',
                                         style: const TextStyle(fontSize: 11, color: AppTheme.textMuted),
                                       ),
                                     ],
@@ -525,18 +537,8 @@ class _LeaveQueueScreenState extends State<LeaveQueueScreen> {
                   itemCount: filteredLeaves.length,
                   itemBuilder: (context, index) {
                     final leave = filteredLeaves[index];
-                    final student = db.users.firstWhere(
-                      (u) => u.id == leave.userId,
-                      orElse: () => User(id: '', name: 'Unknown', email: '', role: 'siswa'),
-                    );
-                    final classRoom = db.classrooms.firstWhere(
-                      (c) => c.id == student.classRoomId,
-                      orElse: () => ClassRoom(id: '', name: '-', jurusan: '-'),
-                    );
-                    final officer = db.users.firstWhere(
-                      (u) => u.id == leave.decidedById,
-                      orElse: () => User(id: '', name: 'Guru Piket', email: '', role: 'guru_piket'),
-                    );
+                    final studentName = leave.userName ?? 'Unknown';
+                    final className = leave.userClassName ?? '-';
 
                     final dateStr = DateFormat('dd/MM/yyyy').format(leave.date);
                     final processedStr = leave.decidedAt != null
@@ -561,11 +563,11 @@ class _LeaveQueueScreenState extends State<LeaveQueueScreen> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        student.name,
+                                        studentName,
                                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                                       ),
                                       Text(
-                                        'Kelas: ${classRoom.name} · Tgl: $dateStr',
+                                        'Kelas: $className · Tgl: $dateStr',
                                         style: const TextStyle(fontSize: 11, color: AppTheme.textMuted),
                                       ),
                                     ],
@@ -614,9 +616,9 @@ class _LeaveQueueScreenState extends State<LeaveQueueScreen> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(
-                                  'Petugas: ${officer.name}',
-                                  style: const TextStyle(fontSize: 10, color: AppTheme.textMuted),
+                                const Text(
+                                  '',
+                                  style: TextStyle(fontSize: 10, color: AppTheme.textMuted),
                                 ),
                                 Text(
                                   'Diproses: $processedStr',

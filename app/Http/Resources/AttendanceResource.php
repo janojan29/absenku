@@ -17,6 +17,11 @@ class AttendanceResource extends JsonResource
         
         $status = ($isMissingCheckout && $isPastOrEnded) ? 'absent' : $this->status;
 
+        $leaveForDate = \App\Models\LeaveRequest::query()
+            ->where('user_id', $this->user_id)
+            ->whereDate('date', $date)
+            ->first();
+
         return [
             'id' => $this->id,
             'user_id' => $this->user_id,
@@ -27,6 +32,12 @@ class AttendanceResource extends JsonResource
             'check_out_at' => optional($this->check_out_at)->toDateTimeString(),
             'check_in_distance_meters' => $this->check_in_distance_meters,
             'check_out_distance_meters' => $this->check_out_distance_meters,
+            'leave_request' => $leaveForDate ? [
+                'type' => $leaveForDate->type,
+                'reason' => $leaveForDate->reason,
+                'keterangan' => $leaveForDate->keterangan,
+                'status' => $leaveForDate->status,
+            ] : null,
         ];
     }
 }

@@ -113,6 +113,18 @@ class _ClassRoomTabState extends State<_ClassRoomTab> {
   final _searchController = TextEditingController();
   final _classNameController = TextEditingController();
   final _classJurusanController = TextEditingController();
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadClassrooms();
+  }
+
+  Future<void> _loadClassrooms() async {
+    await MockDatabase().fetchClassrooms();
+    if (mounted) setState(() => _loading = false);
+  }
 
   @override
   void dispose() {
@@ -177,6 +189,8 @@ class _ClassRoomTabState extends State<_ClassRoomTab> {
 
   @override
   Widget build(BuildContext context) {
+    if (_loading) return const Center(child: CircularProgressIndicator());
+
     final db = MockDatabase();
     final filteredClassrooms = db.classrooms.where((c) {
       return c.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
@@ -228,7 +242,6 @@ class _ClassRoomTabState extends State<_ClassRoomTab> {
                     itemCount: filteredClassrooms.length,
                     itemBuilder: (context, index) {
                       final classroom = filteredClassrooms[index];
-                      final studentCount = db.users.where((u) => u.classRoomId == classroom.id).length;
 
                       return Card(
                         margin: const EdgeInsets.only(bottom: 10),
@@ -239,7 +252,7 @@ class _ClassRoomTabState extends State<_ClassRoomTab> {
                           ),
                           title: Text(classroom.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                           subtitle: Text(
-                            '${classroom.jurusan} · $studentCount Siswa',
+                            classroom.jurusan,
                             style: const TextStyle(fontSize: 11),
                           ),
                           trailing: IconButton(
@@ -303,18 +316,27 @@ class _SettingsTabState extends State<_SettingsTab> {
   final _checkInEndController = TextEditingController();
   final _checkOutStartController = TextEditingController();
   final _checkOutEndController = TextEditingController();
+  bool _loading = true;
 
   @override
   void initState() {
     super.initState();
-    final db = MockDatabase();
-    _latController.text = db.latitude.toString();
-    _lngController.text = db.longitude.toString();
-    _radiusController.text = db.radiusMeters.toString();
-    _checkInStartController.text = db.checkInStart;
-    _checkInEndController.text = db.checkInEnd;
-    _checkOutStartController.text = db.checkOutStart;
-    _checkOutEndController.text = db.checkOutEnd;
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    await MockDatabase().fetchAdminSettings();
+    if (mounted) {
+      final db = MockDatabase();
+      _latController.text = db.latitude.toString();
+      _lngController.text = db.longitude.toString();
+      _radiusController.text = db.radiusMeters.toString();
+      _checkInStartController.text = db.checkInStart;
+      _checkInEndController.text = db.checkInEnd;
+      _checkOutStartController.text = db.checkOutStart;
+      _checkOutEndController.text = db.checkOutEnd;
+      setState(() => _loading = false);
+    }
   }
 
   @override
@@ -351,6 +373,7 @@ class _SettingsTabState extends State<_SettingsTab> {
 
   @override
   Widget build(BuildContext context) {
+    if (_loading) return const Center(child: CircularProgressIndicator());
     final db = MockDatabase();
 
     return SingleChildScrollView(

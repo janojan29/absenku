@@ -11,26 +11,26 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController(text: 'password'); // Pre-fill password for ease
+  final _identifierController = TextEditingController();
+  final _passwordController = TextEditingController();
   bool _isLoading = false;
   String? _errorMessage;
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _identifierController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  void _login(String email) async {
+  void _login(String identifier) async {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
 
     try {
-      final user = await MockDatabase().login(email, _passwordController.text);
+      final user = await MockDatabase().login(identifier, _passwordController.text);
       if (user != null && mounted) {
         // Redirection handled by App level listener
       }
@@ -60,50 +60,75 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               // Logo & App Name Header
               Container(
-                padding: const EdgeInsets.symmetric(vertical: 24),
+                padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [AppTheme.primaryNavy, AppTheme.primaryBlue],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(40),
+                    bottomRight: Radius.circular(40),
+                  ),
                   boxShadow: [
                     BoxShadow(
-                      color: AppTheme.primaryNavy.withValues(alpha: 0.3),
-                      blurRadius: 15,
-                      offset: const Offset(0, 8),
+                      color: AppTheme.primaryNavy.withValues(alpha: 0.15),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
                 child: Column(
                   children: [
-                    const Icon(
-                      Icons.fingerprint,
-                      size: 64,
-                      color: Colors.white,
+                    Container(
+                      width: 72,
+                      height: 72,
+                      padding: const EdgeInsets.all(8),
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 6,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Image.asset(
+                        'assets/images/logo.webp',
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) => const Icon(
+                          Icons.fingerprint,
+                          size: 40,
+                          color: AppTheme.primaryBlue,
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 12),
-                    Text(
-                      'ABSENKU',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: Colors.white,
-                            fontSize: 28,
-                            letterSpacing: 2.0,
-                          ),
+                    const Text(
+                      'AbsenKu',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Sistem Presensi Sekolah Modern',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.white.withValues(alpha: 0.8),
-                            fontSize: 13,
-                          ),
+                      'Absensi Digital SMKN Bungursari',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.8),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
 
               // Error Banner
               if (_errorMessage != null) ...[
@@ -143,24 +168,36 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Text(
-                          'Masuk ke Akun Anda',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontSize: 18,
-                              ),
+                        const Text(
+                          'Masuk ke Akun',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.primaryNavy,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'Gunakan NISN, NIP, atau email Anda',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: AppTheme.textMuted,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 24),
                         TextFormField(
-                          controller: _emailController,
-                          keyboardType: TextInputType.emailAddress,
+                          controller: _identifierController,
+                          keyboardType: TextInputType.text,
                           decoration: const InputDecoration(
-                            labelText: 'Alamat Email',
-                            prefixIcon: Icon(Icons.email_outlined),
-                            hintText: 'nama@gmail.com',
+                            labelText: 'NISN / NIP / Email',
+                            prefixIcon: Icon(Icons.person_outline),
+                            hintText: 'Masukkan NISN, NIP, atau Email',
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Email tidak boleh kosong';
+                              return 'Identitas login tidak boleh kosong';
                             }
                             return null;
                           },
@@ -186,7 +223,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ? null
                               : () {
                                   if (_formKey.currentState!.validate()) {
-                                    _login(_emailController.text);
+                                    _login(_identifierController.text);
                                   }
                                 },
                           child: _isLoading
@@ -205,107 +242,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
-
-              // Quick login section for testing
-              const Row(
-                children: [
-                  Expanded(child: Divider()),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      'Uji Coba Cepat (Demo)',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.textMuted,
-                      ),
-                    ),
-                  ),
-                  Expanded(child: Divider()),
-                ],
-              ),
-              const SizedBox(height: 16),
-              
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _QuickLoginButton(
-                    label: 'Siswa',
-                    icon: Icons.person_outline,
-                    color: AppTheme.statusPresent,
-                    onPressed: () {
-                      _emailController.text = 'rian@gmail.com';
-                      _login('rian@gmail.com');
-                    },
-                  ),
-                  _QuickLoginButton(
-                    label: 'Piket',
-                    icon: Icons.assignment_outlined,
-                    color: AppTheme.statusLeave,
-                    onPressed: () {
-                      _emailController.text = 'budi@gmail.com';
-                      _login('budi@gmail.com');
-                    },
-                  ),
-                  _QuickLoginButton(
-                    label: 'Admin',
-                    icon: Icons.admin_panel_settings_outlined,
-                    color: AppTheme.primaryBlue,
-                    onPressed: () {
-                      _emailController.text = 'admin@gmail.com';
-                      _login('admin@gmail.com');
-                    },
-                  ),
-                ],
-              ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _QuickLoginButton extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final Color color;
-  final VoidCallback onPressed;
-
-  const _QuickLoginButton({
-    required this.label,
-    required this.icon,
-    required this.color,
-    required this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onPressed,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        width: 90,
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
-          border: Border.all(color: color.withValues(alpha: 0.3), width: 1.5),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: color),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                color: color,
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
-              ),
-            ),
-          ],
         ),
       ),
     );

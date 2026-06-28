@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../core/config/theme.dart';
 import '../../../services/mock_database.dart';
-import '../../../models/user.dart';
-import '../../../models/attendance.dart';
 
 class ReportScreen extends StatefulWidget {
   const ReportScreen({super.key});
@@ -26,10 +24,116 @@ class _ReportScreenState extends State<ReportScreen> with SingleTickerProviderSt
   DateTime _summaryStartDate = DateTime.now().subtract(const Duration(days: 7));
   DateTime _summaryEndDate = DateTime.now();
 
+  // Loaded data
+  bool _loadingDetail = true;
+  bool _loadingSummary = true;
+  List<dynamic> _detailRows = [];
+  List<dynamic> _summaryRows = [];
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() {
+      if (_tabController.indexIsChanging) return;
+      if (_tabController.index == 0) {
+        _loadDetailReport();
+      } else {
+        _loadSummaryReport();
+      }
+    });
+
+    _loadDetailReport();
+    _loadSummaryReport();
+  }
+
+  Future<void> _loadDetailReport() async {
+    setState(() {
+      _loadingDetail = true;
+    });
+
+    final db = MockDatabase();
+    if (db.classrooms.isEmpty) {
+      await db.fetchClassrooms();
+    }
+
+    final startStr = DateFormat('yyyy-MM-dd').format(_detailStartDate);
+    final endStr = DateFormat('yyyy-MM-dd').format(_detailEndDate);
+
+    final result = await db.fetchTeacherReport(
+      classRoomId: _detailClassRoomId,
+      startDate: startStr,
+      endDate: endStr,
+      status: _detailStatus,
+    );
+
+    if (mounted) {
+      setState(() {
+        _detailRows = result;
+        _loadingDetail = false;
+      });
+    }
+  }
+
+  Future<void> _loadSummaryReport() async {
+    setState(() {
+      _loadingSummary = true;
+    });
+
+    final db = MockDatabase();
+    if (db.classrooms.isEmpty) {
+      await db.fetchClassrooms();
+    }
+
+    final startStr = DateFormat('yyyy-MM-dd').format(_summaryStartDate);
+    final endStr = DateFormat('yyyy-MM-dd').format(_summaryEndDate);
+
+    // Summary tab shows totals, so we do not pass status parameter to fetch everything in range
+    final result = await db.fetchTeacherReport(
+      classRoomId: _summaryClassRoomId,
+      startDate: startStr,
+      endDate: endStr,
+    );
+
+    // Group the rows by student Name
+    final Map<String, Map<String, dynamic>> studentSummary = {};
+
+    for (final row in result) {
+      final String name = row['Nama'] as String? ?? '';
+      final String className = row['Kelas'] as String? ?? '-';
+      final String jurusan = row['Jurusan'] as String? ?? '-';
+      final String status = row['Status'] as String? ?? '';
+
+      if (!studentSummary.containsKey(name)) {
+        studentSummary[name] = {
+          'nama': name,
+          'kelas': className,
+          'jurusan': jurusan,
+          'present': 0,
+          'late': 0,
+          'leave': 0,
+          'absent': 0,
+        };
+      }
+
+      final summary = studentSummary[name]!;
+      if (status.contains('Hadir')) {
+        summary['present'] = (summary['present'] as int) + 1;
+      } else if (status.contains('Terlambat')) {
+        summary['late'] = (summary['late'] as int) + 1;
+      } else if (status.contains('Izin') || status.contains('Sakit')) {
+        summary['leave'] = (summary['leave'] as int) + 1;
+      } else if (status.contains('Alfa')) {
+        summary['absent'] = (summary['absent'] as int) + 1;
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        _summaryRows = studentSummary.values.toList();
+        _loadingSummary = false;
+      });
+    }
   }
 
   @override
@@ -77,80 +181,6 @@ class _ReportScreenState extends State<ReportScreen> with SingleTickerProviderSt
 
   // --- REKAP ABSEN (DETAIL REPORT) TAB ---
   Widget _buildDetailTab(MockDatabase db) {
-    // Generate all attendance records within range (both present, late, leave, and alfa)
-    // To represent mock data realistically, we take all students, and for each day in range,
-    // we find if there is an attendance record. If not, and it's in the past (excluding Sundays),
-    // it defaults to 'absent' (Alfa) or 'unknown' depending on settings.
-    List<Map<String, dynamic>> rows = [];
-    
-    // Loop through each day from start to end
-    for (var date = _detailStartDate;
-        date.isBefore(_detailEndDate.add(const Duration(days: 1)));
-        date = date.add(const Duration(days: 1))) {
-      
-      // Skip sundays
-      if (date.weekday == DateTime.sunday) continue;
-      final dateOnly = DateTime(date.year, date.month, date.day);
-
-      for (var student in db.users.where((u) => u.role == 'siswa')) {
-        // Filter classroom
-        if (_detailClassRoomId.isNotEmpty && student.classRoomId != _detailClassRoomId) {
-          continue;
-        }
-
-        // Find attendance record
-        final att = db.attendance.firstWhere(
-          (a) => a.userId == student.id &&
-              a.date.year == dateOnly.year &&
-              a.date.month == dateOnly.month &&
-              a.date.day == dateOnly.day,
-          orElse: () => Attendance(id: '', userId: student.id, date: dateOnly, status: 'absent'), // Default to Alfa if past
-        );
-
-        // Filter status
-        if (_detailStatus.isNotEmpty && att.status != _detailStatus) {
-          continue;
-        }
-
-        final classRoom = db.classrooms.firstWhere(
-          (c) => c.id == student.classRoomId,
-          orElse: () => ClassRoom(id: '', name: '-', jurusan: '-'),
-        );
-
-        // Find leave request if status is leave/sick
-        String leaveNote = '';
-        if (att.status == 'leave' || att.status == 'sick') {
-          final leave = db.leaveRequests.firstWhere(
-            (l) => l.userId == student.id &&
-                l.date.year == dateOnly.year &&
-                l.date.month == dateOnly.month &&
-                l.date.day == dateOnly.day,
-            orElse: () => LeaveRequest(id: '', userId: '', type: '', date: dateOnly, reason: '', keterangan: '', status: ''),
-          );
-          if (leave.id.isNotEmpty) {
-            leaveNote = '${leave.reason == "sick" ? "Sakit" : "Izin"} - ${leave.keterangan}';
-          }
-        }
-
-        rows.add({
-          'tanggal': DateFormat('dd/MM/yyyy').format(dateOnly),
-          'nama': student.name,
-          'kelas': classRoom.name,
-          'status': att.status,
-          'masuk': att.checkInAt != null ? DateFormat('HH:mm').format(att.checkInAt!) : '—',
-          'pulang': att.checkOutAt != null ? DateFormat('HH:mm').format(att.checkOutAt!) : '—',
-          'keterangan': leaveNote,
-        });
-      }
-    }
-
-    // Sort by date descending
-    rows.sort((a, b) {
-      final dateA = DateFormat('dd/MM/yyyy').parse(a['tanggal']);
-      final dateB = DateFormat('dd/MM/yyyy').parse(b['tanggal']);
-      return dateB.compareTo(dateA);
-    });
-
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -176,7 +206,10 @@ class _ReportScreenState extends State<ReportScreen> with SingleTickerProviderSt
                             const DropdownMenuItem(value: '', child: Text('Semua Kelas')),
                             ...db.classrooms.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name))),
                           ],
-                          onChanged: (val) => setState(() => _detailClassRoomId = val ?? ''),
+                          onChanged: (val) {
+                            setState(() => _detailClassRoomId = val ?? '');
+                            _loadDetailReport();
+                          },
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -193,7 +226,10 @@ class _ReportScreenState extends State<ReportScreen> with SingleTickerProviderSt
                             DropdownMenuItem(value: 'sick', child: Text('Sakit')),
                             DropdownMenuItem(value: 'absent', child: Text('Alfa')),
                           ],
-                          onChanged: (val) => setState(() => _detailStatus = val ?? ''),
+                          onChanged: (val) {
+                            setState(() => _detailStatus = val ?? '');
+                            _loadDetailReport();
+                          },
                         ),
                       ),
                     ],
@@ -213,6 +249,7 @@ class _ReportScreenState extends State<ReportScreen> with SingleTickerProviderSt
                             );
                             if (selected != null) {
                               setState(() => _detailStartDate = selected);
+                              _loadDetailReport();
                             }
                           },
                           child: InputDecorator(
@@ -233,6 +270,7 @@ class _ReportScreenState extends State<ReportScreen> with SingleTickerProviderSt
                             );
                             if (selected != null) {
                               setState(() => _detailEndDate = selected);
+                              _loadDetailReport();
                             }
                           },
                           child: InputDecorator(
@@ -255,6 +293,7 @@ class _ReportScreenState extends State<ReportScreen> with SingleTickerProviderSt
                               _detailStartDate = DateTime.now().subtract(const Duration(days: 7));
                               _detailEndDate = DateTime.now();
                             });
+                            _loadDetailReport();
                           },
                           child: const Text('RESET'),
                         ),
@@ -290,9 +329,14 @@ class _ReportScreenState extends State<ReportScreen> with SingleTickerProviderSt
           ),
           const SizedBox(height: 16),
           // Results list
-          Text('Hasil Rekap (${rows.length})', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+          Text('Hasil Rekap (${_detailRows.length})', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
           const SizedBox(height: 8),
-          if (rows.isEmpty)
+          if (_loadingDetail)
+            const Center(child: Padding(
+              padding: EdgeInsets.all(24.0),
+              child: CircularProgressIndicator(),
+            ))
+          else if (_detailRows.isEmpty)
             const Card(
               child: Padding(
                 padding: EdgeInsets.all(24),
@@ -303,37 +347,27 @@ class _ReportScreenState extends State<ReportScreen> with SingleTickerProviderSt
             ListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: rows.length,
+              itemCount: _detailRows.length,
               itemBuilder: (context, index) {
-                final row = rows[index];
+                final row = _detailRows[index] as Map<String, dynamic>;
                 
+                final String statusText = row['Status'] as String? ?? '-';
                 Color statusColor;
-                String statusText;
-                switch (row['status']) {
-                  case 'present':
-                    statusColor = AppTheme.statusPresent;
-                    statusText = 'Hadir';
-                    break;
-                  case 'late':
-                    statusColor = AppTheme.statusLate;
-                    statusText = 'Terlambat';
-                    break;
-                  case 'leave':
-                    statusColor = AppTheme.statusLeave;
-                    statusText = 'Izin';
-                    break;
-                  case 'sick':
-                    statusColor = AppTheme.statusLeave;
-                    statusText = 'Sakit';
-                    break;
-                  case 'absent':
-                    statusColor = AppTheme.statusAbsent;
-                    statusText = 'Alfa';
-                    break;
-                  default:
-                    statusColor = Colors.grey;
-                    statusText = row['status'].toUpperCase();
+                if (statusText.contains('Hadir')) {
+                  statusColor = AppTheme.statusPresent;
+                } else if (statusText.contains('Terlambat')) {
+                  statusColor = AppTheme.statusLate;
+                } else if (statusText.contains('Izin') || statusText.contains('Sakit')) {
+                  statusColor = AppTheme.statusLeave;
+                } else if (statusText.contains('Alfa')) {
+                  statusColor = AppTheme.statusAbsent;
+                } else {
+                  statusColor = Colors.grey;
                 }
+
+                final tanggal = row['Tanggal'] != null 
+                    ? DateFormat('dd/MM/yyyy').format(DateTime.parse(row['Tanggal'])) 
+                    : '-';
 
                 return Card(
                   margin: const EdgeInsets.only(bottom: 8),
@@ -345,7 +379,7 @@ class _ReportScreenState extends State<ReportScreen> with SingleTickerProviderSt
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(row['nama'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                            Text(row['Nama'] as String? ?? '-', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                               decoration: BoxDecoration(
@@ -362,18 +396,18 @@ class _ReportScreenState extends State<ReportScreen> with SingleTickerProviderSt
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Kelas: ${row['kelas']} · Tanggal: ${row['tanggal']}',
+                          'Kelas: ${row['Kelas'] ?? "-"} · Tanggal: $tanggal',
                           style: const TextStyle(fontSize: 11, color: AppTheme.textMuted),
                         ),
                         Text(
-                          'Jam Masuk: ${row['masuk']} · Jam Pulang: ${row['pulang']}',
+                          'Jam Masuk: ${row['Masuk'] ?? "-"} · Jam Pulang: ${row['Pulang'] ?? "-"}',
                           style: const TextStyle(fontSize: 12, color: AppTheme.textDark),
                         ),
-                        if (row['keterangan'] != '')
+                        if (row['Keterangan Izin'] != null && row['Keterangan Izin'] != '-')
                           Padding(
                             padding: const EdgeInsets.only(top: 4.0),
                             child: Text(
-                              'Info Izin: ${row['keterangan']}',
+                              'Info Izin: ${row['Keterangan Izin']}',
                               style: const TextStyle(fontSize: 11, fontStyle: FontStyle.italic, color: AppTheme.textMuted),
                             ),
                           ),
@@ -390,59 +424,6 @@ class _ReportScreenState extends State<ReportScreen> with SingleTickerProviderSt
 
   // --- REKAP KETERANGAN (SUMMARY TOTALS) TAB ---
   Widget _buildSummaryTab(MockDatabase db) {
-    // Generate summarized data for all students in the classroom
-    List<Map<String, dynamic>> summaryRows = [];
-
-    final students = db.users.where((u) => u.role == 'siswa').toList();
-
-    for (var student in students) {
-      if (_summaryClassRoomId.isNotEmpty && student.classRoomId != _summaryClassRoomId) {
-        continue;
-      }
-
-      int present = 0;
-      int late = 0;
-      int leave = 0;
-      int absent = 0;
-
-      // Scan days in range
-      for (var date = _summaryStartDate;
-          date.isBefore(_summaryEndDate.add(const Duration(days: 1)));
-          date = date.add(const Duration(days: 1))) {
-        
-        if (date.weekday == DateTime.sunday) continue;
-        final dateOnly = DateTime(date.year, date.month, date.day);
-
-        final att = db.attendance.firstWhere(
-          (a) => a.userId == student.id &&
-              a.date.year == dateOnly.year &&
-              a.date.month == dateOnly.month &&
-              a.date.day == dateOnly.day,
-          orElse: () => Attendance(id: '', userId: student.id, date: dateOnly, status: 'absent'), // default to Alfa if past
-        );
-
-        if (att.status == 'present') present++;
-        if (att.status == 'late') late++;
-        if (att.status == 'leave' || att.status == 'sick') leave++;
-        if (att.status == 'absent') absent++;
-      }
-
-      final classRoom = db.classrooms.firstWhere(
-        (c) => c.id == student.classRoomId,
-        orElse: () => ClassRoom(id: '', name: '-', jurusan: '-'),
-      );
-
-      summaryRows.add({
-        'nama': student.name,
-        'kelas': classRoom.name,
-        'jurusan': classRoom.jurusan,
-        'present': present,
-        'late': late,
-        'leave': leave,
-        'absent': absent,
-      });
-    }
-
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -464,7 +445,10 @@ class _ReportScreenState extends State<ReportScreen> with SingleTickerProviderSt
                       const DropdownMenuItem(value: '', child: Text('Semua Kelas')),
                       ...db.classrooms.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name))),
                     ],
-                    onChanged: (val) => setState(() => _summaryClassRoomId = val ?? ''),
+                    onChanged: (val) {
+                      setState(() => _summaryClassRoomId = val ?? '');
+                      _loadSummaryReport();
+                    },
                   ),
                   const SizedBox(height: 12),
                   Row(
@@ -480,6 +464,7 @@ class _ReportScreenState extends State<ReportScreen> with SingleTickerProviderSt
                             );
                             if (selected != null) {
                               setState(() => _summaryStartDate = selected);
+                              _loadSummaryReport();
                             }
                           },
                           child: InputDecorator(
@@ -500,6 +485,7 @@ class _ReportScreenState extends State<ReportScreen> with SingleTickerProviderSt
                             );
                             if (selected != null) {
                               setState(() => _summaryEndDate = selected);
+                              _loadSummaryReport();
                             }
                           },
                           child: InputDecorator(
@@ -521,6 +507,7 @@ class _ReportScreenState extends State<ReportScreen> with SingleTickerProviderSt
                               _summaryStartDate = DateTime.now().subtract(const Duration(days: 7));
                               _summaryEndDate = DateTime.now();
                             });
+                            _loadSummaryReport();
                           },
                           child: const Text('RESET'),
                         ),
@@ -533,9 +520,14 @@ class _ReportScreenState extends State<ReportScreen> with SingleTickerProviderSt
           ),
           const SizedBox(height: 16),
           // Results list
-          Text('Ringkasan Akumulasi (${summaryRows.length} Siswa)', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+          Text('Ringkasan Akumulasi (${_summaryRows.length} Siswa)', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
           const SizedBox(height: 8),
-          if (summaryRows.isEmpty)
+          if (_loadingSummary)
+            const Center(child: Padding(
+              padding: EdgeInsets.all(24.0),
+              child: CircularProgressIndicator(),
+            ))
+          else if (_summaryRows.isEmpty)
             const Card(
               child: Padding(
                 padding: EdgeInsets.all(24),
@@ -546,9 +538,9 @@ class _ReportScreenState extends State<ReportScreen> with SingleTickerProviderSt
             ListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: summaryRows.length,
+              itemCount: _summaryRows.length,
               itemBuilder: (context, index) {
-                final row = summaryRows[index];
+                final row = _summaryRows[index];
 
                 return Card(
                   margin: const EdgeInsets.only(bottom: 10),
@@ -557,19 +549,19 @@ class _ReportScreenState extends State<ReportScreen> with SingleTickerProviderSt
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(row['nama'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                        Text(row['nama'] as String? ?? '-', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                         Text(
-                          'Kelas: ${row['kelas']} · Jurusan: ${row['jurusan']}',
+                          'Kelas: ${row['kelas'] ?? "-"} · Jurusan: ${row['jurusan'] ?? "-"}',
                           style: const TextStyle(fontSize: 11, color: AppTheme.textMuted),
                         ),
                         const SizedBox(height: 10),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            _buildSummaryCountItem('Hadir', row['present'], AppTheme.statusPresent),
-                            _buildSummaryCountItem('Telat', row['late'], AppTheme.statusLate),
-                            _buildSummaryCountItem('Izin', row['leave'], AppTheme.statusLeave),
-                            _buildSummaryCountItem('Alfa', row['absent'], AppTheme.statusAbsent),
+                            _buildSummaryCountItem('Hadir', row['present'] as int, AppTheme.statusPresent),
+                            _buildSummaryCountItem('Telat', row['late'] as int, AppTheme.statusLate),
+                            _buildSummaryCountItem('Izin', row['leave'] as int, AppTheme.statusLeave),
+                            _buildSummaryCountItem('Alfa', row['absent'] as int, AppTheme.statusAbsent),
                           ],
                         ),
                       ],

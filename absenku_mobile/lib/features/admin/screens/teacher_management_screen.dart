@@ -13,11 +13,23 @@ class TeacherManagementScreen extends StatefulWidget {
 class _TeacherManagementScreenState extends State<TeacherManagementScreen> {
   String _searchQuery = '';
   final _searchController = TextEditingController();
+  bool _loading = true;
 
   // Form controllers
   final _nameController = TextEditingController();
   final _nipController = TextEditingController();
   final _emailController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    await MockDatabase().fetchTeachers();
+    if (mounted) setState(() => _loading = false);
+  }
 
   @override
   void dispose() {
@@ -123,6 +135,8 @@ class _TeacherManagementScreenState extends State<TeacherManagementScreen> {
     return ListenableBuilder(
       listenable: MockDatabase(),
       builder: (context, _) {
+        if (_loading) return const Center(child: CircularProgressIndicator());
+
         final db = MockDatabase();
         final teachers = db.users.where((u) => u.role == 'guru_piket').toList();
 
