@@ -123,15 +123,55 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                     ],
                   ),
                   actions: [
-                    IconButton(
-                      icon: const Icon(Icons.person),
-                      tooltip: 'Profil',
-                      onPressed: () {
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => const ProfileScreen()));
+                    IconButton(icon: const Icon(Icons.refresh), tooltip: 'Muat Ulang', onPressed: () => _loadData()),
+                    PopupMenuButton<String>(
+                      onSelected: (value) {
+                        if (value == 'profile') {
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => const ProfileScreen()));
+                        } else if (value == 'logout') {
+                          db.logout();
+                        }
                       },
+                      itemBuilder: (BuildContext context) {
+                        return [
+                          PopupMenuItem<String>(
+                            enabled: false,
+                            child: Text(db.currentUser?.name ?? 'Siswa', style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryNavy)),
+                          ),
+                          const PopupMenuDivider(),
+                          const PopupMenuItem<String>(
+                            value: 'profile',
+                            child: Row(
+                              children: [
+                                Icon(Icons.person_outline, size: 20, color: AppTheme.textMuted),
+                                SizedBox(width: 12),
+                                Text('Profil'),
+                              ],
+                            ),
+                          ),
+                          const PopupMenuItem<String>(
+                            value: 'logout',
+                            child: Row(
+                              children: [
+                                Icon(Icons.logout, size: 20, color: AppTheme.statusAbsent),
+                                SizedBox(width: 12),
+                                Text('Keluar', style: TextStyle(color: AppTheme.statusAbsent)),
+                              ],
+                            ),
+                          ),
+                        ];
+                      },
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Row(
+                          children: [
+                            Icon(Icons.account_circle, size: 28),
+                            SizedBox(width: 8),
+                            Icon(Icons.arrow_drop_down, size: 20),
+                          ],
+                        ),
+                      ),
                     ),
-                    IconButton(icon: const Icon(Icons.refresh), tooltip: 'Refresh', onPressed: () => _loadData()),
-                    IconButton(icon: const Icon(Icons.logout), tooltip: 'Logout', onPressed: () => db.logout()),
                   ],
                   flexibleSpace: FlexibleSpaceBar(
                     background: Container(

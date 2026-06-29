@@ -283,10 +283,14 @@ class StudentController extends Controller
                 'created' => $created,
             ], 422);
         }
-
         return response()->json([
             'message' => "Import selesai: {$created} siswa berhasil ditambahkan.",
             'created' => $created,
         ]);
+    }
+
+    public function downloadTemplate()
+    {
+        return Excel::download(new \App\Exports\StudentsTemplateExport(), 'template-import-siswa.xlsx');
     }
 }

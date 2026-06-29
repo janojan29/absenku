@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
-import '../../../core/config/app_config.dart';
 import '../../../core/config/theme.dart';
 import '../../../services/mock_database.dart';
+import 'forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -33,7 +32,8 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final user = await MockDatabase().login(identifier, _passwordController.text);
+      final user =
+          await MockDatabase().login(identifier, _passwordController.text);
       if (user != null && mounted) {
         // Redirection handled by App level listener
       }
@@ -58,7 +58,11 @@ class _LoginScreenState extends State<LoginScreen> {
         height: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [AppTheme.primaryNavy, AppTheme.primaryBlue, AppTheme.accentBlue],
+            colors: [
+              AppTheme.primaryNavy,
+              AppTheme.primaryBlue,
+              AppTheme.accentBlue
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -66,7 +70,8 @@ class _LoginScreenState extends State<LoginScreen> {
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -87,7 +92,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ],
                     ),
                     child: Image.asset(
-                      'assets/images/logo.webp',
+                      'assets/images/logo_transparent.webp',
                       fit: BoxFit.contain,
                       errorBuilder: (context, error, stackTrace) => const Icon(
                         Icons.fingerprint,
@@ -168,7 +173,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                                 child: Row(
                                   children: [
-                                    Icon(Icons.error_outline, color: Colors.red[700], size: 20),
+                                    Icon(Icons.error_outline,
+                                        color: Colors.red[700], size: 20),
                                     const SizedBox(width: 10),
                                     Expanded(
                                       child: Text(
@@ -209,8 +215,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                 labelText: 'Password',
                                 prefixIcon: const Icon(Icons.lock_outlined),
                                 suffixIcon: IconButton(
-                                  icon: Icon(_obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined),
-                                  onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                                  icon: Icon(_obscurePassword
+                                      ? Icons.visibility_off_outlined
+                                      : Icons.visibility_outlined),
+                                  onPressed: () => setState(() =>
+                                      _obscurePassword = !_obscurePassword),
                                 ),
                               ),
                               validator: (value) {
@@ -243,26 +252,28 @@ class _LoginScreenState extends State<LoginScreen> {
                                         width: 20,
                                         child: CircularProgressIndicator(
                                           strokeWidth: 2.5,
-                                          valueColor: AlwaysStoppedAnimation(Colors.white),
+                                          valueColor: AlwaysStoppedAnimation(
+                                              Colors.white),
                                         ),
                                       )
-                                    : const Text('MASUK', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                                    : const Text('MASUK',
+                                        style: TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.bold)),
                               ),
                             ),
                             const SizedBox(height: 16),
                             TextButton(
-                              onPressed: () async {
-                                final url = Uri.parse(AppConfig.apiBaseUrl.replaceAll('/api', '/forgot-password'));
-                                if (await canLaunchUrl(url)) {
-                                  await launchUrl(url, mode: LaunchMode.externalApplication);
-                                } else {
-                                  if (!context.mounted) return;
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Tidak dapat membuka halaman reset password. Hubungi admin.')),
-                                  );
-                                }
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          const ForgotPasswordScreen()),
+                                );
                               },
-                              child: const Text('Lupa Password?', style: TextStyle(color: AppTheme.textMuted)),
+                              child: const Text('Lupa Password?',
+                                  style: TextStyle(color: AppTheme.textMuted)),
                             ),
                           ],
                         ),

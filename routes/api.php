@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\Admin\ClassRoomController as ApiClassRoomController
 use App\Http\Controllers\Api\Admin\StudentController as ApiStudentController;
 use App\Http\Controllers\Api\Admin\TeacherController as ApiTeacherController;
 use App\Http\Controllers\Api\Admin\PicketOfficerController as ApiPicketOfficerController;
+use App\Http\Controllers\Api\PasswordResetController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -27,6 +28,10 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::post('/login', [AuthController::class, 'login']);
+
+Route::post('/forgot-password', [PasswordResetController::class, 'requestReset']);
+Route::post('/forgot-password/verify-otp', [PasswordResetController::class, 'verifyOtp']);
+Route::post('/forgot-password/reset', [PasswordResetController::class, 'resetPassword']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -52,6 +57,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/reports/attendance', [ApiTeacherReportController::class, 'index']);
         Route::get('/reports/attendance/excel', [ApiTeacherReportController::class, 'exportExcel']);
         Route::get('/reports/attendance/pdf', [ApiTeacherReportController::class, 'exportPdf']);
+        Route::get('/reports/attendance/summary/excel', [ApiTeacherReportController::class, 'exportSummaryExcel']);
+        Route::get('/reports/attendance/summary/pdf', [ApiTeacherReportController::class, 'exportSummaryPdf']);
     });
 
     Route::prefix('admin')->middleware('role:admin')->group(function () {
@@ -72,6 +79,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/students', [ApiStudentController::class, 'index']);
         Route::post('/students', [ApiStudentController::class, 'store']);
         Route::post('/students/import', [ApiStudentController::class, 'import']);
+        Route::get('/students/import/template', [ApiStudentController::class, 'downloadTemplate']);
         Route::patch('/students/{user}', [ApiStudentController::class, 'update']);
 
         Route::get('/teachers', [ApiTeacherController::class, 'index']);

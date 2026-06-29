@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../core/config/theme.dart';
-import '../../../core/config/app_config.dart';
 import '../../../services/mock_database.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:open_file/open_file.dart';
+import '../../../services/api_client.dart';
 
 class ReportScreen extends StatefulWidget {
   const ReportScreen({super.key});
@@ -27,7 +28,12 @@ class _ReportScreenState extends State<ReportScreen> with SingleTickerProviderSt
   bool _loadingDetail = true;
   bool _loadingSummary = true;
   List<dynamic> _detailRows = [];
+  int _detailCurrentPage = 1;
+  int _detailLastPage = 1;
+
   List<dynamic> _summaryRows = [];
+  int _summaryCurrentPage = 1;
+  int _summaryLastPage = 1;
 
   @override
   void initState() {
@@ -45,7 +51,7 @@ class _ReportScreenState extends State<ReportScreen> with SingleTickerProviderSt
     _loadSummaryReport();
   }
 
-  Future<void> _loadDetailReport() async {
+  Future<void> _loadDetailReport({int page = 1}) async {
     setState(() => _loadingDetail = true);
     final db = MockDatabase();
     if (db.classrooms.isEmpty) await db.fetchClassrooms();
@@ -54,11 +60,20 @@ class _ReportScreenState extends State<ReportScreen> with SingleTickerProviderSt
       startDate: DateFormat('yyyy-MM-dd').format(_detailStartDate),
       endDate: DateFormat('yyyy-MM-dd').format(_detailEndDate),
       status: _detailStatus,
+      page: page,
     );
-    if (mounted) setState(() { _detailRows = result; _loadingDetail = false; });
+    if (mounted) {
+      setState(() { 
+        _detailRows = result['rows'] as List<dynamic>? ?? []; 
+        final meta = result['meta']?['pagination'] as Map<String, dynamic>? ?? {};
+        _detailCurrentPage = meta['current_page'] as int? ?? 1;
+        _detailLastPage = meta['last_page'] as int? ?? 1;
+        _loadingDetail = false; 
+      });
+    }
   }
 
-  Future<void> _loadSummaryReport() async {
+  Future<void> _loadSummaryReport({int page = 1}) async {
     setState(() => _loadingSummary = true);
     final db = MockDatabase();
     if (db.classrooms.isEmpty) await db.fetchClassrooms();
@@ -66,9 +81,12 @@ class _ReportScreenState extends State<ReportScreen> with SingleTickerProviderSt
       classRoomId: _summaryClassRoomId,
       startDate: DateFormat('yyyy-MM-dd').format(_summaryStartDate),
       endDate: DateFormat('yyyy-MM-dd').format(_summaryEndDate),
+      page: page,
     );
+    final rows = result['rows'] as List<dynamic>? ?? [];
+    final meta = result['meta']?['pagination'] as Map<String, dynamic>? ?? {};
     final Map<String, Map<String, dynamic>> studentSummary = {};
-    for (final row in result) {
+    for (final row in rows) {
       final String name = row['Nama'] as String? ?? '';
       final String className = row['Kelas'] as String? ?? '-';
       final String jurusan = row['Jurusan'] as String? ?? '-';
@@ -87,7 +105,14 @@ class _ReportScreenState extends State<ReportScreen> with SingleTickerProviderSt
         s['absent'] = (s['absent'] as int) + 1;
       }
     }
-    if (mounted) setState(() { _summaryRows = studentSummary.values.toList(); _loadingSummary = false; });
+    if (mounted) {
+      setState(() { 
+        _summaryRows = studentSummary.values.toList(); 
+        _summaryCurrentPage = meta['current_page'] as int? ?? 1;
+        _summaryLastPage = meta['last_page'] as int? ?? 1;
+        _loadingSummary = false; 
+      });
+    }
   }
 
   @override
@@ -245,6 +270,12 @@ class _ReportScreenState extends State<ReportScreen> with SingleTickerProviderSt
               ]),
             );
           }),
+        if (!_loadingDetail && _detailRows.isNotEmpty && _detailLastPage > 1)
+          _buildPaginationRow(
+            currentPage: _detailCurrentPage,
+            lastPage: _detailLastPage,
+            onPageChanged: (page) => _loadDetailReport(page: page),
+          ),
       ]),
     );
   }
@@ -328,6 +359,12 @@ class _ReportScreenState extends State<ReportScreen> with SingleTickerProviderSt
               ]),
             ]),
           )),
+        if (!_loadingSummary && _summaryRows.isNotEmpty && _summaryLastPage > 1)
+          _buildPaginationRow(
+            currentPage: _summaryCurrentPage,
+            lastPage: _summaryLastPage,
+            onPageChanged: (page) => _loadSummaryReport(page: page),
+          ),
       ]),
     );
   }
@@ -357,25 +394,59 @@ class _ReportScreenState extends State<ReportScreen> with SingleTickerProviderSt
     );
   }
 
+  Widget _buildPaginationRow({required int currentPage, required int lastPage, required Function(int) onPageChanged}) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.chevron_left),
+            onPressed: currentPage > 1 ? () => onPageChanged(currentPage - 1) : null,
+          ),
+          Text('Halaman $currentPage dari $lastPage', style: const TextStyle(fontWeight: FontWeight.bold)),
+          IconButton(
+            icon: const Icon(Icons.chevron_right),
+            onPressed: currentPage < lastPage ? () => onPageChanged(currentPage + 1) : null,
+          ),
+        ],
+      ),
+    );
+  }
+
   void _downloadReport(String type, bool isSummary) async {
-    final baseUrl = AppConfig.apiBaseUrl.replaceAll('/api', '');
-    String path = isSummary ? '/guru/reports/attendance/summary/' : '/guru/reports/attendance/';
-    path += type;
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Mengunduh laporan...')));
+      
+      String path = isSummary ? '/teacher/reports/attendance/summary/$type' : '/teacher/reports/attendance/$type';
+      String classId = isSummary ? _summaryClassRoomId : _detailClassRoomId;
+      String start = DateFormat('yyyy-MM-dd').format(isSummary ? _summaryStartDate : _detailStartDate);
+      String end = DateFormat('yyyy-MM-dd').format(isSummary ? _summaryEndDate : _detailEndDate);
+      
+      String query = '?class_room_id=$classId&start_date=$start&end_date=$end';
+      if (!isSummary && _detailStatus.isNotEmpty) {
+        query += '&status=$_detailStatus';
+      }
 
-    String classId = isSummary ? _summaryClassRoomId : _detailClassRoomId;
-    String start = DateFormat('yyyy-MM-dd').format(isSummary ? _summaryStartDate : _detailStartDate);
-    String end = DateFormat('yyyy-MM-dd').format(isSummary ? _summaryEndDate : _detailEndDate);
-    
-    String query = '?class_room_id=$classId&detail_start_date=$start&detail_end_date=$end';
-    if (!isSummary && _detailStatus.isNotEmpty) {
-      query += '&status=$_detailStatus';
-    }
-
-    final url = Uri.parse('$baseUrl$path$query');
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: LaunchMode.externalApplication);
-    } else {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Tidak dapat membuka browser')));
+      final dir = await getTemporaryDirectory();
+      final ext = type == 'excel' ? 'xlsx' : 'pdf';
+      final savePath = '${dir.path}/rekap_absensi_$start.$ext';
+      
+      await ApiClient().dio.download(
+        '$path$query',
+        savePath,
+      );
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Unduhan selesai! Membuka file...')));
+      }
+      await OpenFile.open(savePath);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal mengunduh: $e')));
+      }
     }
   }
 }

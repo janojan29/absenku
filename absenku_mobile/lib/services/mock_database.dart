@@ -34,6 +34,7 @@ class MockDatabase extends ChangeNotifier {
   String _checkInEnd = '';
   String _checkOutStart = '';
   String _checkOutEnd = '';
+  int _lateToleranceMinutes = 0;
 
   // Simulated Device Coordinates (still local — GPS)
   double _deviceLatitude = 0.0;
@@ -57,8 +58,13 @@ class MockDatabase extends ChangeNotifier {
   Map<String, int> _dashboardCounts = {};
   List<Map<String, dynamic>> _dashboardStudents = [];
   String? _dashboardClassRoomId;
+  int _dashboardCurrentPage = 1;
+  int _dashboardLastPage = 1;
 
-  // Getters
+  int _leavePendingCurrentPage = 1;
+  int _leavePendingLastPage = 1;
+  int _leaveHistoryCurrentPage = 1;
+  int _leaveHistoryLastPage = 1;
   List<ClassRoom> get classrooms => _classrooms;
   List<User> get users => _users;
   List<Attendance> get attendance => _attendance;
@@ -73,6 +79,7 @@ class MockDatabase extends ChangeNotifier {
   String get checkInEnd => _checkInEnd;
   String get checkOutStart => _checkOutStart;
   String get checkOutEnd => _checkOutEnd;
+  int get lateToleranceMinutes => _lateToleranceMinutes;
 
   double get deviceLatitude => _deviceLatitude;
   double get deviceLongitude => _deviceLongitude;
@@ -98,6 +105,13 @@ class MockDatabase extends ChangeNotifier {
   Map<String, int> get dashboardCounts => _dashboardCounts;
   List<Map<String, dynamic>> get dashboardStudents => _dashboardStudents;
   String? get dashboardClassRoomId => _dashboardClassRoomId;
+  int get dashboardCurrentPage => _dashboardCurrentPage;
+  int get dashboardLastPage => _dashboardLastPage;
+
+  int get leavePendingCurrentPage => _leavePendingCurrentPage;
+  int get leavePendingLastPage => _leavePendingLastPage;
+  int get leaveHistoryCurrentPage => _leaveHistoryCurrentPage;
+  int get leaveHistoryLastPage => _leaveHistoryLastPage;
 
   Dio get _dio => ApiClient().dio;
 
@@ -252,6 +266,58 @@ class MockDatabase extends ChangeNotifier {
   }
 
   // ──────────────────────────────────────────────
+  // Forgot Password Operations
+  // ──────────────────────────────────────────────
+
+  Future<Map<String, dynamic>> requestPasswordReset(String email, String fullName, String identifier) async {
+    try {
+      final response = await _dio.post('/forgot-password', data: {
+        'email': email,
+        'full_name': fullName,
+        'identifier': identifier,
+      });
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      if (e.response?.data != null && e.response?.data['message'] != null) {
+        throw Exception(e.response!.data['message'].toString());
+      }
+      throw Exception('Gagal memproses permintaan reset password.');
+    }
+  }
+
+  Future<Map<String, dynamic>> verifyPasswordResetOtp(int userId, String otp) async {
+    try {
+      final response = await _dio.post('/forgot-password/verify-otp', data: {
+        'user_id': userId,
+        'otp': otp,
+      });
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      if (e.response?.data != null && e.response?.data['message'] != null) {
+        throw Exception(e.response!.data['message'].toString());
+      }
+      throw Exception('Gagal verifikasi OTP.');
+    }
+  }
+
+  Future<Map<String, dynamic>> submitNewPassword(int userId, String resetToken, String password, String passwordConfirmation) async {
+    try {
+      final response = await _dio.post('/forgot-password/reset', data: {
+        'user_id': userId,
+        'reset_token': resetToken,
+        'password': password,
+        'password_confirmation': passwordConfirmation,
+      });
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      if (e.response?.data != null && e.response?.data['message'] != null) {
+        throw Exception(e.response!.data['message'].toString());
+      }
+      throw Exception('Gagal mengubah password baru.');
+    }
+  }
+
+  // ──────────────────────────────────────────────
   // Student Attendance Operations
   // ──────────────────────────────────────────────
 
@@ -391,15 +457,27 @@ class MockDatabase extends ChangeNotifier {
   // Picket Officer — Leave Queue Operations
   // ──────────────────────────────────────────────
 
-  Future<void> fetchLeaveQueue() async {
+  Future<void> fetchLeaveQueue({int pendingPage = 1, int historyPage = 1}) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      final response = await _dio.get('/picket/leave-requests');
+      final response = await _dio.get('/picket/leave-requests', queryParameters: {
+        'pendingPage': pendingPage,
+        'historyPage': historyPage,
+      });
       if (response.statusCode == 200) {
         final pendingData = response.data['pending']['data'] as List? ?? [];
         final historyData = response.data['history']['data'] as List? ?? [];
+
+        final pendingMeta = response.data['pending']['meta']?['pagination'] as Map<String, dynamic>? ?? {};
+        final historyMeta = response.data['history']['meta']?['pagination'] as Map<String, dynamic>? ?? {};
+
+        _leavePendingCurrentPage = pendingMeta['current_page'] as int? ?? 1;
+        _leavePendingLastPage = pendingMeta['last_page'] as int? ?? 1;
+
+        _leaveHistoryCurrentPage = historyMeta['current_page'] as int? ?? 1;
+        _leaveHistoryLastPage = historyMeta['last_page'] as int? ?? 1;
 
         _leaveRequests = [
           ...pendingData.map((item) => LeaveRequest.fromApiJson(item as Map<String, dynamic>)),
@@ -446,12 +524,12 @@ class MockDatabase extends ChangeNotifier {
   // Teacher Dashboard
   // ──────────────────────────────────────────────
 
-  Future<void> fetchTeacherDashboard({String? classRoomId}) async {
+  Future<void> fetchTeacherDashboard({String? classRoomId, int page = 1}) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      final queryParams = <String, dynamic>{};
+      final queryParams = <String, dynamic>{'page': page};
       if (classRoomId != null) {
         queryParams['class_room_id'] = classRoomId;
       }
@@ -470,6 +548,10 @@ class MockDatabase extends ChangeNotifier {
         _dashboardStudents = (data['students'] as List? ?? [])
             .map((item) => Map<String, dynamic>.from(item as Map))
             .toList();
+            
+        final meta = data['meta']?['pagination'] as Map<String, dynamic>? ?? {};
+        _dashboardCurrentPage = meta['current_page'] as int? ?? 1;
+        _dashboardLastPage = meta['last_page'] as int? ?? 1;
 
         _dashboardClassRoomId = data['class_room_id']?.toString();
 
@@ -491,14 +573,15 @@ class MockDatabase extends ChangeNotifier {
   // Teacher Reports
   // ──────────────────────────────────────────────
 
-  Future<List<dynamic>> fetchTeacherReport({
+  Future<Map<String, dynamic>> fetchTeacherReport({
     String? classRoomId,
     String? startDate,
     String? endDate,
     String? status,
+    int page = 1,
   }) async {
     try {
-      final queryParams = <String, dynamic>{};
+      final queryParams = <String, dynamic>{'page': page};
       if (classRoomId != null && classRoomId.isNotEmpty) {
         queryParams['class_room_id'] = classRoomId;
       }
@@ -517,13 +600,16 @@ class MockDatabase extends ChangeNotifier {
         final dataMap = response.data as Map<String, dynamic>;
         final data = dataMap['data'] as Map<String, dynamic>?;
         if (data != null && data['rows'] != null) {
-          return data['rows'] as List<dynamic>;
+          return {
+            'rows': data['rows'] as List<dynamic>,
+            'meta': data['meta'] ?? {},
+          };
         }
       }
     } catch (e) {
       debugPrint('Error fetching teacher report: $e');
     }
-    return [];
+    return {'rows': <dynamic>[], 'meta': {}};
   }
 
   // ──────────────────────────────────────────────
@@ -544,6 +630,7 @@ class MockDatabase extends ChangeNotifier {
           _checkInEnd = setting['check_in_end_time'] as String? ?? _checkInEnd;
           _checkOutStart = setting['check_out_start_time'] as String? ?? _checkOutStart;
           _checkOutEnd = setting['check_out_end_time'] as String? ?? _checkOutEnd;
+          _lateToleranceMinutes = (setting['late_tolerance_minutes'] as num?)?.toInt() ?? _lateToleranceMinutes;
           notifyListeners();
         }
       }
@@ -560,6 +647,7 @@ class MockDatabase extends ChangeNotifier {
     required String checkInEnd,
     required String checkOutStart,
     required String checkOutEnd,
+    required int lateToleranceMinutes,
   }) async {
     try {
       await _dio.patch('/admin/settings', data: {
@@ -570,6 +658,7 @@ class MockDatabase extends ChangeNotifier {
         'check_in_end_time': checkInEnd,
         'check_out_start_time': checkOutStart,
         'check_out_end_time': checkOutEnd,
+        'late_tolerance_minutes': lateToleranceMinutes,
       });
 
       _latitude = latitude;
@@ -579,6 +668,7 @@ class MockDatabase extends ChangeNotifier {
       _checkInEnd = checkInEnd;
       _checkOutStart = checkOutStart;
       _checkOutEnd = checkOutEnd;
+      _lateToleranceMinutes = lateToleranceMinutes;
       notifyListeners();
     } on DioException catch (e) {
       if (e.response?.data != null && e.response?.data['message'] != null) {

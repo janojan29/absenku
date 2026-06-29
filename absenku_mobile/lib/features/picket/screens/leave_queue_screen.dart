@@ -158,6 +158,28 @@ class _LeaveQueueScreenState extends State<LeaveQueueScreen> {
                   )
                 else
                   ...pendingLeaves.map((leave) => _buildPendingCard(leave)),
+                if (pendingLeaves.isNotEmpty && db.leavePendingLastPage > 1)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.chevron_left),
+                          onPressed: db.leavePendingCurrentPage > 1 
+                              ? () => db.fetchLeaveQueue(pendingPage: db.leavePendingCurrentPage - 1, historyPage: db.leaveHistoryCurrentPage) 
+                              : null,
+                        ),
+                        Text('Hal ${db.leavePendingCurrentPage} dari ${db.leavePendingLastPage}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                        IconButton(
+                          icon: const Icon(Icons.chevron_right),
+                          onPressed: db.leavePendingCurrentPage < db.leavePendingLastPage 
+                              ? () => db.fetchLeaveQueue(pendingPage: db.leavePendingCurrentPage + 1, historyPage: db.leaveHistoryCurrentPage) 
+                              : null,
+                        ),
+                      ],
+                    ),
+                  ),
 
                 const SizedBox(height: 28),
 
@@ -241,6 +263,28 @@ class _LeaveQueueScreenState extends State<LeaveQueueScreen> {
                   )
                 else
                   ...filteredLeaves.map((leave) => _buildHistoryCard(leave)),
+                if (filteredLeaves.isNotEmpty && db.leaveHistoryLastPage > 1)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.chevron_left),
+                          onPressed: db.leaveHistoryCurrentPage > 1 
+                              ? () => db.fetchLeaveQueue(pendingPage: db.leavePendingCurrentPage, historyPage: db.leaveHistoryCurrentPage - 1) 
+                              : null,
+                        ),
+                        Text('Hal ${db.leaveHistoryCurrentPage} dari ${db.leaveHistoryLastPage}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                        IconButton(
+                          icon: const Icon(Icons.chevron_right),
+                          onPressed: db.leaveHistoryCurrentPage < db.leaveHistoryLastPage 
+                              ? () => db.fetchLeaveQueue(pendingPage: db.leavePendingCurrentPage, historyPage: db.leaveHistoryCurrentPage + 1) 
+                              : null,
+                        ),
+                      ],
+                    ),
+                  ),
               ],
             ),
           ),

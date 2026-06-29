@@ -125,10 +125,23 @@ class DashboardController extends Controller
             ];
         })->values();
 
+        $page = max(1, (int) $request->query('page', 1));
+        $perPage = 20;
+        $total = $rows->count();
+        $paginatedRows = $rows->slice(($page - 1) * $perPage, $perPage)->values();
+
         return response()->json([
             'data' => [
                 'counts' => $counts,
-                'students' => $rows,
+                'students' => $paginatedRows,
+                'meta' => [
+                    'pagination' => [
+                        'current_page' => $page,
+                        'last_page' => ceil($total / $perPage),
+                        'per_page' => $perPage,
+                        'total' => $total,
+                    ],
+                ],
                 'class_room_id' => $classRoomId,
                 'classrooms' => ClassRoom::query()->orderBy('name')->get()->map(fn($c) => [
                     'id' => $c->id,

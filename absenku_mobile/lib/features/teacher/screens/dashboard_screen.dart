@@ -77,14 +77,54 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
           appBar: AppBar(
             title: Text(title),
             actions: [
-              IconButton(
-                icon: const Icon(Icons.person),
-                tooltip: 'Profil',
-                onPressed: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const ProfileScreen()));
+              PopupMenuButton<String>(
+                onSelected: (value) {
+                  if (value == 'profile') {
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => const ProfileScreen()));
+                  } else if (value == 'logout') {
+                    db.logout();
+                  }
                 },
+                itemBuilder: (BuildContext context) {
+                  return [
+                    PopupMenuItem<String>(
+                      enabled: false,
+                      child: Text(db.currentUser?.name ?? 'Guru', style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryNavy)),
+                    ),
+                    const PopupMenuDivider(),
+                    const PopupMenuItem<String>(
+                      value: 'profile',
+                      child: Row(
+                        children: [
+                          Icon(Icons.person_outline, size: 20, color: AppTheme.textMuted),
+                          SizedBox(width: 12),
+                          Text('Profil'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem<String>(
+                      value: 'logout',
+                      child: Row(
+                        children: [
+                          Icon(Icons.logout, size: 20, color: AppTheme.statusAbsent),
+                          SizedBox(width: 12),
+                          Text('Keluar', style: TextStyle(color: AppTheme.statusAbsent)),
+                        ],
+                      ),
+                    ),
+                  ];
+                },
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Row(
+                    children: [
+                      Icon(Icons.account_circle, size: 28),
+                      SizedBox(width: 8),
+                      Icon(Icons.arrow_drop_down, size: 20),
+                    ],
+                  ),
+                ),
               ),
-              IconButton(icon: const Icon(Icons.logout), tooltip: 'Logout', onPressed: () => db.logout()),
             ],
           ),
           body: IndexedStack(index: activeIndex, children: tabs),
@@ -124,8 +164,8 @@ class _TodaySummaryTabState extends State<_TodaySummaryTab> {
     _loadData();
   }
 
-  Future<void> _loadData([String? classRoomId]) async {
-    await MockDatabase().fetchTeacherDashboard(classRoomId: classRoomId);
+  Future<void> _loadData({String? classRoomId, int page = 1}) async {
+    await MockDatabase().fetchTeacherDashboard(classRoomId: classRoomId, page: page);
     if (mounted) {
       setState(() {
         _initialLoading = false;
@@ -158,7 +198,7 @@ class _TodaySummaryTabState extends State<_TodaySummaryTab> {
     }).toList();
 
     return RefreshIndicator(
-      onRefresh: () => _loadData(_selectedClassRoomId.isEmpty ? 'all' : _selectedClassRoomId),
+      onRefresh: () => _loadData(classRoomId: _selectedClassRoomId.isEmpty ? 'all' : _selectedClassRoomId),
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(16.0),
@@ -192,7 +232,7 @@ class _TodaySummaryTabState extends State<_TodaySummaryTab> {
                           ],
                           onChanged: (value) {
                             setState(() => _selectedClassRoomId = value ?? '');
-                            _loadData(value?.isEmpty == true ? 'all' : value);
+                            _loadData(classRoomId: value?.isEmpty == true ? 'all' : value);
                           },
                           decoration: const InputDecoration(contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 4)),
                         ),
@@ -293,6 +333,28 @@ class _TodaySummaryTabState extends State<_TodaySummaryTab> {
                   ),
                 );
               }),
+            if (!_initialLoading && db.dashboardStudents.isNotEmpty && db.dashboardLastPage > 1)
+              Padding(
+                padding: const EdgeInsets.only(top: 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.chevron_left),
+                      onPressed: db.dashboardCurrentPage > 1 
+                          ? () => _loadData(classRoomId: _selectedClassRoomId, page: db.dashboardCurrentPage - 1) 
+                          : null,
+                    ),
+                    Text('Halaman ${db.dashboardCurrentPage} dari ${db.dashboardLastPage}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    IconButton(
+                      icon: const Icon(Icons.chevron_right),
+                      onPressed: db.dashboardCurrentPage < db.dashboardLastPage 
+                          ? () => _loadData(classRoomId: _selectedClassRoomId, page: db.dashboardCurrentPage + 1) 
+                          : null,
+                    ),
+                  ],
+                ),
+              ),
           ],
         ),
       ),

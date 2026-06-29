@@ -43,25 +43,60 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
               _currentIndex == 0
                   ? 'Kelola Siswa'
                   : _currentIndex == 1
-                      ? 'Kelola Guru Piket'
+                      ? 'Kelola Guru dan Petugas Piket'
                       : _currentIndex == 2
                           ? 'Kelola Kelas'
                           : 'Pengaturan Sekolah',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
             ),
             actions: [
-              IconButton(
-                icon: const Icon(Icons.person),
-                tooltip: 'Profil',
-                onPressed: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const ProfileScreen()));
+              PopupMenuButton<String>(
+                onSelected: (value) {
+                  if (value == 'profile') {
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => const ProfileScreen()));
+                  } else if (value == 'logout') {
+                    db.logout();
+                  }
                 },
-              ),
-              IconButton(
-                icon: const Icon(Icons.logout),
-                tooltip: 'Logout',
-                onPressed: () {
-                  db.logout();
+                itemBuilder: (BuildContext context) {
+                  return [
+                    PopupMenuItem<String>(
+                      enabled: false,
+                      child: Text(db.currentUser?.name ?? 'Admin', style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryNavy)),
+                    ),
+                    const PopupMenuDivider(),
+                    const PopupMenuItem<String>(
+                      value: 'profile',
+                      child: Row(
+                        children: [
+                          Icon(Icons.person_outline, size: 20, color: AppTheme.textMuted),
+                          SizedBox(width: 12),
+                          Text('Profil'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem<String>(
+                      value: 'logout',
+                      child: Row(
+                        children: [
+                          Icon(Icons.logout, size: 20, color: AppTheme.statusAbsent),
+                          SizedBox(width: 12),
+                          Text('Keluar', style: TextStyle(color: AppTheme.statusAbsent)),
+                        ],
+                      ),
+                    ),
+                  ];
                 },
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Row(
+                    children: [
+                      Icon(Icons.account_circle, size: 28),
+                      SizedBox(width: 8),
+                      Icon(Icons.arrow_drop_down, size: 20),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),
@@ -370,6 +405,7 @@ class _SettingsTabState extends State<_SettingsTab> {
   final _checkInEndController = TextEditingController();
   final _checkOutStartController = TextEditingController();
   final _checkOutEndController = TextEditingController();
+  final _lateToleranceController = TextEditingController();
   bool _loading = true;
 
   @override
@@ -389,6 +425,7 @@ class _SettingsTabState extends State<_SettingsTab> {
       _checkInEndController.text = db.checkInEnd;
       _checkOutStartController.text = db.checkOutStart;
       _checkOutEndController.text = db.checkOutEnd;
+      _lateToleranceController.text = db.lateToleranceMinutes.toString();
       setState(() => _loading = false);
     }
   }
@@ -402,6 +439,7 @@ class _SettingsTabState extends State<_SettingsTab> {
     _checkInEndController.dispose();
     _checkOutStartController.dispose();
     _checkOutEndController.dispose();
+    _lateToleranceController.dispose();
     super.dispose();
   }
 
@@ -416,6 +454,7 @@ class _SettingsTabState extends State<_SettingsTab> {
       checkInEnd: _checkInEndController.text,
       checkOutStart: _checkOutStartController.text,
       checkOutEnd: _checkOutEndController.text,
+      lateToleranceMinutes: int.parse(_lateToleranceController.text),
     );
 
     if (mounted) {
@@ -535,6 +574,13 @@ class _SettingsTabState extends State<_SettingsTab> {
                           ),
                         ),
                       ],
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _lateToleranceController,
+                      decoration: const InputDecoration(labelText: 'Toleransi Keterlambatan (Menit)', hintText: 'Contoh: 15'),
+                      keyboardType: TextInputType.number,
+                      validator: (val) => val == null || int.tryParse(val) == null ? 'Nilai tidak valid' : null,
                     ),
                   ],
                 ),
