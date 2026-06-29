@@ -1,7 +1,7 @@
 class AppConfig {
-  static const String appName = 'Absenku Mobile';
+  static const String appName = 'AbsenKu';
 
   // API Base URL — ngrok tunnel to Laravel backend
-  static const String apiBaseUrl = 'https://convene-radiantly-numeric.ngrok-free.dev/api';
-
+  static const String apiBaseUrl =
+      'https://celery-wrought-mangy.ngrok-free.dev/api';
 }
