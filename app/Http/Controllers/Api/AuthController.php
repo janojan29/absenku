@@ -150,4 +150,37 @@ class AuthController extends Controller
             'message' => 'Password berhasil diubah.',
         ]);
     }
+
+    public function updatePhone(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        if (! $user) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
+        if ($user->hasAnyRole(['admin', 'petugas_piket'])) {
+            return response()->json([
+                'message' => 'Validation failed.',
+                'errors' => [
+                    'whatsapp_number' => ['Tidak diizinkan mengubah profil untuk peran ini.'],
+                ]
+            ], 422);
+        }
+
+        $data = $request->validate([
+            'whatsapp_number' => ['required', 'string', 'regex:/^08[0-9]+$/', 'max:30'],
+        ], [
+            'whatsapp_number.regex' => 'Nomor WhatsApp harus diawali dengan 08 dan hanya berisi angka.',
+            'whatsapp_number.required' => 'Nomor WhatsApp wajib diisi.',
+        ]);
+
+        $user->update([
+            'whatsapp_number' => $data['whatsapp_number']
+        ]);
+
+        return response()->json([
+            'message' => 'Nomor HP berhasil diperbarui.',
+            'whatsapp_number' => $user->whatsapp_number,
+        ]);
+    }
 }

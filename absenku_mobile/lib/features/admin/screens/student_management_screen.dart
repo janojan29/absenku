@@ -17,6 +17,8 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
   final _searchController = TextEditingController();
   Set<String> _selectedStudentIds = {};
   bool _loading = true;
+  int _currentPage = 1;
+  static const int _itemsPerPage = 20;
 
   // Form controllers
   final _nameController = TextEditingController();
@@ -31,6 +33,11 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
   void initState() {
     super.initState();
     _loadData();
+    _searchController.addListener(() {
+      setState(() {
+        _currentPage = 1;
+      });
+    });
   }
 
   Future<void> _loadData() async {
@@ -95,10 +102,11 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                       ),
                       const SizedBox(height: 12),
                       DropdownButtonFormField<String>(
+                        isExpanded: true,
                         initialValue: _formClassRoomId.isEmpty ? null : _formClassRoomId,
                         decoration: const InputDecoration(labelText: 'Kelas'),
                         items: db.classrooms.map((c) {
-                          return DropdownMenuItem(value: c.id, child: Text(c.name));
+                          return DropdownMenuItem(value: c.id, child: Text(c.name, overflow: TextOverflow.ellipsis));
                         }).toList(),
                         onChanged: (val) {
                           setDialogState(() {
@@ -242,9 +250,10 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
+                    isExpanded: true,
                     initialValue: bulkTargetClassId.isEmpty ? null : bulkTargetClassId,
                     items: db.classrooms.map((c) {
-                      return DropdownMenuItem(value: c.id, child: Text(c.name));
+                      return DropdownMenuItem(value: c.id, child: Text(c.name, overflow: TextOverflow.ellipsis));
                     }).toList(),
                     onChanged: (val) {
                       setDialogState(() {
@@ -303,9 +312,10 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
+                    isExpanded: true,
                     initialValue: bulkDeleteClassId.isEmpty ? null : bulkDeleteClassId,
                     items: db.classrooms.map((c) {
-                      return DropdownMenuItem(value: c.id, child: Text(c.name));
+                      return DropdownMenuItem(value: c.id, child: Text(c.name, overflow: TextOverflow.ellipsis));
                     }).toList(),
                     onChanged: (val) {
                       setDialogState(() {
@@ -525,12 +535,18 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                         SizedBox(
                           width: 120,
                           child: DropdownButtonFormField<String>(
+                            isExpanded: true,
                             initialValue: _selectedClassRoomId,
                             items: [
-                              const DropdownMenuItem(value: '', child: Text('Semua')),
-                              ...db.classrooms.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name))),
+                              const DropdownMenuItem(value: '', child: Text('Semua', overflow: TextOverflow.ellipsis)),
+                              ...db.classrooms.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name, overflow: TextOverflow.ellipsis))),
                             ],
-                            onChanged: (val) => setState(() => _selectedClassRoomId = val ?? ''),
+                            onChanged: (val) {
+                              setState(() {
+                                _selectedClassRoomId = val ?? '';
+                                _currentPage = 1;
+                              });
+                            },
                             decoration: const InputDecoration(
                               contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             ),
@@ -618,10 +634,21 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                             style: TextStyle(color: AppTheme.textMuted),
                           ),
                         )
-                      : ListView.builder(
-                          itemCount: filteredStudents.length,
-                          itemBuilder: (context, index) {
-                            final student = filteredStudents[index];
+                      : Builder(
+                          builder: (context) {
+                            final startIndex = (_currentPage - 1) * _itemsPerPage;
+                            int endIndex = startIndex + _itemsPerPage;
+                            if (endIndex > filteredStudents.length) {
+                              endIndex = filteredStudents.length;
+                            }
+                            final paginatedStudents = startIndex < filteredStudents.length 
+                                ? filteredStudents.sublist(startIndex, endIndex)
+                                : <User>[];
+
+                            return ListView.builder(
+                              itemCount: paginatedStudents.length,
+                              itemBuilder: (context, index) {
+                                final student = paginatedStudents[index];
                             final classRoom = db.classrooms.firstWhere(
                               (c) => c.id == student.classRoomId,
                               orElse: () => ClassRoom(id: '', name: '-', jurusan: '-'),
@@ -709,9 +736,38 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                               ),
                             );
                           },
-                        ),
+                        );
+                  },
                 ),
-              ],
+              ),
+              
+              // Pagination Controls
+              if (filteredStudents.length > _itemsPerPage)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.chevron_left),
+                        onPressed: _currentPage > 1
+                            ? () => setState(() => _currentPage--)
+                            : null,
+                      ),
+                      Text(
+                        'Halaman $_currentPage dari ${(filteredStudents.length / _itemsPerPage).ceil()}',
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.chevron_right),
+                        onPressed: _currentPage < (filteredStudents.length / _itemsPerPage).ceil()
+                            ? () => setState(() => _currentPage++)
+                            : null,
+                      ),
+                    ],
+                  ),
+                ),
+            ],
             ),
           ),
         );

@@ -225,6 +225,33 @@ class MockDatabase extends ChangeNotifier {
     }
   }
 
+  Future<void> updatePhone(String whatsappNumber) async {
+    try {
+      final response = await _dio.post('/user/update-phone', data: {
+        'whatsapp_number': whatsappNumber,
+      });
+      if (response.statusCode == 200) {
+        try {
+          final userRes = await _dio.get('/user');
+          if (userRes.statusCode == 200) {
+            final userData = userRes.data['data']['user'] as Map<String, dynamic>;
+            _currentUser = User.fromApiJson(userData);
+            notifyListeners();
+          }
+        } catch (_) {}
+      }
+    } on DioException catch (e) {
+      if (e.response?.data != null && e.response?.data['errors'] != null) {
+        final errors = e.response!.data['errors'] as Map<String, dynamic>;
+        throw Exception(errors.values.expand((v) => v as List).join('\n'));
+      }
+      if (e.response?.data != null && e.response?.data['message'] != null) {
+        throw Exception(e.response!.data['message'].toString());
+      }
+      throw Exception('Gagal mengubah nomor HP.');
+    }
+  }
+
   // ──────────────────────────────────────────────
   // Student Attendance Operations
   // ──────────────────────────────────────────────

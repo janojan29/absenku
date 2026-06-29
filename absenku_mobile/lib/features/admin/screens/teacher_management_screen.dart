@@ -14,6 +14,8 @@ class _TeacherManagementScreenState extends State<TeacherManagementScreen> {
   String _searchQuery = '';
   final _searchController = TextEditingController();
   bool _loading = true;
+  int _currentPage = 1;
+  static const int _itemsPerPage = 20;
 
   // Form controllers
   final _nameController = TextEditingController();
@@ -29,6 +31,11 @@ class _TeacherManagementScreenState extends State<TeacherManagementScreen> {
   void initState() {
     super.initState();
     _loadData();
+    _searchController.addListener(() {
+      setState(() {
+        _currentPage = 1;
+      });
+    });
   }
 
   Future<void> _loadData() async {
@@ -57,7 +64,9 @@ class _TeacherManagementScreenState extends State<TeacherManagementScreen> {
       _whatsappController.text = teacher.whatsappNumber ?? '';
       _subjectController.text = teacher.subject ?? '';
       _waliKelasController.text = teacher.waliKelas ?? '';
-      _selectedRole = (teacher.role == 'guru_walikelas') ? 'guru_walikelas' : 'guru';
+      _selectedRole = (teacher.role == 'guru_walikelas') 
+          ? 'guru_walikelas' 
+          : (teacher.role == 'petugas_piket' ? 'petugas_piket' : 'guru');
       _passwordController.clear();
       _passwordConfirmController.clear();
     } else {
@@ -91,6 +100,7 @@ class _TeacherManagementScreenState extends State<TeacherManagementScreen> {
                         items: const [
                           DropdownMenuItem(value: 'guru', child: Text('Guru')),
                           DropdownMenuItem(value: 'guru_walikelas', child: Text('Guru Walikelas')),
+                          DropdownMenuItem(value: 'petugas_piket', child: Text('Petugas Piket')),
                         ],
                         onChanged: (val) {
                           if (val != null) {
@@ -108,7 +118,7 @@ class _TeacherManagementScreenState extends State<TeacherManagementScreen> {
                       const SizedBox(height: 12),
                       TextField(
                         controller: _nipController,
-                        decoration: const InputDecoration(labelText: 'NIP'),
+                        decoration: const InputDecoration(labelText: 'NIP / ID Petugas'),
                         keyboardType: TextInputType.number,
                       ),
                       const SizedBox(height: 12),
@@ -155,7 +165,7 @@ class _TeacherManagementScreenState extends State<TeacherManagementScreen> {
                     if (_nameController.text.trim().isEmpty ||
                         _nipController.text.trim().isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Nama dan NIP wajib diisi!')),
+                        const SnackBar(content: Text('Nama dan NIP/ID wajib diisi!')),
                       );
                       return;
                     }
@@ -299,10 +309,21 @@ class _TeacherManagementScreenState extends State<TeacherManagementScreen> {
                             style: TextStyle(color: AppTheme.textMuted),
                           ),
                         )
-                      : ListView.builder(
-                          itemCount: filteredTeachers.length,
-                          itemBuilder: (context, index) {
-                            final teacher = filteredTeachers[index];
+                      : Builder(
+                          builder: (context) {
+                            final startIndex = (_currentPage - 1) * _itemsPerPage;
+                            int endIndex = startIndex + _itemsPerPage;
+                            if (endIndex > filteredTeachers.length) {
+                              endIndex = filteredTeachers.length;
+                            }
+                            final paginatedTeachers = startIndex < filteredTeachers.length 
+                                ? filteredTeachers.sublist(startIndex, endIndex)
+                                : <User>[];
+
+                            return ListView.builder(
+                              itemCount: paginatedTeachers.length,
+                              itemBuilder: (context, index) {
+                                final teacher = paginatedTeachers[index];
 
                             return Card(
                               margin: const EdgeInsets.only(bottom: 10),
@@ -380,9 +401,38 @@ class _TeacherManagementScreenState extends State<TeacherManagementScreen> {
                               ),
                             );
                           },
-                        ),
+                        );
+                  },
                 ),
-              ],
+              ),
+
+              // Pagination Controls
+              if (filteredTeachers.length > _itemsPerPage)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.chevron_left),
+                        onPressed: _currentPage > 1
+                            ? () => setState(() => _currentPage--)
+                            : null,
+                      ),
+                      Text(
+                        'Halaman $_currentPage dari ${(filteredTeachers.length / _itemsPerPage).ceil()}',
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.chevron_right),
+                        onPressed: _currentPage < (filteredTeachers.length / _itemsPerPage).ceil()
+                            ? () => setState(() => _currentPage++)
+                            : null,
+                      ),
+                    ],
+                  ),
+                ),
+            ],
             ),
           ),
         );

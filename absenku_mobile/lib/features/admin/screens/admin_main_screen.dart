@@ -122,6 +122,8 @@ class _ClassRoomTabState extends State<_ClassRoomTab> {
   final _classNameController = TextEditingController();
   final _classJurusanController = TextEditingController();
   bool _loading = true;
+  int _currentPage = 1;
+  static const int _itemsPerPage = 20;
 
   @override
   void initState() {
@@ -219,7 +221,12 @@ class _ClassRoomTabState extends State<_ClassRoomTab> {
                   Expanded(
                     child: TextField(
                       controller: _searchController,
-                      onChanged: (val) => setState(() => _searchQuery = val),
+                      onChanged: (val) {
+                        setState(() {
+                          _searchQuery = val;
+                          _currentPage = 1;
+                        });
+                      },
                       decoration: const InputDecoration(
                         hintText: 'Cari nama kelas/jurusan...',
                         prefixIcon: Icon(Icons.search),
@@ -246,10 +253,19 @@ class _ClassRoomTabState extends State<_ClassRoomTab> {
           Expanded(
             child: filteredClassrooms.isEmpty
                 ? const Center(child: Text('Kelas tidak ditemukan.', style: TextStyle(color: AppTheme.textMuted)))
-                : ListView.builder(
-                    itemCount: filteredClassrooms.length,
-                    itemBuilder: (context, index) {
-                      final classroom = filteredClassrooms[index];
+                : Builder(
+                    builder: (context) {
+                      final startIndex = (_currentPage - 1) * _itemsPerPage;
+                      int endIndex = startIndex + _itemsPerPage;
+                      if (endIndex > filteredClassrooms.length) endIndex = filteredClassrooms.length;
+                      final paginatedClassrooms = startIndex < filteredClassrooms.length
+                          ? filteredClassrooms.sublist(startIndex, endIndex)
+                          : <ClassRoom>[];
+
+                      return ListView.builder(
+                        itemCount: paginatedClassrooms.length,
+                        itemBuilder: (context, index) {
+                          final classroom = paginatedClassrooms[index];
 
                       return Card(
                         margin: const EdgeInsets.only(bottom: 10),
@@ -299,8 +315,37 @@ class _ClassRoomTabState extends State<_ClassRoomTab> {
                         ),
                       );
                     },
-                  ),
+                  );
+                },
+              ),
           ),
+          
+          // Pagination Controls
+          if (filteredClassrooms.length > _itemsPerPage)
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.chevron_left),
+                    onPressed: _currentPage > 1
+                        ? () => setState(() => _currentPage--)
+                        : null,
+                  ),
+                  Text(
+                    'Halaman $_currentPage dari ${(filteredClassrooms.length / _itemsPerPage).ceil()}',
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.chevron_right),
+                    onPressed: _currentPage < (filteredClassrooms.length / _itemsPerPage).ceil()
+                        ? () => setState(() => _currentPage++)
+                        : null,
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
     );

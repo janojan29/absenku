@@ -18,7 +18,7 @@ class TeacherController extends Controller
         $q = trim((string) $request->query('q', ''));
 
         $teachers = User::query()
-            ->whereHas('roles', fn ($query) => $query->whereIn('name', ['guru', 'guru_walikelas']))
+            ->whereHas('roles', fn ($query) => $query->whereIn('name', ['guru', 'guru_walikelas', 'petugas_piket']))
             ->with(['teacher', 'roles'])
             ->when($q !== '', function ($query) use ($q) {
                 $like = '%' . $q . '%';
@@ -56,7 +56,7 @@ class TeacherController extends Controller
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'teacher_role' => ['required', 'string', 'in:guru,guru_walikelas'],
+            'teacher_role' => ['required', 'string', 'in:guru,guru_walikelas,petugas_piket'],
             'name' => ['required', 'string', 'max:255'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'nip' => ['required', 'string', 'max:50', 'unique:teachers,nip'],
@@ -103,14 +103,14 @@ class TeacherController extends Controller
 
     public function update(Request $request, User $user): JsonResponse
     {
-        if (! $user->hasAnyRole(['guru', 'guru_walikelas'])) {
+        if (! $user->hasAnyRole(['guru', 'guru_walikelas', 'petugas_piket'])) {
             return response()->json([
-                'message' => 'User ini bukan role guru.',
+                'message' => 'User ini bukan role guru / petugas piket.',
             ], 422);
         }
 
         $data = $request->validate([
-            'teacher_role' => ['required', 'string', 'in:guru,guru_walikelas'],
+            'teacher_role' => ['required', 'string', 'in:guru,guru_walikelas,petugas_piket'],
             'name' => ['required', 'string', 'max:255'],
             'nip' => [
                 'nullable',

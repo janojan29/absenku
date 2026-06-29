@@ -32,6 +32,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'me']);
     Route::post('/user/change-password', [AuthController::class, 'changePassword']);
+    Route::post('/user/update-phone', [AuthController::class, 'updatePhone']);
 
     Route::middleware('role:siswa')->group(function () {
         Route::get('/attendance', [AttendanceController::class, 'index']);

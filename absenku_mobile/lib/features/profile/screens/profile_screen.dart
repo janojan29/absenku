@@ -21,12 +21,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _obscureNew = true;
   bool _obscureConfirm = true;
 
+  final _phoneController = TextEditingController();
+  bool _isPhoneLoading = false;
+
   @override
   void dispose() {
     _oldPasswordController.dispose();
     _newPasswordController.dispose();
     _confirmPasswordController.dispose();
+    _phoneController.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    final user = MockDatabase().currentUser;
+    if (user != null && user.whatsappNumber != null) {
+      _phoneController.text = user.whatsappNumber!;
+    }
+  }
+
+  Future<void> _submitUpdatePhone() async {
+    final phone = _phoneController.text.trim();
+    if (phone.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Nomor WhatsApp wajib diisi.')));
+      return;
+    }
+    setState(() => _isPhoneLoading = true);
+    try {
+      await MockDatabase().updatePhone(phone);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Nomor HP berhasil diperbarui.')));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceAll('Exception:', ''))));
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isPhoneLoading = false);
+      }
+    }
   }
 
   Future<void> _submitChangePassword() async {
@@ -140,6 +176,58 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               
               const SizedBox(height: 24),
+              
+              if (!widget.forceChangePassword && (user.role == 'siswa' || user.role == 'guru' || user.role == 'guru_walikelas')) ...[
+                Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Text(
+                          'Ubah Nomor WhatsApp',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextFormField(
+                                controller: _phoneController,
+                                keyboardType: TextInputType.phone,
+                                decoration: const InputDecoration(
+                                  labelText: 'No WhatsApp Baru',
+                                  prefixIcon: Icon(Icons.phone),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            ElevatedButton(
+                              onPressed: _isPhoneLoading ? null : _submitUpdatePhone,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppTheme.accentBlue,
+                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                              child: _isPhoneLoading
+                                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                                  : const Text('SIMPAN'),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Pastikan diawali dengan 08 dan hanya angka.',
+                          style: TextStyle(fontSize: 12, color: AppTheme.textMuted),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+              ],
               
               // Password Change Form
               if (user.role == 'admin' || user.role == 'petugas_piket')
