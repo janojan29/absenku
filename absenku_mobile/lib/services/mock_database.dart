@@ -152,7 +152,7 @@ class MockDatabase extends ChangeNotifier {
         _currentUser = User.fromApiJson(userData);
         
         // Simulating backend check for default password
-        if (password == '12345678') {
+        if (password == '12345678' && _currentUser?.role != 'admin' && _currentUser?.role != 'petugas_piket') {
           _mustChangePassword = true;
         } else {
           _mustChangePassword = false;
@@ -504,15 +504,18 @@ class MockDatabase extends ChangeNotifier {
     try {
       final response = await _dio.get('/admin/settings');
       if (response.statusCode == 200) {
-        final data = response.data['data'] as Map<String, dynamic>? ?? response.data as Map<String, dynamic>;
-        _latitude = (data['latitude'] as num?)?.toDouble() ?? _latitude;
-        _longitude = (data['longitude'] as num?)?.toDouble() ?? _longitude;
-        _radiusMeters = (data['radius_meters'] as num?)?.toInt() ?? _radiusMeters;
-        _checkInStart = data['check_in_start_time'] as String? ?? _checkInStart;
-        _checkInEnd = data['check_in_end_time'] as String? ?? _checkInEnd;
-        _checkOutStart = data['check_out_start_time'] as String? ?? _checkOutStart;
-        _checkOutEnd = data['check_out_end_time'] as String? ?? _checkOutEnd;
-        notifyListeners();
+        final data = response.data['data'] as Map<String, dynamic>?;
+        final setting = data != null ? data['setting'] as Map<String, dynamic>? : null;
+        if (setting != null) {
+          _latitude = (setting['latitude'] as num?)?.toDouble() ?? _latitude;
+          _longitude = (setting['longitude'] as num?)?.toDouble() ?? _longitude;
+          _radiusMeters = (setting['radius_meters'] as num?)?.toInt() ?? _radiusMeters;
+          _checkInStart = setting['check_in_start_time'] as String? ?? _checkInStart;
+          _checkInEnd = setting['check_in_end_time'] as String? ?? _checkInEnd;
+          _checkOutStart = setting['check_out_start_time'] as String? ?? _checkOutStart;
+          _checkOutEnd = setting['check_out_end_time'] as String? ?? _checkOutEnd;
+          notifyListeners();
+        }
       }
     } catch (e) {
       debugPrint('Error fetching admin settings: $e');

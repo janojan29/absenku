@@ -141,9 +141,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: 24),
               
               // Password Change Form
-              Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              if (user.role == 'admin' || user.role == 'petugas_piket')
+                Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Center(
+                      child: Text(
+                        user.role == 'admin'
+                            ? 'Password untuk akun Administrator hanya dapat diubah melalui database seeder atau hubungi operator.'
+                            : 'Password untuk akun Petugas Piket hanya dapat diubah oleh Admin.',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: AppTheme.textMuted),
+                      ),
+                    ),
+                  ),
+                )
+              else
+                Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Form(

@@ -68,7 +68,10 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
         if (_initialLoading) {
           return Scaffold(
             backgroundColor: AppTheme.backgroundLight,
-            appBar: AppBar(title: const Text('Absensi Harian')),
+            appBar: AppBar(
+              title: const Text('Absensi Harian', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              backgroundColor: AppTheme.primaryNavy,
+            ),
             body: const Center(child: CircularProgressIndicator()),
           );
         }
@@ -127,7 +130,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Absensi Harian', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        const Text('Absensi Harian', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                         Text('Lakukan absensi masuk dan pulang',
                             style: TextStyle(fontSize: 10, color: Colors.white.withValues(alpha: 0.7))),
                       ],

@@ -27,13 +27,13 @@ class SchoolSettingController extends Controller
         $setting = SchoolSetting::singleton();
 
         $validator = Validator::make($request->all(), [
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['sometimes', 'required', 'string', 'max:255'],
             'latitude' => ['required', 'numeric', 'between:-90,90'],
             'longitude' => ['required', 'numeric', 'between:-180,180'],
             'radius_meters' => ['required', 'integer', 'min:10', 'max:5000'],
             'check_in_start_time' => ['required', 'date_format:H:i'],
             'check_in_end_time' => ['required', 'date_format:H:i'],
-            'late_tolerance_minutes' => ['required', 'integer', 'min:0', 'max:180'],
+            'late_tolerance_minutes' => ['sometimes', 'required', 'integer', 'min:0', 'max:180'],
             'check_out_start_time' => ['required', 'date_format:H:i'],
             'check_out_end_time' => ['required', 'date_format:H:i'],
         ]);

@@ -15,11 +15,11 @@ class SchoolSettingResource extends JsonResource
             'latitude' => $this->latitude,
             'longitude' => $this->longitude,
             'radius_meters' => $this->radius_meters,
-            'check_in_start_time' => $this->check_in_start_time,
-            'check_in_end_time' => $this->check_in_end_time,
+            'check_in_start_time' => $this->check_in_start_time ? substr($this->check_in_start_time, 0, 5) : null,
+            'check_in_end_time' => $this->check_in_end_time ? substr($this->check_in_end_time, 0, 5) : null,
             'late_tolerance_minutes' => $this->late_tolerance_minutes,
-            'check_out_start_time' => $this->check_out_start_time,
-            'check_out_end_time' => $this->check_out_end_time,
+            'check_out_start_time' => $this->check_out_start_time ? substr($this->check_out_start_time, 0, 5) : null,
+            'check_out_end_time' => $this->check_out_end_time ? substr($this->check_out_end_time, 0, 5) : null,
         ];
     }
 }
