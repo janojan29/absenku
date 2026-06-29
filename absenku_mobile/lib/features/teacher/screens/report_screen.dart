@@ -169,6 +169,26 @@ class _ReportScreenState extends State<ReportScreen> with SingleTickerProviderSt
               },
               child: const Text('RESET'),
             )),
+            const SizedBox(height: 12),
+            Row(children: [
+              Expanded(child: ElevatedButton.icon(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Mengunduh Rekap Absen (Excel)...')));
+                },
+                icon: const Icon(Icons.table_chart, size: 18),
+                label: const Text('Ekspor Excel'),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+              )),
+              const SizedBox(width: 12),
+              Expanded(child: ElevatedButton.icon(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Mengunduh Rekap Absen (PDF)...')));
+                },
+                icon: const Icon(Icons.picture_as_pdf, size: 18),
+                label: const Text('Ekspor PDF'),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              )),
+            ]),
           ]),
         ),
         const SizedBox(height: 16),
@@ -258,6 +278,26 @@ class _ReportScreenState extends State<ReportScreen> with SingleTickerProviderSt
               },
               child: const Text('RESET'),
             )),
+            const SizedBox(height: 12),
+            Row(children: [
+              Expanded(child: ElevatedButton.icon(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Mengunduh Rekap Keterangan (Excel)...')));
+                },
+                icon: const Icon(Icons.table_chart, size: 18),
+                label: const Text('Ekspor Excel'),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+              )),
+              const SizedBox(width: 12),
+              Expanded(child: ElevatedButton.icon(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Mengunduh Rekap Keterangan (PDF)...')));
+                },
+                icon: const Icon(Icons.picture_as_pdf, size: 18),
+                label: const Text('Ekspor PDF'),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              )),
+            ]),
           ]),
         ),
         const SizedBox(height: 16),

@@ -10,6 +10,9 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
+use App\Imports\StudentsImport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class StudentController extends Controller
 {
@@ -166,6 +169,124 @@ class StudentController extends Controller
             'data' => [
                 'student' => (new UserResource($user))->toArray($request),
             ],
+        ]);
+    }
+
+    public function import(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'file' => ['required', 'file', 'mimes:xlsx,xls,csv'],
+        ]);
+
+        $import = new StudentsImport();
+        Excel::import($import, $data['file']);
+
+        $errors = [];
+        $created = 0;
+
+        $classRooms = ClassRoom::query()
+            ->select(['id', 'name', 'jurusan'])
+            ->get();
+
+        $normalize = static function (?string $value): string {
+            $value = trim((string) $value);
+            $value = preg_replace('/\s+/', ' ', $value) ?? '';
+
+            return mb_strtolower($value);
+        };
+
+        foreach ($import->rows() as $index => $row) {
+            $rowNumber = $index + 2;
+
+            $name = trim((string) ($row['nama'] ?? $row['name'] ?? ''));
+            $nis = trim((string) ($row['nisn'] ?? $row['nis'] ?? ''));
+            $kelas = trim((string) ($row['kelas'] ?? ''));
+            $jurusan = trim((string) ($row['jurusan'] ?? ''));
+            $parentPhone = trim((string) ($row['nohp_orangtua'] ?? $row['no_hp_orangtua'] ?? $row['nohp_ortu'] ?? $row['no_hp_ortu'] ?? ''));
+            $studentPhone = trim((string) ($row['nohp_siswa'] ?? $row['no_hp_siswa'] ?? ''));
+
+            if ($name === '' || $nis === '' || $kelas === '' || $jurusan === '') {
+                $errors[] = "Baris {$rowNumber}: Kolom wajib tidak lengkap.";
+                continue;
+            }
+
+            if (!preg_match('/^[a-zA-Z\s.,\'\-]+$/', $name)) {
+                $errors[] = "Baris {$rowNumber}: Nama siswa hanya boleh berisi huruf, spasi, dan tanda baca nama.";
+                continue;
+            }
+
+            if (!preg_match('/^[0-9]+$/', $nis)) {
+                $errors[] = "Baris {$rowNumber}: NISN harus berupa angka.";
+                continue;
+            }
+
+            if ($parentPhone !== '' && !preg_match('/^08[0-9]+$/', $parentPhone)) {
+                $errors[] = "Baris {$rowNumber}: Nomor HP orang tua harus diawali dengan 08.";
+                continue;
+            }
+
+            if ($studentPhone !== '' && !preg_match('/^08[0-9]+$/', $studentPhone)) {
+                $errors[] = "Baris {$rowNumber}: Nomor HP siswa harus diawali dengan 08.";
+                continue;
+            }
+
+            if (StudentProfile::query()->where('nis', $nis)->exists()) {
+                $errors[] = "Baris {$rowNumber}: NISN {$nis} sudah terdaftar.";
+                continue;
+            }
+
+            $classRoom = $classRooms->first(function ($classRoom) use ($kelas, $jurusan, $normalize) {
+                return $normalize($classRoom->name) === $normalize($kelas)
+                    && $normalize($classRoom->jurusan) === $normalize($jurusan);
+            });
+
+            if (! $classRoom) {
+                $classRoom = $classRooms->first(function ($classRoom) use ($kelas, $normalize) {
+                    return $normalize($classRoom->name) === $normalize($kelas);
+                });
+            }
+
+            if (! $classRoom) {
+                $errors[] = "Baris {$rowNumber}: Kelas '{$kelas}' dengan jurusan '{$jurusan}' tidak ditemukan.";
+                continue;
+            }
+
+            $generatedEmailLocalPart = preg_replace('/[^A-Za-z0-9]/', '', $nis);
+            $generatedEmail = strtolower($generatedEmailLocalPart) . '@sekolah.local';
+
+            DB::transaction(function () use ($name, $generatedEmail, $nis, $classRoom, $parentPhone, $studentPhone, &$created) {
+                $user = User::create([
+                    'name' => $name,
+                    'email' => $generatedEmail,
+                    'password' => Hash::make('siswa123'),
+                    'whatsapp_number' => $studentPhone !== '' ? $studentPhone : null,
+                ]);
+
+                $user->assignRole('siswa');
+
+                StudentProfile::create([
+                    'user_id' => $user->id,
+                    'class_room_id' => $classRoom->id,
+                    'nis' => $nis,
+                    'jurusan' => $classRoom->jurusan,
+                    'parent_phone_wa' => $parentPhone !== '' ? $parentPhone : null,
+                ]);
+
+                $created++;
+            });
+        }
+
+        if (! empty($errors)) {
+            return response()->json([
+                'message' => "Import selesai: {$created} siswa berhasil ditambahkan, " . count($errors) . ' gagal.',
+                'errors' => $errors,
+                'created' => $created,
+            ], 422);
+        }
+
+        return response()->json([
+            'message' => "Import selesai: {$created} siswa berhasil ditambahkan.",
+            'created' => $created,
         ]);
     }
 }

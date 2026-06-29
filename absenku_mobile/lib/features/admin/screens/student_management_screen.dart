@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/config/theme.dart';
 import '../../../services/mock_database.dart';
 import '../../../models/user.dart';
+import 'package:file_picker/file_picker.dart';
 
 class StudentManagementScreen extends StatefulWidget {
   const StudentManagementScreen({super.key});
@@ -463,18 +464,34 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                     const Text('Pilih Semua', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
                     const Spacer(),
                     TextButton.icon(
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Fitur Import Excel akan segera hadir')));
+                      onPressed: () async {
+                        try {
+                          final result = await FilePicker.platform.pickFiles(
+                            type: FileType.custom,
+                            allowedExtensions: ['xlsx', 'xls', 'csv'],
+                            withData: true,
+                          );
+                          
+                          if (result != null && result.files.single.bytes != null) {
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sedang mengimport data...')));
+                            
+                            final db = MockDatabase();
+                            final message = await db.importStudents(result.files.single.bytes!, result.files.single.name);
+                            
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+                            
+                            // Reload data
+                            await _loadData();
+                          }
+                        } catch (e) {
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceAll('Exception:', ''))));
+                        }
                       },
                       icon: const Icon(Icons.upload_file, size: 16),
                       label: const Text('Import', style: TextStyle(fontSize: 12)),
-                    ),
-                    TextButton.icon(
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Fitur Export Excel akan segera hadir')));
-                      },
-                      icon: const Icon(Icons.download, size: 16),
-                      label: const Text('Export', style: TextStyle(fontSize: 12)),
                     ),
                   ],
                 ),

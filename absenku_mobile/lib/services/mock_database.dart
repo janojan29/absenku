@@ -856,6 +856,22 @@ class MockDatabase extends ChangeNotifier {
     }
   }
 
+  Future<String> importStudents(List<int> bytes, String filename) async {
+    try {
+      final formData = FormData.fromMap({
+        'file': MultipartFile.fromBytes(bytes, filename: filename),
+      });
+      final response = await _dio.post('/admin/students/import', data: formData);
+      await fetchStudents();
+      return response.data['message'] ?? 'Import berhasil.';
+    } on DioException catch (e) {
+      if (e.response?.data != null && e.response?.data['message'] != null) {
+        throw Exception(e.response!.data['message'].toString());
+      }
+      throw Exception('Gagal mengimport data.');
+    }
+  }
+
   // Bulk Operations — delegated to admin endpoints
   Future<void> bulkUpdateClass(List<String> studentIds, String newClassId) async {
     // The admin API may not have a bulk endpoint, update one by one

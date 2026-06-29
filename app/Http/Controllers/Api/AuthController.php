@@ -119,6 +119,15 @@ class AuthController extends Controller
             return response()->json(['message' => 'Unauthenticated.'], 401);
         }
 
+        if ($user->hasAnyRole(['admin', 'petugas_piket'])) {
+            return response()->json([
+                'message' => 'Validation failed.',
+                'errors' => [
+                    'password' => ['Tidak diizinkan mengubah password untuk peran ini.'],
+                ]
+            ], 422);
+        }
+
         $data = $request->validate([
             'old_password' => ['required', 'string'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],

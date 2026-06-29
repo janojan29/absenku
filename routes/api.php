@@ -70,6 +70,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/students', [ApiStudentController::class, 'index']);
         Route::post('/students', [ApiStudentController::class, 'store']);
+        Route::post('/students/import', [ApiStudentController::class, 'import']);
         Route::patch('/students/{user}', [ApiStudentController::class, 'update']);
 
         Route::get('/teachers', [ApiTeacherController::class, 'index']);
