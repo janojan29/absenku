@@ -19,6 +19,7 @@ class UserResource extends JsonResource
             'whatsapp_number' => $this->whatsapp_number,
             'roles' => $roles,
             'role_name' => $roleName,
+            'has_default_password' => $this->hasDefaultPassword(),
             'student_profile' => $this->whenLoaded('studentProfile', fn() => new StudentProfileResource($this->studentProfile)),
             'teacher' => $this->whenLoaded('teacher', fn() => new TeacherResource($this->teacher)),
         ];

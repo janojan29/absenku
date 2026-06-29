@@ -341,6 +341,143 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
       },
     );
   }
+  void _showImportDialog(MockDatabase db) {
+    String? selectedFileName;
+    List<int>? selectedFileBytes;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Impor Data Siswa'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Panduan Impor', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    const Text('Ikuti format kolom agar data masuk tanpa error.', style: TextStyle(fontSize: 12, color: AppTheme.textMuted)),
+                    const SizedBox(height: 16),
+                    _buildGuideStep('1', 'Unduh template', 'Gunakan file template agar header kolom sesuai.'),
+                    const SizedBox(height: 8),
+                    _buildGuideStep('2', 'Isi data siswa', 'Pastikan kolom kelas dan jurusan sesuai data kelas di sistem.'),
+                    const SizedBox(height: 8),
+                    _buildGuideStep('3', 'Unggah dan impor', 'Password siswa otomatis: siswa123.'),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[50],
+                        border: Border.all(color: Colors.grey[300]!, style: BorderStyle.solid),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Format kolom', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.black87)),
+                          const SizedBox(height: 4),
+                          const Text('nama | nisn | kelas | jurusan | nohp orangtua | no hp siswa', style: TextStyle(fontFamily: 'monospace', fontSize: 10, color: Colors.black87)),
+                          const SizedBox(height: 8),
+                          const Text('Catatan: kolom boleh kosong untuk nomor HP, tetapi nama, nisn, kelas, jurusan wajib.', style: TextStyle(fontSize: 10, color: AppTheme.textMuted)),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text('File Excel *', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        ElevatedButton(
+                          onPressed: () async {
+                            final result = await FilePicker.platform.pickFiles(
+                              type: FileType.custom,
+                              allowedExtensions: ['xlsx', 'xls', 'csv'],
+                              withData: true,
+                            );
+                            if (result != null && result.files.single.bytes != null) {
+                              setDialogState(() {
+                                selectedFileName = result.files.single.name;
+                                selectedFileBytes = result.files.single.bytes;
+                              });
+                            }
+                          },
+                          child: const Text('Pilih File'),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(selectedFileName ?? 'Belum ada file dipilih.', style: const TextStyle(fontSize: 11, color: AppTheme.textMuted), overflow: TextOverflow.ellipsis),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Silakan unduh template via web admin.')));
+                  },
+                  child: const Text('UNDUH TEMPLATE', style: TextStyle(color: AppTheme.accentBlue)),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('BATAL', style: TextStyle(color: AppTheme.textMuted)),
+                ),
+                ElevatedButton(
+                  onPressed: selectedFileBytes == null ? null : () async {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sedang mengimport data...')));
+                    try {
+                      final message = await db.importStudents(selectedFileBytes!, selectedFileName!);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+                        await _loadData();
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceAll('Exception:', ''))));
+                      }
+                    }
+                  },
+                  child: const Text('IMPOR DATA'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildGuideStep(String step, String title, String subtitle) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 24,
+          height: 24,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: AppTheme.accentBlue.withValues(alpha: 0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Text(step, style: const TextStyle(color: AppTheme.accentBlue, fontWeight: FontWeight.bold, fontSize: 12)),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.textDark)),
+              Text(subtitle, style: const TextStyle(fontSize: 11, color: AppTheme.textMuted)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -464,32 +601,7 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                     const Text('Pilih Semua', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
                     const Spacer(),
                     TextButton.icon(
-                      onPressed: () async {
-                        try {
-                          final result = await FilePicker.platform.pickFiles(
-                            type: FileType.custom,
-                            allowedExtensions: ['xlsx', 'xls', 'csv'],
-                            withData: true,
-                          );
-                          
-                          if (result != null && result.files.single.bytes != null) {
-                            if (!context.mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sedang mengimport data...')));
-                            
-                            final db = MockDatabase();
-                            final message = await db.importStudents(result.files.single.bytes!, result.files.single.name);
-                            
-                            if (!context.mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
-                            
-                            // Reload data
-                            await _loadData();
-                          }
-                        } catch (e) {
-                          if (!context.mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceAll('Exception:', ''))));
-                        }
-                      },
+                      onPressed: () => _showImportDialog(MockDatabase()),
                       icon: const Icon(Icons.upload_file, size: 16),
                       label: const Text('Import', style: TextStyle(fontSize: 12)),
                     ),

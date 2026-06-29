@@ -227,8 +227,11 @@ class _ReportScreenState extends State<ReportScreen> with SingleTickerProviderSt
               decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppTheme.borderLight)),
               padding: const EdgeInsets.all(12),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                  Text(r['Nama'] as String? ?? '-', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                Row(children: [
+                  Expanded(
+                    child: Text(r['Nama'] as String? ?? '-', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13), overflow: TextOverflow.ellipsis),
+                  ),
+                  const SizedBox(width: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.1), border: Border.all(color: statusColor.withValues(alpha: 0.3)), borderRadius: BorderRadius.circular(12)),
@@ -320,11 +323,14 @@ class _ReportScreenState extends State<ReportScreen> with SingleTickerProviderSt
               Text(row['nama'] as String? ?? '-', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
               Text('Kelas: ${row['kelas'] ?? "-"} · Jurusan: ${row['jurusan'] ?? "-"}', style: const TextStyle(fontSize: 11, color: AppTheme.textMuted)),
               const SizedBox(height: 10),
-              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                _buildCountItem('Hadir', row['present'] as int, AppTheme.statusPresent),
-                _buildCountItem('Telat', row['late'] as int, AppTheme.statusLate),
-                _buildCountItem('Izin', row['leave'] as int, AppTheme.statusLeave),
-                _buildCountItem('Alfa', row['absent'] as int, AppTheme.statusAbsent),
+              Row(children: [
+                Expanded(child: _buildCountItem('Hadir', row['present'] as int, AppTheme.statusPresent)),
+                const SizedBox(width: 6),
+                Expanded(child: _buildCountItem('Telat', row['late'] as int, AppTheme.statusLate)),
+                const SizedBox(width: 6),
+                Expanded(child: _buildCountItem('Izin', row['leave'] as int, AppTheme.statusLeave)),
+                const SizedBox(width: 6),
+                Expanded(child: _buildCountItem('Alfa', row['absent'] as int, AppTheme.statusAbsent)),
               ]),
             ]),
           )),
@@ -347,7 +353,6 @@ class _ReportScreenState extends State<ReportScreen> with SingleTickerProviderSt
 
   Widget _buildCountItem(String label, int count, Color color) {
     return Container(
-      width: 70,
       padding: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(color: color.withValues(alpha: 0.06), border: Border.all(color: color.withValues(alpha: 0.2)), borderRadius: BorderRadius.circular(8)),
       child: Column(children: [

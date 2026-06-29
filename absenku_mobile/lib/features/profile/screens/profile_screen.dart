@@ -133,6 +133,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         if (user.nis != null) _buildInfoRow('NISN', user.nis!),
                         if (user.nip != null) _buildInfoRow('NIP', user.nip!),
                         if (user.classRoomName != null) _buildInfoRow('Kelas', user.classRoomName!),
+                        if (user.whatsappNumber != null && user.whatsappNumber!.isNotEmpty) _buildInfoRow('No HP', user.whatsappNumber!),
                       ],
                     ),
                   ),

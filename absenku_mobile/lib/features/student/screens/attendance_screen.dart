@@ -107,12 +107,21 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
             child: CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
-                // Gradient App Bar
                 SliverAppBar(
-                  expandedHeight: 100,
+                  toolbarHeight: 65,
                   floating: false,
                   pinned: true,
                   backgroundColor: AppTheme.primaryNavy,
+                  titleSpacing: 16,
+                  title: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Absensi Harian', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                      Text('Lakukan absensi masuk dan pulang',
+                          style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.7))),
+                    ],
+                  ),
                   actions: [
                     IconButton(
                       icon: const Icon(Icons.person),
@@ -125,16 +134,6 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                     IconButton(icon: const Icon(Icons.logout), tooltip: 'Logout', onPressed: () => db.logout()),
                   ],
                   flexibleSpace: FlexibleSpaceBar(
-                    titlePadding: const EdgeInsets.only(left: 16, bottom: 14),
-                    title: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Absensi Harian', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
-                        Text('Lakukan absensi masuk dan pulang',
-                            style: TextStyle(fontSize: 10, color: Colors.white.withValues(alpha: 0.7))),
-                      ],
-                    ),
                     background: Container(
                       decoration: const BoxDecoration(
                         gradient: LinearGradient(

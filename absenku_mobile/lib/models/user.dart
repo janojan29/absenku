@@ -36,6 +36,7 @@ class User {
   final String? jurusan;
   final String? subject; // For teachers
   final String? waliKelas; // For teachers
+  final bool hasDefaultPassword;
 
   User({
     required this.id,
@@ -51,6 +52,7 @@ class User {
     this.jurusan,
     this.subject,
     this.waliKelas,
+    this.hasDefaultPassword = false,
   });
 
   Map<String, dynamic> toJson() => {
@@ -66,6 +68,7 @@ class User {
         'jurusan': jurusan,
         'subject': subject,
         'waliKelas': waliKelas,
+        'hasDefaultPassword': hasDefaultPassword,
       };
 
   /// Parse User from mock-style flat JSON (backwards compatible)
@@ -82,6 +85,7 @@ class User {
         jurusan: json['jurusan'] as String?,
         subject: json['subject'] as String?,
         waliKelas: json['waliKelas'] as String? ?? json['wali_kelas'] as String?,
+        hasDefaultPassword: json['hasDefaultPassword'] as bool? ?? false,
       );
 
   /// Parse User from Laravel API response (nested structure with student_profile / teacher)
@@ -125,6 +129,7 @@ class User {
       jurusan: jurusan,
       subject: teacher?['subject'] as String?,
       waliKelas: teacher?['wali_kelas'] as String?,
+      hasDefaultPassword: json['has_default_password'] as bool? ?? false,
     );
   }
 }

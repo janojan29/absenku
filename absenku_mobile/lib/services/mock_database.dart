@@ -120,6 +120,7 @@ class MockDatabase extends ChangeNotifier {
         if (response.statusCode == 200) {
           final userData = response.data['data']['user'] as Map<String, dynamic>;
           _currentUser = User.fromApiJson(userData);
+          _mustChangePassword = _currentUser?.hasDefaultPassword ?? false;
         }
       } catch (e) {
         // Token expired or invalid, clear it
@@ -151,12 +152,7 @@ class MockDatabase extends ChangeNotifier {
         final userData = response.data['user'] as Map<String, dynamic>;
         _currentUser = User.fromApiJson(userData);
         
-        // Simulating backend check for default password
-        if (password == '12345678' && _currentUser?.role != 'admin' && _currentUser?.role != 'petugas_piket') {
-          _mustChangePassword = true;
-        } else {
-          _mustChangePassword = false;
-        }
+        _mustChangePassword = _currentUser?.hasDefaultPassword ?? false;
         
         notifyListeners();
         return _currentUser;
@@ -208,6 +204,14 @@ class MockDatabase extends ChangeNotifier {
       });
       if (response.statusCode == 200) {
         clearMustChangePassword();
+        try {
+          final userRes = await _dio.get('/user');
+          if (userRes.statusCode == 200) {
+            final userData = userRes.data['data']['user'] as Map<String, dynamic>;
+            _currentUser = User.fromApiJson(userData);
+            notifyListeners();
+          }
+        } catch (_) {}
       }
     } on DioException catch (e) {
       if (e.response?.data != null && e.response?.data['errors'] != null) {
