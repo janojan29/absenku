@@ -121,6 +121,7 @@ class TeacherController extends Controller
             'subject' => ['nullable', 'string', 'max:150'],
             'wali_kelas' => ['nullable', 'string', 'max:100'],
             'whatsapp_number' => ['nullable', 'string', 'max:30'],
+            'password' => ['nullable', 'string', 'min:8', 'confirmed'],
         ]);
 
         if ($data['teacher_role'] === 'guru_walikelas' && empty($data['wali_kelas'])) {
@@ -132,10 +133,16 @@ class TeacherController extends Controller
             ], 422);
         }
 
-        $user->update([
+        $updateData = [
             'name' => $data['name'],
             'whatsapp_number' => $data['whatsapp_number'] ?? null,
-        ]);
+        ];
+
+        if (!empty($data['password'])) {
+            $updateData['password'] = Hash::make($data['password']);
+        }
+
+        $user->update($updateData);
         $user->syncRoles([$data['teacher_role']]);
 
         if ($user->teacher) {

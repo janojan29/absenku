@@ -6,6 +6,7 @@ import 'features/auth/screens/login_screen.dart';
 import 'features/student/screens/attendance_screen.dart';
 import 'features/teacher/screens/dashboard_screen.dart';
 import 'features/admin/screens/admin_main_screen.dart';
+import 'features/profile/screens/profile_screen.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -21,6 +22,8 @@ class MyApp extends StatelessWidget {
         Widget homeScreen;
         if (user == null) {
           homeScreen = const LoginScreen();
+        } else if (db.mustChangePassword) {
+          homeScreen = const ProfileScreen(forceChangePassword: true);
         } else if (user.role == 'siswa') {
           homeScreen = const AttendanceScreen();
         } else if (user.role == 'guru' || user.role == 'guru_walikelas' || user.role == 'petugas_piket') {

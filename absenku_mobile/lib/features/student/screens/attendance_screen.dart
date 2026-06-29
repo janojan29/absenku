@@ -5,6 +5,7 @@ import '../../../core/config/theme.dart';
 import '../../../services/mock_database.dart';
 import '../../../services/attendance_service.dart';
 import '../../../models/attendance.dart';
+import '../../profile/screens/profile_screen.dart';
 import 'leave_request_screen.dart';
 
 class AttendanceScreen extends StatefulWidget {
@@ -110,6 +111,13 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                   pinned: true,
                   backgroundColor: AppTheme.primaryNavy,
                   actions: [
+                    IconButton(
+                      icon: const Icon(Icons.person),
+                      tooltip: 'Profil',
+                      onPressed: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => const ProfileScreen()));
+                      },
+                    ),
                     IconButton(icon: const Icon(Icons.refresh), tooltip: 'Refresh', onPressed: () => _loadData()),
                     IconButton(icon: const Icon(Icons.logout), tooltip: 'Logout', onPressed: () => db.logout()),
                   ],

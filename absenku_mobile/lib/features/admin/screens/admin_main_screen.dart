@@ -3,6 +3,7 @@ import '../../../core/config/theme.dart';
 import '../../../services/mock_database.dart';
 import 'student_management_screen.dart';
 import 'teacher_management_screen.dart';
+import '../../profile/screens/profile_screen.dart';
 
 class AdminMainScreen extends StatefulWidget {
   const AdminMainScreen({super.key});
@@ -47,6 +48,13 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
                           : 'Pengaturan Sekolah',
             ),
             actions: [
+              IconButton(
+                icon: const Icon(Icons.person),
+                tooltip: 'Profil',
+                onPressed: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const ProfileScreen()));
+                },
+              ),
               IconButton(
                 icon: const Icon(Icons.logout),
                 tooltip: 'Logout',

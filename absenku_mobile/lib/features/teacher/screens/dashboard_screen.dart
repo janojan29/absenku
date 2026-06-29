@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../../../core/config/theme.dart';
 import '../../../services/mock_database.dart';
 import '../../picket/screens/leave_queue_screen.dart';
+import '../../profile/screens/profile_screen.dart';
 import 'report_screen.dart';
 
 class TeacherDashboardScreen extends StatefulWidget {
@@ -76,6 +77,13 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
           appBar: AppBar(
             title: Text(title),
             actions: [
+              IconButton(
+                icon: const Icon(Icons.person),
+                tooltip: 'Profil',
+                onPressed: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const ProfileScreen()));
+                },
+              ),
               IconButton(icon: const Icon(Icons.logout), tooltip: 'Logout', onPressed: () => db.logout()),
             ],
           ),

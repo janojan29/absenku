@@ -31,13 +31,28 @@ class AttendanceService {
     return distance <= _db.radiusMeters;
   }
 
+  /// Simulates anti fake GPS check
+  bool isUsingFakeGps() {
+    // In a real device, you would use geolocator's position.isMocked property
+    // Example:
+    // final position = await Geolocator.getCurrentPosition();
+    // return position.isMocked;
+    return false; // Currently false for simulator
+  }
+
   /// Check in via API — sends coordinates to Laravel
   Future<String> checkIn(double lat, double lng) async {
+    if (isUsingFakeGps()) {
+      throw Exception('Sistem mendeteksi penggunaan Fake GPS. Silakan matikan Fake GPS Anda.');
+    }
     return await _db.checkIn(lat, lng);
   }
 
   /// Check out via API — sends coordinates to Laravel
   Future<String> checkOut(double lat, double lng) async {
+    if (isUsingFakeGps()) {
+      throw Exception('Sistem mendeteksi penggunaan Fake GPS. Silakan matikan Fake GPS Anda.');
+    }
     return await _db.checkOut(lat, lng);
   }
 }

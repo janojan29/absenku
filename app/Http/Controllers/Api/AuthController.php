@@ -111,4 +111,34 @@ class AuthController extends Controller
             'message' => 'Logged out.',
         ]);
     }
+
+    public function changePassword(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        if (! $user) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
+        $data = $request->validate([
+            'old_password' => ['required', 'string'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        if (!Hash::check($data['old_password'], $user->password)) {
+            return response()->json([
+                'message' => 'Validation failed.',
+                'errors' => [
+                    'old_password' => ['Password lama tidak sesuai.'],
+                ]
+            ], 422);
+        }
+
+        $user->update([
+            'password' => Hash::make($data['password']),
+        ]);
+
+        return response()->json([
+            'message' => 'Password berhasil diubah.',
+        ]);
+    }
 }

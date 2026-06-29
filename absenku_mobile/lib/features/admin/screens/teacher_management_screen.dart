@@ -129,20 +129,18 @@ class _TeacherManagementScreenState extends State<TeacherManagementScreen> {
                           decoration: const InputDecoration(labelText: 'Wali Kelas (contoh: X TSM 1)'),
                         ),
                       ],
-                      if (!isEdit) ...[
-                        const SizedBox(height: 12),
-                        TextField(
-                          controller: _passwordController,
-                          decoration: const InputDecoration(labelText: 'Password'),
-                          obscureText: true,
-                        ),
-                        const SizedBox(height: 12),
-                        TextField(
-                          controller: _passwordConfirmController,
-                          decoration: const InputDecoration(labelText: 'Konfirmasi Password'),
-                          obscureText: true,
-                        ),
-                      ],
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: _passwordController,
+                        decoration: InputDecoration(labelText: 'Password', hintText: isEdit ? '(Kosongkan jika tidak ingin mengubah)' : null),
+                        obscureText: true,
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: _passwordConfirmController,
+                        decoration: InputDecoration(labelText: 'Konfirmasi Password', hintText: isEdit ? '(Kosongkan jika tidak ingin mengubah)' : null),
+                        obscureText: true,
+                      ),
                     ],
                   ),
                 ),
@@ -193,6 +191,8 @@ class _TeacherManagementScreenState extends State<TeacherManagementScreen> {
                           nip: _nipController.text,
                           subject: _subjectController.text.isNotEmpty ? _subjectController.text : null,
                           waliKelas: _selectedRole == 'guru_walikelas' ? _waliKelasController.text : null,
+                          password: _passwordController.text.isNotEmpty ? _passwordController.text : null,
+                          passwordConfirmation: _passwordConfirmController.text.isNotEmpty ? _passwordConfirmController.text : null,
                           whatsappNumber: _whatsappController.text.isNotEmpty ? _whatsappController.text : null,
                         );
                       } else {

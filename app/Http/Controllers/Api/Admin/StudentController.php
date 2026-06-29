@@ -124,6 +124,7 @@ class StudentController extends Controller
             'class_room_id' => ['required', 'integer', 'exists:class_rooms,id'],
             'nis' => ['nullable', 'string', 'max:50'],
             'parent_phone_wa' => ['nullable', 'string', 'max:30'],
+            'password' => ['nullable', 'string', 'min:8', 'confirmed'],
         ]);
 
         $selectedClass = ClassRoom::query()->findOrFail((int) $data['class_room_id']);
@@ -138,10 +139,16 @@ class StudentController extends Controller
 
         $data['jurusan'] = $selectedClass->jurusan;
 
-        $user->update([
+        $updateData = [
             'name' => $data['name'],
             'whatsapp_number' => $data['whatsapp_number'] ?? null,
-        ]);
+        ];
+
+        if (!empty($data['password'])) {
+            $updateData['password'] = Hash::make($data['password']);
+        }
+
+        $user->update($updateData);
 
         StudentProfile::query()->updateOrCreate(
             ['user_id' => $user->id],

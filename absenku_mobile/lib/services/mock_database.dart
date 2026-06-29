@@ -25,6 +25,7 @@ class MockDatabase extends ChangeNotifier {
   List<Attendance> _attendance = [];
   List<LeaveRequest> _leaveRequests = [];
   User? _currentUser;
+  bool _mustChangePassword = false;
 
   // Settings (loaded from API /attendance endpoint's school setting)
   double _latitude = AppConfig.defaultLatitude;
@@ -89,6 +90,11 @@ class MockDatabase extends ChangeNotifier {
   LeaveRequest? get todayLeaveSubmission => _todayLeaveSubmission;
   List<String> get absentBlockedDates => _absentBlockedDates;
   bool get earlyLeaveBlockedToday => _earlyLeaveBlockedToday;
+  bool get mustChangePassword => _mustChangePassword;
+  void clearMustChangePassword() {
+    _mustChangePassword = false;
+    notifyListeners();
+  }
 
   Map<String, int> get dashboardCounts => _dashboardCounts;
   List<Map<String, dynamic>> get dashboardStudents => _dashboardStudents;
@@ -144,6 +150,14 @@ class MockDatabase extends ChangeNotifier {
 
         final userData = response.data['user'] as Map<String, dynamic>;
         _currentUser = User.fromApiJson(userData);
+        
+        // Simulating backend check for default password
+        if (password == '12345678') {
+          _mustChangePassword = true;
+        } else {
+          _mustChangePassword = false;
+        }
+        
         notifyListeners();
         return _currentUser;
       }
@@ -183,6 +197,28 @@ class MockDatabase extends ChangeNotifier {
     _absentBlockedDates = [];
     _earlyLeaveBlockedToday = false;
     notifyListeners();
+  }
+
+  Future<void> changePassword(String oldPassword, String newPassword, String newPasswordConfirmation) async {
+    try {
+      final response = await _dio.post('/user/change-password', data: {
+        'old_password': oldPassword,
+        'password': newPassword,
+        'password_confirmation': newPasswordConfirmation,
+      });
+      if (response.statusCode == 200) {
+        clearMustChangePassword();
+      }
+    } on DioException catch (e) {
+      if (e.response?.data != null && e.response?.data['errors'] != null) {
+        final errors = e.response!.data['errors'] as Map<String, dynamic>;
+        throw Exception(errors.values.expand((v) => v as List).join('\n'));
+      }
+      if (e.response?.data != null && e.response?.data['message'] != null) {
+        throw Exception(e.response!.data['message'].toString());
+      }
+      throw Exception('Gagal mengubah password.');
+    }
   }
 
   // ──────────────────────────────────────────────
@@ -779,6 +815,8 @@ class MockDatabase extends ChangeNotifier {
     String? subject,
     String? waliKelas,
     String? whatsappNumber,
+    String? password,
+    String? passwordConfirmation,
   }) async {
     try {
       await _dio.patch('/admin/teachers/$id', data: {
@@ -788,6 +826,9 @@ class MockDatabase extends ChangeNotifier {
         'subject': subject,
         'wali_kelas': waliKelas,
         'whatsapp_number': whatsappNumber,
+        if (password != null && password.isNotEmpty) 'password': password,
+        if (passwordConfirmation != null && passwordConfirmation.isNotEmpty)
+          'password_confirmation': passwordConfirmation,
       });
       await fetchTeachers();
     } on DioException catch (e) {

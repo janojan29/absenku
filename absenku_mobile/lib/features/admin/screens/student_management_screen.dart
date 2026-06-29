@@ -14,7 +14,7 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
   String _selectedClassRoomId = '';
   String _searchQuery = '';
   final _searchController = TextEditingController();
-  final List<String> _selectedStudentIds = [];
+  Set<String> _selectedStudentIds = {};
   bool _loading = true;
 
   // Form controllers
@@ -117,20 +117,18 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                         decoration: const InputDecoration(labelText: 'No. WhatsApp Orang Tua (08...)'),
                         keyboardType: TextInputType.phone,
                       ),
-                      if (!isEdit) ...[
-                        const SizedBox(height: 12),
-                        TextField(
-                          controller: _passwordController,
-                          decoration: const InputDecoration(labelText: 'Password'),
-                          obscureText: true,
-                        ),
-                        const SizedBox(height: 12),
-                        TextField(
-                          controller: _passwordConfirmController,
-                          decoration: const InputDecoration(labelText: 'Konfirmasi Password'),
-                          obscureText: true,
-                        ),
-                      ],
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: _passwordController,
+                        decoration: InputDecoration(labelText: 'Password', hintText: isEdit ? '(Kosongkan jika tidak ingin mengubah)' : null),
+                        obscureText: true,
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: _passwordConfirmController,
+                        decoration: InputDecoration(labelText: 'Konfirmasi Password', hintText: isEdit ? '(Kosongkan jika tidak ingin mengubah)' : null),
+                        obscureText: true,
+                      ),
                     ],
                   ),
                 ),
@@ -173,6 +171,8 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                           name: _nameController.text,
                           nis: _nisController.text,
                           classRoomId: _formClassRoomId,
+                          password: _passwordController.text.isNotEmpty ? _passwordController.text : null,
+                          passwordConfirmation: _passwordConfirmController.text.isNotEmpty ? _passwordConfirmController.text : null,
                           whatsappNumber: _whatsappController.text.isNotEmpty ? _whatsappController.text : null,
                           parentPhoneWa: _parentWhatsappController.text.isNotEmpty ? _parentWhatsappController.text : null,
                         );
@@ -261,7 +261,7 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                 ElevatedButton(
                   onPressed: () async {
                     if (bulkTargetClassId.isEmpty) return;
-                    await db.bulkUpdateClass(_selectedStudentIds, bulkTargetClassId);
+                    await db.bulkUpdateClass(_selectedStudentIds.toList(), bulkTargetClassId);
                     setState(() {
                       _selectedStudentIds.clear();
                     });
@@ -443,7 +443,42 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
+                
+                // Select All and Export/Import
+                Row(
+                  children: [
+                    Checkbox(
+                      value: filteredStudents.isNotEmpty && _selectedStudentIds.length == filteredStudents.length,
+                      onChanged: (val) {
+                        setState(() {
+                          if (val == true) {
+                            _selectedStudentIds = filteredStudents.map((s) => s.id).toSet();
+                          } else {
+                            _selectedStudentIds.clear();
+                          }
+                        });
+                      },
+                    ),
+                    const Text('Pilih Semua', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                    const Spacer(),
+                    TextButton.icon(
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Fitur Import Excel akan segera hadir')));
+                      },
+                      icon: const Icon(Icons.upload_file, size: 16),
+                      label: const Text('Import', style: TextStyle(fontSize: 12)),
+                    ),
+                    TextButton.icon(
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Fitur Export Excel akan segera hadir')));
+                      },
+                      icon: const Icon(Icons.download, size: 16),
+                      label: const Text('Export', style: TextStyle(fontSize: 12)),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
 
                 // Student List
                 Expanded(

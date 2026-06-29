@@ -247,6 +247,15 @@ class _LoginScreenState extends State<LoginScreen> {
                                     : const Text('MASUK', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
                               ),
                             ),
+                            const SizedBox(height: 16),
+                            TextButton(
+                              onPressed: () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Silakan hubungi Admin atau Wali Kelas Anda untuk mereset password.')),
+                                );
+                              },
+                              child: const Text('Lupa Password?', style: TextStyle(color: AppTheme.textMuted)),
+                            ),
                           ],
                         ),
                       ),
