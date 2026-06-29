@@ -3,11 +3,10 @@ import 'package:flutter/material.dart';
 import '../../../core/config/theme.dart';
 import '../../../services/mock_database.dart';
 import '../../../models/user.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:open_file/open_file.dart';
 import '../../../services/api_client.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../../core/widgets/custom_expand_menu.dart';
+import '../../../core/utils/download_file.dart';
 
 class StudentManagementScreen extends StatefulWidget {
   const StudentManagementScreen({super.key});
@@ -430,19 +429,16 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                   onPressed: () async {
                     try {
                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Mengunduh template...')));
-                      final dir = await getTemporaryDirectory();
-                      final savePath = '${dir.path}/template_import_siswa.xlsx';
-                      
-                      await ApiClient().dio.download(
-                        '/admin/students/import/template',
-                        savePath,
+                      await downloadAndOpenFile(
+                        dio: ApiClient().dio,
+                        url: '/admin/students/import/template',
+                        fileName: 'template_import_siswa.xlsx',
                       );
                       
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Unduhan selesai! Membuka file...')));
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Unduhan selesai!')));
                       }
-                      await OpenFile.open(savePath);
                     } catch (e) {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal mengunduh: $e')));

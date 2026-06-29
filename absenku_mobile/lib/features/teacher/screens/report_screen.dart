@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../core/config/theme.dart';
 import '../../../services/mock_database.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:open_file/open_file.dart';
 import '../../../services/api_client.dart';
 import '../../../core/widgets/custom_expand_menu.dart';
+import '../../../core/utils/download_file.dart';
 
 
 class ReportScreen extends StatefulWidget {
@@ -449,20 +448,19 @@ class _ReportScreenState extends State<ReportScreen> with SingleTickerProviderSt
         query += '&status=$_detailStatus';
       }
 
-      final dir = await getTemporaryDirectory();
       final ext = type == 'excel' ? 'xlsx' : 'pdf';
-      final savePath = '${dir.path}/rekap_absensi_$start.$ext';
+      final fileName = 'rekap_absensi_$start.$ext';
       
-      await ApiClient().dio.download(
-        '$path$query',
-        savePath,
+      await downloadAndOpenFile(
+        dio: ApiClient().dio,
+        url: '$path$query',
+        fileName: fileName,
       );
       
       if (mounted) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Unduhan selesai! Membuka file...')));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Unduhan selesai!')));
       }
-      await OpenFile.open(savePath);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();

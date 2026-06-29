@@ -4,10 +4,9 @@ import '../../../core/config/theme.dart';
 import '../../../services/mock_database.dart';
 import '../../../services/teacher_service.dart';
 import '../../../models/user.dart';
-import 'package:open_file/open_file.dart';
-import 'package:path_provider/path_provider.dart';
 import '../../../services/api_client.dart';
 import '../../../core/widgets/custom_expand_menu.dart';
+import '../../../core/utils/download_file.dart';
 
 class LeaveQueueScreen extends StatefulWidget {
   const LeaveQueueScreen({super.key});
@@ -69,21 +68,20 @@ class _LeaveQueueScreenState extends State<LeaveQueueScreen> {
       if (_filterDateFrom != null) query += 'date_from=${DateFormat('yyyy-MM-dd').format(_filterDateFrom!)}&';
       if (_filterDateTo != null) query += 'date_to=${DateFormat('yyyy-MM-dd').format(_filterDateTo!)}&';
 
-      final dir = await getTemporaryDirectory();
       final ext = type == 'excel' ? 'xlsx' : 'pdf';
       final startStr = _filterDateFrom != null ? DateFormat('yyyy-MM-dd').format(_filterDateFrom!) : 'all';
-      final savePath = '${dir.path}/riwayat_izin_$startStr.$ext';
+      final fileName = 'riwayat_izin_$startStr.$ext';
       
-      await ApiClient().dio.download(
-        '/picket/leave-requests/$type$query',
-        savePath,
+      await downloadAndOpenFile(
+        dio: ApiClient().dio,
+        url: '/picket/leave-requests/$type$query',
+        fileName: fileName,
       );
       
       if (mounted) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Unduhan selesai! Membuka file...')));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Unduhan selesai!')));
       }
-      await OpenFile.open(savePath);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
