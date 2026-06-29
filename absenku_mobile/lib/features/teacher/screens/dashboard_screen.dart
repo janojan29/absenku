@@ -158,7 +158,7 @@ class _TodaySummaryTabState extends State<_TodaySummaryTab> {
     }).toList();
 
     return RefreshIndicator(
-      onRefresh: () => _loadData(_selectedClassRoomId.isEmpty ? null : _selectedClassRoomId),
+      onRefresh: () => _loadData(_selectedClassRoomId.isEmpty ? 'all' : _selectedClassRoomId),
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(16.0),
@@ -192,7 +192,7 @@ class _TodaySummaryTabState extends State<_TodaySummaryTab> {
                           ],
                           onChanged: (value) {
                             setState(() => _selectedClassRoomId = value ?? '');
-                            _loadData(value?.isEmpty == true ? null : value);
+                            _loadData(value?.isEmpty == true ? 'all' : value);
                           },
                           decoration: const InputDecoration(contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 4)),
                         ),

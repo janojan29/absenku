@@ -17,11 +17,13 @@ class DashboardController extends Controller
     public function index(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'class_room_id' => ['nullable', 'integer', 'exists:class_rooms,id'],
+            'class_room_id' => ['nullable', 'string'],
         ]);
 
-        $classRoomId = $data['class_room_id'] ?? null;
-        if ($classRoomId === null) {
+        $classRoomId = $request->input('class_room_id');
+        if ($classRoomId === 'all') {
+            $classRoomId = null;
+        } elseif ($classRoomId === null && !$request->has('class_room_id')) {
             $classRoomId = ClassRoom::query()->orderBy('name')->value('id');
         }
 

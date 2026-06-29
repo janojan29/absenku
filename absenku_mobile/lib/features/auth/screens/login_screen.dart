@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../../../core/config/app_config.dart';
 import '../../../core/config/theme.dart';
 import '../../../services/mock_database.dart';
 
@@ -249,10 +251,16 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             const SizedBox(height: 16),
                             TextButton(
-                              onPressed: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Silakan hubungi Admin atau Wali Kelas Anda untuk mereset password.')),
-                                );
+                              onPressed: () async {
+                                final url = Uri.parse(AppConfig.apiBaseUrl.replaceAll('/api', '/forgot-password'));
+                                if (await canLaunchUrl(url)) {
+                                  await launchUrl(url, mode: LaunchMode.externalApplication);
+                                } else {
+                                  if (!context.mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Tidak dapat membuka halaman reset password. Hubungi admin.')),
+                                  );
+                                }
                               },
                               child: const Text('Lupa Password?', style: TextStyle(color: AppTheme.textMuted)),
                             ),
