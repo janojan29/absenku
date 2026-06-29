@@ -4,6 +4,7 @@ import '../../../services/mock_database.dart';
 import 'student_management_screen.dart';
 import 'teacher_management_screen.dart';
 import '../../profile/screens/profile_screen.dart';
+import '../../../models/user.dart';
 
 class AdminMainScreen extends StatefulWidget {
   const AdminMainScreen({super.key});

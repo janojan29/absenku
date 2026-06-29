@@ -383,14 +383,14 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                         border: Border.all(color: Colors.grey[300]!, style: BorderStyle.solid),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Column(
+                      child: const Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Format kolom', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.black87)),
-                          const SizedBox(height: 4),
-                          const Text('nama | nisn | kelas | jurusan | nohp orangtua | no hp siswa', style: TextStyle(fontFamily: 'monospace', fontSize: 10, color: Colors.black87)),
-                          const SizedBox(height: 8),
-                          const Text('Catatan: kolom boleh kosong untuk nomor HP, tetapi nama, nisn, kelas, jurusan wajib.', style: TextStyle(fontSize: 10, color: AppTheme.textMuted)),
+                          Text('Format kolom', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.black87)),
+                          SizedBox(height: 4),
+                          Text('nama | nisn | kelas | jurusan | nohp orangtua | no hp siswa', style: TextStyle(fontFamily: 'monospace', fontSize: 10, color: Colors.black87)),
+                          SizedBox(height: 8),
+                          Text('Catatan: kolom boleh kosong untuk nomor HP, tetapi nama, nisn, kelas, jurusan wajib.', style: TextStyle(fontSize: 10, color: AppTheme.textMuted)),
                         ],
                       ),
                     ),
