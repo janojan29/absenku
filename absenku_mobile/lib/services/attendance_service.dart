@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'mock_database.dart';
+import 'package:geolocator/geolocator.dart';
 
 class AttendanceService {
   final MockDatabase _db = MockDatabase();
@@ -31,18 +32,23 @@ class AttendanceService {
     return distance <= _db.radiusMeters;
   }
 
-  /// Simulates anti fake GPS check
-  bool isUsingFakeGps() {
-    // In a real device, you would use geolocator's position.isMocked property
-    // Example:
-    // final position = await Geolocator.getCurrentPosition();
-    // return position.isMocked;
-    return false; // Currently false for simulator
+  /// Anti fake GPS check using geolocator
+  Future<bool> isUsingFakeGps() async {
+    try {
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
+      );
+      return position.isMocked;
+    } catch (e) {
+      // If we can't get the position (e.g., permissions), we can't verify.
+      // You could throw an error here, but returning false allows fallback.
+      return false;
+    }
   }
 
   /// Check in via API — sends coordinates to Laravel
   Future<String> checkIn(double lat, double lng) async {
-    if (isUsingFakeGps()) {
+    if (await isUsingFakeGps()) {
       throw Exception('Sistem mendeteksi penggunaan Fake GPS. Silakan matikan Fake GPS Anda.');
     }
     return await _db.checkIn(lat, lng);
@@ -50,7 +56,7 @@ class AttendanceService {
 
   /// Check out via API — sends coordinates to Laravel
   Future<String> checkOut(double lat, double lng) async {
-    if (isUsingFakeGps()) {
+    if (await isUsingFakeGps()) {
       throw Exception('Sistem mendeteksi penggunaan Fake GPS. Silakan matikan Fake GPS Anda.');
     }
     return await _db.checkOut(lat, lng);

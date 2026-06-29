@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../core/config/theme.dart';
+import '../../../core/config/app_config.dart';
 import '../../../services/mock_database.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ReportScreen extends StatefulWidget {
   const ReportScreen({super.key});
@@ -172,18 +174,14 @@ class _ReportScreenState extends State<ReportScreen> with SingleTickerProviderSt
             const SizedBox(height: 12),
             Row(children: [
               Expanded(child: ElevatedButton.icon(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Mengunduh Rekap Absen (Excel)...')));
-                },
+                onPressed: () => _downloadReport('excel', false),
                 icon: const Icon(Icons.table_chart, size: 18),
                 label: const Text('Ekspor Excel'),
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
               )),
               const SizedBox(width: 12),
               Expanded(child: ElevatedButton.icon(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Mengunduh Rekap Absen (PDF)...')));
-                },
+                onPressed: () => _downloadReport('pdf', false),
                 icon: const Icon(Icons.picture_as_pdf, size: 18),
                 label: const Text('Ekspor PDF'),
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
@@ -284,18 +282,14 @@ class _ReportScreenState extends State<ReportScreen> with SingleTickerProviderSt
             const SizedBox(height: 12),
             Row(children: [
               Expanded(child: ElevatedButton.icon(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Mengunduh Rekap Keterangan (Excel)...')));
-                },
+                onPressed: () => _downloadReport('excel', true),
                 icon: const Icon(Icons.table_chart, size: 18),
                 label: const Text('Ekspor Excel'),
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
               )),
               const SizedBox(width: 12),
               Expanded(child: ElevatedButton.icon(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Mengunduh Rekap Keterangan (PDF)...')));
-                },
+                onPressed: () => _downloadReport('pdf', true),
                 icon: const Icon(Icons.picture_as_pdf, size: 18),
                 label: const Text('Ekspor PDF'),
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
@@ -361,5 +355,27 @@ class _ReportScreenState extends State<ReportScreen> with SingleTickerProviderSt
         Text('$count', style: TextStyle(fontSize: 16, color: color, fontWeight: FontWeight.bold)),
       ]),
     );
+  }
+
+  void _downloadReport(String type, bool isSummary) async {
+    final baseUrl = AppConfig.apiBaseUrl.replaceAll('/api', '');
+    String path = isSummary ? '/guru/reports/attendance/summary/' : '/guru/reports/attendance/';
+    path += type;
+
+    String classId = isSummary ? _summaryClassRoomId : _detailClassRoomId;
+    String start = DateFormat('yyyy-MM-dd').format(isSummary ? _summaryStartDate : _detailStartDate);
+    String end = DateFormat('yyyy-MM-dd').format(isSummary ? _summaryEndDate : _detailEndDate);
+    
+    String query = '?class_room_id=$classId&detail_start_date=$start&detail_end_date=$end';
+    if (!isSummary && _detailStatus.isNotEmpty) {
+      query += '&status=$_detailStatus';
+    }
+
+    final url = Uri.parse('$baseUrl$path$query');
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    } else {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Tidak dapat membuka browser')));
+    }
   }
 }

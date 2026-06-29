@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../../core/config/theme.dart';
 import '../../../services/mock_database.dart';
 import '../../../models/user.dart';
+import '../../../core/config/app_config.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:file_picker/file_picker.dart';
 
 class StudentManagementScreen extends StatefulWidget {
@@ -426,8 +428,16 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
               ),
               actions: [
                 TextButton(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Silakan unduh template via web admin.')));
+                  onPressed: () async {
+                    final baseUrl = AppConfig.apiBaseUrl.replaceAll('/api', '');
+                    final url = Uri.parse('$baseUrl/admin/students/import/template');
+                    if (await canLaunchUrl(url)) {
+                      await launchUrl(url, mode: LaunchMode.externalApplication);
+                    } else {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Tidak dapat membuka browser')));
+                      }
+                    }
                   },
                   child: const Text('UNDUH TEMPLATE', style: TextStyle(color: AppTheme.accentBlue)),
                 ),

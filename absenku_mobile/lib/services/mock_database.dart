@@ -2,7 +2,6 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import '../models/user.dart';
 import '../models/attendance.dart';
-import '../core/config/app_config.dart';
 import 'api_client.dart';
 
 /// API-backed database that replaces the mock database.
@@ -28,17 +27,17 @@ class MockDatabase extends ChangeNotifier {
   bool _mustChangePassword = false;
 
   // Settings (loaded from API /attendance endpoint's school setting)
-  double _latitude = AppConfig.defaultLatitude;
-  double _longitude = AppConfig.defaultLongitude;
-  int _radiusMeters = AppConfig.defaultRadiusMeters;
-  String _checkInStart = AppConfig.defaultCheckInStartTime;
-  String _checkInEnd = AppConfig.defaultCheckInEndTime;
-  String _checkOutStart = AppConfig.defaultCheckOutStartTime;
-  String _checkOutEnd = AppConfig.defaultCheckOutEndTime;
+  double _latitude = 0.0;
+  double _longitude = 0.0;
+  int _radiusMeters = 0;
+  String _checkInStart = '';
+  String _checkInEnd = '';
+  String _checkOutStart = '';
+  String _checkOutEnd = '';
 
   // Simulated Device Coordinates (still local — GPS)
-  double _deviceLatitude = AppConfig.defaultLatitude;
-  double _deviceLongitude = AppConfig.defaultLongitude;
+  double _deviceLatitude = 0.0;
+  double _deviceLongitude = 0.0;
 
   // Attendance page API data
   bool _canCheckInNow = false;
