@@ -1,3 +1,4 @@
+// ignore_for_file: deprecated_member_use
 import 'package:flutter/material.dart';
 import '../../../core/config/theme.dart';
 import '../../../services/mock_database.dart';
@@ -104,18 +105,34 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                         keyboardType: TextInputType.number,
                       ),
                       const SizedBox(height: 12),
-                      DropdownButtonFormField<String>(
-                        isExpanded: true,
-                        initialValue: _formClassRoomId.isEmpty ? null : _formClassRoomId,
-                        decoration: const InputDecoration(labelText: 'Kelas'),
-                        items: db.classrooms.map((c) {
-                          return DropdownMenuItem(value: c.id, child: Text(c.name, overflow: TextOverflow.ellipsis));
-                        }).toList(),
-                        onChanged: (val) {
-                          setDialogState(() {
-                            _formClassRoomId = val ?? '';
-                          });
-                        },
+                      Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(color: AppTheme.borderLight, width: 1.5),
+                          borderRadius: BorderRadius.circular(12),
+                          color: Colors.white,
+                        ),
+                        child: ExpansionTile(
+                          title: Text(
+                            _formClassRoomId.isEmpty
+                                ? 'Pilih Kelas'
+                                : 'Kelas: ${db.classrooms.firstWhere((c) => c.id == _formClassRoomId, orElse: () => db.classrooms.first).name}',
+                            style: const TextStyle(fontSize: 14),
+                          ),
+                          shape: const Border(),
+                          children: db.classrooms.map((c) {
+                            return RadioListTile<String>(
+                              title: Text(c.name, style: const TextStyle(fontSize: 14)),
+                              value: c.id,
+                              groupValue: _formClassRoomId,
+                              onChanged: (val) {
+                                if (val != null) {
+                                  setDialogState(() => _formClassRoomId = val);
+                                }
+                              },
+                              dense: true,
+                            );
+                          }).toList(),
+                        ),
                       ),
                       const SizedBox(height: 12),
                       TextField(
@@ -252,17 +269,34 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                     style: const TextStyle(fontSize: 13, color: AppTheme.textMuted),
                   ),
                   const SizedBox(height: 12),
-                  DropdownButtonFormField<String>(
-                    isExpanded: true,
-                    initialValue: bulkTargetClassId.isEmpty ? null : bulkTargetClassId,
-                    items: db.classrooms.map((c) {
-                      return DropdownMenuItem(value: c.id, child: Text(c.name, overflow: TextOverflow.ellipsis));
-                    }).toList(),
-                    onChanged: (val) {
-                      setDialogState(() {
-                        bulkTargetClassId = val ?? '';
-                      });
-                    },
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: AppTheme.borderLight, width: 1.5),
+                      borderRadius: BorderRadius.circular(12),
+                      color: Colors.white,
+                    ),
+                    child: ExpansionTile(
+                      title: Text(
+                        bulkTargetClassId.isEmpty
+                            ? 'Pilih Kelas'
+                            : 'Kelas: ${db.classrooms.firstWhere((c) => c.id == bulkTargetClassId, orElse: () => db.classrooms.first).name}',
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                      shape: const Border(),
+                      children: db.classrooms.map((c) {
+                        return RadioListTile<String>(
+                          title: Text(c.name, style: const TextStyle(fontSize: 14)),
+                          value: c.id,
+                          groupValue: bulkTargetClassId,
+                          onChanged: (val) {
+                            if (val != null) {
+                              setDialogState(() => bulkTargetClassId = val);
+                            }
+                          },
+                          dense: true,
+                        );
+                      }).toList(),
+                    ),
                   ),
                 ],
               ),
@@ -314,17 +348,34 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                     style: TextStyle(fontSize: 12, color: AppTheme.statusAbsent, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 12),
-                  DropdownButtonFormField<String>(
-                    isExpanded: true,
-                    initialValue: bulkDeleteClassId.isEmpty ? null : bulkDeleteClassId,
-                    items: db.classrooms.map((c) {
-                      return DropdownMenuItem(value: c.id, child: Text(c.name, overflow: TextOverflow.ellipsis));
-                    }).toList(),
-                    onChanged: (val) {
-                      setDialogState(() {
-                        bulkDeleteClassId = val ?? '';
-                      });
-                    },
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: AppTheme.borderLight, width: 1.5),
+                      borderRadius: BorderRadius.circular(12),
+                      color: Colors.white,
+                    ),
+                    child: ExpansionTile(
+                      title: Text(
+                        bulkDeleteClassId.isEmpty
+                            ? 'Pilih Kelas'
+                            : 'Kelas: ${db.classrooms.firstWhere((c) => c.id == bulkDeleteClassId, orElse: () => db.classrooms.first).name}',
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                      shape: const Border(),
+                      children: db.classrooms.map((c) {
+                        return RadioListTile<String>(
+                          title: Text(c.name, style: const TextStyle(fontSize: 14)),
+                          value: c.id,
+                          groupValue: bulkDeleteClassId,
+                          onChanged: (val) {
+                            if (val != null) {
+                              setDialogState(() => bulkDeleteClassId = val);
+                            }
+                          },
+                          dense: true,
+                        );
+                      }).toList(),
+                    ),
                   ),
                 ],
               ),

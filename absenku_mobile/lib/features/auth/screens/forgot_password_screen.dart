@@ -48,11 +48,16 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 
   Future<void> _submitRequest() async {
-    if (_emailController.text.isEmpty || _fullNameController.text.isEmpty || _identifierController.text.isEmpty) {
+    if (_emailController.text.isEmpty ||
+        _fullNameController.text.isEmpty ||
+        _identifierController.text.isEmpty) {
       _showError('Semua kolom harus diisi.');
       return;
     }
-    setState(() { _isLoading = true; _errorMessage = null; });
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
     try {
       final res = await MockDatabase().requestPasswordReset(
         _emailController.text,
@@ -64,7 +69,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           _userId = res['user_id'];
           _currentStep = 2;
         });
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['message'] ?? 'OTP dikirim')));
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(res['message'] ?? 'OTP dikirim')));
       }
     } catch (e) {
       _showError(e.toString());
@@ -78,15 +84,20 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       _showError('OTP harus 6 digit.');
       return;
     }
-    setState(() { _isLoading = true; _errorMessage = null; });
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
     try {
-      final res = await MockDatabase().verifyPasswordResetOtp(_userId!, _otpController.text);
+      final res = await MockDatabase()
+          .verifyPasswordResetOtp(_userId!, _otpController.text);
       if (mounted) {
         setState(() {
           _resetToken = res['reset_token'];
           _currentStep = 3;
         });
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['message'] ?? 'Verifikasi berhasil')));
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(res['message'] ?? 'Verifikasi berhasil')));
       }
     } catch (e) {
       _showError(e.toString());
@@ -96,7 +107,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 
   Future<void> _submitReset() async {
-    if (_passwordController.text.isEmpty || _confirmPasswordController.text.isEmpty) {
+    if (_passwordController.text.isEmpty ||
+        _confirmPasswordController.text.isEmpty) {
       _showError('Password tidak boleh kosong.');
       return;
     }
@@ -104,7 +116,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       _showError('Password konfirmasi tidak cocok.');
       return;
     }
-    setState(() { _isLoading = true; _errorMessage = null; });
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
     try {
       final res = await MockDatabase().submitNewPassword(
         _userId!,
@@ -113,7 +128,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         _confirmPasswordController.text,
       );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res['message'] ?? 'Password diperbarui')));
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(res['message'] ?? 'Password diperbarui')));
         Navigator.pop(context); // Back to login
       }
     } catch (e) {
@@ -149,8 +165,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    _currentStep == 1 ? 'Identifikasi Akun' : _currentStep == 2 ? 'Verifikasi OTP' : 'Buat Password Baru',
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.primaryNavy),
+                    _currentStep == 1
+                        ? 'Identifikasi Akun'
+                        : _currentStep == 2
+                            ? 'Verifikasi OTP'
+                            : 'Buat Password Baru',
+                    style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.primaryNavy),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
@@ -160,65 +183,102 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         : _currentStep == 2
                             ? 'Masukkan 6 digit OTP yang dikirim ke WhatsApp Anda.'
                             : 'Silakan buat password baru untuk akun Anda.',
-                    style: const TextStyle(fontSize: 13, color: AppTheme.textMuted),
+                    style: const TextStyle(
+                        fontSize: 13, color: AppTheme.textMuted),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 24),
-
                   if (_errorMessage != null) ...[
                     Container(
                       padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(color: Colors.red[50], border: Border.all(color: Colors.red[200]!), borderRadius: BorderRadius.circular(12)),
+                      decoration: BoxDecoration(
+                          color: Colors.red[50],
+                          border: Border.all(color: Colors.red[200]!),
+                          borderRadius: BorderRadius.circular(12)),
                       child: Row(children: [
-                        Icon(Icons.error_outline, color: Colors.red[700], size: 20),
+                        Icon(Icons.error_outline,
+                            color: Colors.red[700], size: 20),
                         const SizedBox(width: 10),
-                        Expanded(child: Text(_errorMessage!, style: TextStyle(color: Colors.red[700], fontWeight: FontWeight.w500, fontSize: 13))),
+                        Expanded(
+                            child: Text(_errorMessage!,
+                                style: TextStyle(
+                                    color: Colors.red[700],
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 13))),
                       ]),
                     ),
                     const SizedBox(height: 16),
                   ],
-
                   if (_currentStep == 1) ...[
                     TextField(
                       controller: _emailController,
-                      decoration: const InputDecoration(labelText: 'Email Aktif', prefixIcon: Icon(Icons.email_outlined)),
+                      decoration: const InputDecoration(
+                          labelText: 'Email Terdaftar',
+                          prefixIcon: Icon(Icons.email_outlined)),
                       keyboardType: TextInputType.emailAddress,
                     ),
                     const SizedBox(height: 16),
                     TextField(
                       controller: _fullNameController,
-                      decoration: const InputDecoration(labelText: 'Nama Lengkap Sesuai Akun', prefixIcon: Icon(Icons.person_outline)),
+                      decoration: const InputDecoration(
+                          labelText: 'Nama Lengkap Sesuai Akun',
+                          prefixIcon: Icon(Icons.person_outline)),
                     ),
                     const SizedBox(height: 16),
                     TextField(
                       controller: _identifierController,
-                      decoration: const InputDecoration(labelText: 'NISN / NIP', prefixIcon: Icon(Icons.badge_outlined)),
+                      decoration: const InputDecoration(
+                          labelText: 'NISN / NIP',
+                          prefixIcon: Icon(Icons.badge_outlined)),
                     ),
                     const SizedBox(height: 24),
                     SizedBox(
                       height: 48,
                       child: ElevatedButton(
                         onPressed: _isLoading ? null : _submitRequest,
-                        style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryBlue, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                        child: _isLoading ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5)) : const Text('KIRIM OTP'),
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.primaryBlue,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12))),
+                        child: _isLoading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                    color: Colors.white, strokeWidth: 2.5))
+                            : const Text('KIRIM OTP'),
                       ),
                     ),
                   ] else if (_currentStep == 2) ...[
                     TextField(
                       controller: _otpController,
-                      decoration: const InputDecoration(labelText: '6 Digit OTP', prefixIcon: Icon(Icons.message_outlined)),
+                      decoration: const InputDecoration(
+                          labelText: '6 Digit OTP',
+                          prefixIcon: Icon(Icons.message_outlined)),
                       keyboardType: TextInputType.number,
                       maxLength: 6,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 24, letterSpacing: 8, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                          fontSize: 24,
+                          letterSpacing: 8,
+                          fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 16),
                     SizedBox(
                       height: 48,
                       child: ElevatedButton(
                         onPressed: _isLoading ? null : _submitOtp,
-                        style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryBlue, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                        child: _isLoading ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5)) : const Text('VERIFIKASI OTP'),
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.primaryBlue,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12))),
+                        child: _isLoading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                    color: Colors.white, strokeWidth: 2.5))
+                            : const Text('VERIFIKASI OTP'),
                       ),
                     ),
                   ] else if (_currentStep == 3) ...[
@@ -229,8 +289,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         labelText: 'Password Baru',
                         prefixIcon: const Icon(Icons.lock_outline),
                         suffixIcon: IconButton(
-                          icon: Icon(_obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined),
-                          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                          icon: Icon(_obscurePassword
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined),
+                          onPressed: () => setState(
+                              () => _obscurePassword = !_obscurePassword),
                         ),
                       ),
                     ),
@@ -242,8 +305,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         labelText: 'Konfirmasi Password Baru',
                         prefixIcon: const Icon(Icons.lock_outline),
                         suffixIcon: IconButton(
-                          icon: Icon(_obscureConfirmPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined),
-                          onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+                          icon: Icon(_obscureConfirmPassword
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined),
+                          onPressed: () => setState(() =>
+                              _obscureConfirmPassword =
+                                  !_obscureConfirmPassword),
                         ),
                       ),
                     ),
@@ -252,8 +319,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       height: 48,
                       child: ElevatedButton(
                         onPressed: _isLoading ? null : _submitReset,
-                        style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryBlue, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                        child: _isLoading ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5)) : const Text('SIMPAN PASSWORD'),
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.primaryBlue,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12))),
+                        child: _isLoading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                    color: Colors.white, strokeWidth: 2.5))
+                            : const Text('SIMPAN PASSWORD'),
                       ),
                     ),
                   ]

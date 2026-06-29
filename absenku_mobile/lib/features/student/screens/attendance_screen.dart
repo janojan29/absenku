@@ -163,13 +163,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                       },
                       child: const Padding(
                         padding: EdgeInsets.symmetric(horizontal: 16.0),
-                        child: Row(
-                          children: [
-                            Icon(Icons.account_circle, size: 28),
-                            SizedBox(width: 8),
-                            Icon(Icons.arrow_drop_down, size: 20),
-                          ],
-                        ),
+                        child: Icon(Icons.account_circle, size: 28),
                       ),
                     ),
                   ],

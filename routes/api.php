@@ -48,6 +48,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::prefix('picket')->middleware('role:petugas_piket')->group(function () {
         Route::get('/leave-requests', [LeaveQueueController::class, 'index']);
+        Route::get('/leave-requests/excel', [LeaveQueueController::class, 'exportExcel']);
+        Route::get('/leave-requests/pdf', [LeaveQueueController::class, 'exportPdf']);
         Route::post('/leave-requests/{leaveRequest}/approve', [ApiLeaveApprovalController::class, 'approve']);
         Route::post('/leave-requests/{leaveRequest}/reject', [ApiLeaveApprovalController::class, 'reject']);
     });

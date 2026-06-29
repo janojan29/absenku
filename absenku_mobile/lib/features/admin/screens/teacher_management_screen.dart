@@ -1,3 +1,4 @@
+// ignore_for_file: deprecated_member_use
 import 'package:flutter/material.dart';
 import '../../../core/config/theme.dart';
 import '../../../services/mock_database.dart';
@@ -94,21 +95,58 @@ class _TeacherManagementScreenState extends State<TeacherManagementScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Role select
-                      DropdownButtonFormField<String>(
-                        initialValue: _selectedRole,
-                        decoration: const InputDecoration(labelText: 'Role Guru'),
-                        items: const [
-                          DropdownMenuItem(value: 'guru', child: Text('Guru')),
-                          DropdownMenuItem(value: 'guru_walikelas', child: Text('Guru Walikelas')),
-                          DropdownMenuItem(value: 'petugas_piket', child: Text('Petugas Piket')),
-                        ],
-                        onChanged: (val) {
-                          if (val != null) {
-                            setDialogState(() {
-                              _selectedRole = val;
-                            });
-                          }
-                        },
+                      Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(color: AppTheme.borderLight, width: 1.5),
+                          borderRadius: BorderRadius.circular(12),
+                          color: Colors.white,
+                        ),
+                        child: ExpansionTile(
+                          title: Text(
+                            _selectedRole == 'guru'
+                                ? 'Role: Guru'
+                                : _selectedRole == 'guru_walikelas'
+                                    ? 'Role: Guru Walikelas'
+                                    : 'Role: Petugas Piket',
+                            style: const TextStyle(fontSize: 14),
+                          ),
+                          shape: const Border(),
+                          children: [
+                            RadioListTile<String>(
+                              title: const Text('Guru', style: TextStyle(fontSize: 14)),
+                              value: 'guru',
+                              groupValue: _selectedRole,
+                              onChanged: (val) {
+                                if (val != null) {
+                                  setDialogState(() => _selectedRole = val);
+                                }
+                              },
+                              dense: true,
+                            ),
+                            RadioListTile<String>(
+                              title: const Text('Guru Walikelas', style: TextStyle(fontSize: 14)),
+                              value: 'guru_walikelas',
+                              groupValue: _selectedRole,
+                              onChanged: (val) {
+                                if (val != null) {
+                                  setDialogState(() => _selectedRole = val);
+                                }
+                              },
+                              dense: true,
+                            ),
+                            RadioListTile<String>(
+                              title: const Text('Petugas Piket', style: TextStyle(fontSize: 14)),
+                              value: 'petugas_piket',
+                              groupValue: _selectedRole,
+                              onChanged: (val) {
+                                if (val != null) {
+                                  setDialogState(() => _selectedRole = val);
+                                }
+                              },
+                              dense: true,
+                            ),
+                          ],
+                        ),
                       ),
                       const SizedBox(height: 12),
                       TextField(

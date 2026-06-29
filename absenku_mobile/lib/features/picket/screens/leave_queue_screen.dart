@@ -4,7 +4,9 @@ import '../../../core/config/theme.dart';
 import '../../../services/mock_database.dart';
 import '../../../services/teacher_service.dart';
 import '../../../models/user.dart';
-
+import 'package:open_file/open_file.dart';
+import 'package:path_provider/path_provider.dart';
+import '../../../services/api_client.dart';
 class LeaveQueueScreen extends StatefulWidget {
   const LeaveQueueScreen({super.key});
 
@@ -52,6 +54,40 @@ class _LeaveQueueScreenState extends State<LeaveQueueScreen> {
       _filterDateTo = null;
       _searchController.clear();
     });
+  }
+
+  void _downloadReport(String type) async {
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Mengunduh riwayat izin...')));
+      
+      String query = '?';
+      if (_searchQuery.isNotEmpty) query += 'search=$_searchQuery&';
+      if (_filterStatus.isNotEmpty) query += 'status=$_filterStatus&';
+      if (_filterType.isNotEmpty) query += 'type=$_filterType&';
+      if (_filterDateFrom != null) query += 'date_from=${DateFormat('yyyy-MM-dd').format(_filterDateFrom!)}&';
+      if (_filterDateTo != null) query += 'date_to=${DateFormat('yyyy-MM-dd').format(_filterDateTo!)}&';
+
+      final dir = await getTemporaryDirectory();
+      final ext = type == 'excel' ? 'xlsx' : 'pdf';
+      final startStr = _filterDateFrom != null ? DateFormat('yyyy-MM-dd').format(_filterDateFrom!) : 'all';
+      final savePath = '${dir.path}/riwayat_izin_$startStr.$ext';
+      
+      await ApiClient().dio.download(
+        '/picket/leave-requests/$type$query',
+        savePath,
+      );
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Unduhan selesai! Membuka file...')));
+      }
+      await OpenFile.open(savePath);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal mengunduh: $e')));
+      }
+    }
   }
 
   void _processLeave(String id, bool approve) {
@@ -250,6 +286,22 @@ class _LeaveQueueScreenState extends State<LeaveQueueScreen> {
                       const SizedBox(height: 12),
                       OutlinedButton.icon(onPressed: _resetFilters, icon: const Icon(Icons.refresh, size: 16), label: const Text('RESET FILTER'),
                           style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 8), side: const BorderSide(color: AppTheme.borderLight))),
+                      const SizedBox(height: 12),
+                      Row(children: [
+                        Expanded(child: ElevatedButton.icon(
+                          onPressed: () => _downloadReport('excel'),
+                          icon: const Icon(Icons.table_chart, size: 18),
+                          label: const Text('Ekspor Excel'),
+                          style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                        )),
+                        const SizedBox(width: 12),
+                        Expanded(child: ElevatedButton.icon(
+                          onPressed: () => _downloadReport('pdf'),
+                          icon: const Icon(Icons.picture_as_pdf, size: 18),
+                          label: const Text('Ekspor PDF'),
+                          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                        )),
+                      ]),
                     ],
                   ),
                 ),
