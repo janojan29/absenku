@@ -7,6 +7,8 @@ import '../../../models/user.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../../services/api_client.dart';
+import '../../../core/widgets/custom_expand_menu.dart';
+
 class LeaveQueueScreen extends StatefulWidget {
   const LeaveQueueScreen({super.key});
 
@@ -237,26 +239,36 @@ class _LeaveQueueScreenState extends State<LeaveQueueScreen> {
                           decoration: const InputDecoration(hintText: 'Cari Nama Siswa...', prefixIcon: Icon(Icons.search), contentPadding: EdgeInsets.zero)),
                       const SizedBox(height: 12),
                       Row(children: [
-                        Expanded(child: DropdownButtonFormField<String>(
-                          initialValue: _filterStatus, isExpanded: true,
+                        Expanded(child: CustomExpandMenu(
+                          title: 'Status',
+                          subtitle: _filterStatus == 'approved'
+                              ? 'Disetujui'
+                              : _filterStatus == 'rejected'
+                                  ? 'Ditolak'
+                                  : 'Semua Status',
                           items: const [
-                            DropdownMenuItem(value: '', child: Text('Semua Status')),
-                            DropdownMenuItem(value: 'approved', child: Text('Disetujui')),
-                            DropdownMenuItem(value: 'rejected', child: Text('Ditolak')),
+                            {'value': '', 'label': 'Semua Status'},
+                            {'value': 'approved', 'label': 'Disetujui'},
+                            {'value': 'rejected', 'label': 'Ditolak'},
                           ],
-                          onChanged: (val) => setState(() => _filterStatus = val ?? ''),
-                          decoration: const InputDecoration(labelText: 'Status', contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 4)),
+                          selectedValue: _filterStatus,
+                          onChanged: (val) => setState(() => _filterStatus = val),
                         )),
                         const SizedBox(width: 12),
-                        Expanded(child: DropdownButtonFormField<String>(
-                          initialValue: _filterType, isExpanded: true,
+                        Expanded(child: CustomExpandMenu(
+                          title: 'Tipe',
+                          subtitle: _filterType == 'absent'
+                              ? 'Tidak Masuk'
+                              : _filterType == 'early_leave'
+                                  ? 'Pulang Awal'
+                                  : 'Semua Jenis',
                           items: const [
-                            DropdownMenuItem(value: '', child: Text('Semua Jenis')),
-                            DropdownMenuItem(value: 'absent', child: Text('Tidak Masuk')),
-                            DropdownMenuItem(value: 'early_leave', child: Text('Pulang Awal')),
+                            {'value': '', 'label': 'Semua Jenis'},
+                            {'value': 'absent', 'label': 'Tidak Masuk'},
+                            {'value': 'early_leave', 'label': 'Pulang Awal'},
                           ],
-                          onChanged: (val) => setState(() => _filterType = val ?? ''),
-                          decoration: const InputDecoration(labelText: 'Tipe', contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 4)),
+                          selectedValue: _filterType,
+                          onChanged: (val) => setState(() => _filterType = val),
                         )),
                       ]),
                       const SizedBox(height: 12),

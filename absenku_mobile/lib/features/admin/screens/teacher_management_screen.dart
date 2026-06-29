@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/config/theme.dart';
 import '../../../services/mock_database.dart';
 import '../../../models/user.dart';
+import '../../../core/widgets/custom_expand_menu.dart';
 
 class TeacherManagementScreen extends StatefulWidget {
   const TeacherManagementScreen({super.key});
@@ -95,58 +96,22 @@ class _TeacherManagementScreenState extends State<TeacherManagementScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Role select
-                      Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(color: AppTheme.borderLight, width: 1.5),
-                          borderRadius: BorderRadius.circular(12),
-                          color: Colors.white,
-                        ),
-                        child: ExpansionTile(
-                          title: Text(
-                            _selectedRole == 'guru'
-                                ? 'Role: Guru'
-                                : _selectedRole == 'guru_walikelas'
-                                    ? 'Role: Guru Walikelas'
-                                    : 'Role: Petugas Piket',
-                            style: const TextStyle(fontSize: 14),
-                          ),
-                          shape: const Border(),
-                          children: [
-                            RadioListTile<String>(
-                              title: const Text('Guru', style: TextStyle(fontSize: 14)),
-                              value: 'guru',
-                              groupValue: _selectedRole,
-                              onChanged: (val) {
-                                if (val != null) {
-                                  setDialogState(() => _selectedRole = val);
-                                }
-                              },
-                              dense: true,
-                            ),
-                            RadioListTile<String>(
-                              title: const Text('Guru Walikelas', style: TextStyle(fontSize: 14)),
-                              value: 'guru_walikelas',
-                              groupValue: _selectedRole,
-                              onChanged: (val) {
-                                if (val != null) {
-                                  setDialogState(() => _selectedRole = val);
-                                }
-                              },
-                              dense: true,
-                            ),
-                            RadioListTile<String>(
-                              title: const Text('Petugas Piket', style: TextStyle(fontSize: 14)),
-                              value: 'petugas_piket',
-                              groupValue: _selectedRole,
-                              onChanged: (val) {
-                                if (val != null) {
-                                  setDialogState(() => _selectedRole = val);
-                                }
-                              },
-                              dense: true,
-                            ),
-                          ],
-                        ),
+                      CustomExpandMenu(
+                        title: 'Pilih Role Guru',
+                        subtitle: _selectedRole == 'guru'
+                            ? 'Guru Biasa'
+                            : _selectedRole == 'guru_walikelas'
+                                ? 'Guru Walikelas'
+                                : 'Petugas Piket',
+                        items: const [
+                          {'value': 'guru', 'label': 'Guru'},
+                          {'value': 'guru_walikelas', 'label': 'Guru Walikelas'},
+                          {'value': 'petugas_piket', 'label': 'Petugas Piket'},
+                        ],
+                        selectedValue: _selectedRole,
+                        onChanged: (val) {
+                          setDialogState(() => _selectedRole = val);
+                        },
                       ),
                       const SizedBox(height: 12),
                       TextField(

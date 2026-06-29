@@ -145,9 +145,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       backgroundColor: AppTheme.backgroundLight,
       appBar: AppBar(
         title: const Text('Lupa Password'),
-        backgroundColor: Colors.white,
-        foregroundColor: AppTheme.primaryNavy,
-        elevation: 1,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),

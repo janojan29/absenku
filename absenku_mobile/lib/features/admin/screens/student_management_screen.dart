@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:open_file/open_file.dart';
 import '../../../services/api_client.dart';
 import 'package:file_picker/file_picker.dart';
+import '../../../core/widgets/custom_expand_menu.dart';
 
 class StudentManagementScreen extends StatefulWidget {
   const StudentManagementScreen({super.key});
@@ -105,34 +106,16 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                         keyboardType: TextInputType.number,
                       ),
                       const SizedBox(height: 12),
-                      Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(color: AppTheme.borderLight, width: 1.5),
-                          borderRadius: BorderRadius.circular(12),
-                          color: Colors.white,
-                        ),
-                        child: ExpansionTile(
-                          title: Text(
-                            _formClassRoomId.isEmpty
-                                ? 'Pilih Kelas'
-                                : 'Kelas: ${db.classrooms.firstWhere((c) => c.id == _formClassRoomId, orElse: () => db.classrooms.first).name}',
-                            style: const TextStyle(fontSize: 14),
-                          ),
-                          shape: const Border(),
-                          children: db.classrooms.map((c) {
-                            return RadioListTile<String>(
-                              title: Text(c.name, style: const TextStyle(fontSize: 14)),
-                              value: c.id,
-                              groupValue: _formClassRoomId,
-                              onChanged: (val) {
-                                if (val != null) {
-                                  setDialogState(() => _formClassRoomId = val);
-                                }
-                              },
-                              dense: true,
-                            );
-                          }).toList(),
-                        ),
+                      CustomExpandMenu(
+                        title: 'Pilih Kelas',
+                        subtitle: _formClassRoomId.isEmpty
+                            ? 'Belum ada kelas dipilih'
+                            : db.classrooms.firstWhere((c) => c.id == _formClassRoomId, orElse: () => db.classrooms.first).name,
+                        items: db.classrooms.map((c) => {'value': c.id, 'label': c.name}).toList(),
+                        selectedValue: _formClassRoomId,
+                        onChanged: (val) {
+                          setDialogState(() => _formClassRoomId = val);
+                        },
                       ),
                       const SizedBox(height: 12),
                       TextField(
@@ -269,34 +252,16 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                     style: const TextStyle(fontSize: 13, color: AppTheme.textMuted),
                   ),
                   const SizedBox(height: 12),
-                  Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(color: AppTheme.borderLight, width: 1.5),
-                      borderRadius: BorderRadius.circular(12),
-                      color: Colors.white,
-                    ),
-                    child: ExpansionTile(
-                      title: Text(
-                        bulkTargetClassId.isEmpty
-                            ? 'Pilih Kelas'
-                            : 'Kelas: ${db.classrooms.firstWhere((c) => c.id == bulkTargetClassId, orElse: () => db.classrooms.first).name}',
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                      shape: const Border(),
-                      children: db.classrooms.map((c) {
-                        return RadioListTile<String>(
-                          title: Text(c.name, style: const TextStyle(fontSize: 14)),
-                          value: c.id,
-                          groupValue: bulkTargetClassId,
-                          onChanged: (val) {
-                            if (val != null) {
-                              setDialogState(() => bulkTargetClassId = val);
-                            }
-                          },
-                          dense: true,
-                        );
-                      }).toList(),
-                    ),
+                  CustomExpandMenu(
+                    title: 'Pilih Kelas Tujuan',
+                    subtitle: bulkTargetClassId.isEmpty
+                        ? 'Belum ada kelas dipilih'
+                        : db.classrooms.firstWhere((c) => c.id == bulkTargetClassId, orElse: () => db.classrooms.first).name,
+                    items: db.classrooms.map((c) => {'value': c.id, 'label': c.name}).toList(),
+                    selectedValue: bulkTargetClassId,
+                    onChanged: (val) {
+                      setDialogState(() => bulkTargetClassId = val);
+                    },
                   ),
                 ],
               ),
@@ -348,34 +313,16 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                     style: TextStyle(fontSize: 12, color: AppTheme.statusAbsent, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 12),
-                  Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(color: AppTheme.borderLight, width: 1.5),
-                      borderRadius: BorderRadius.circular(12),
-                      color: Colors.white,
-                    ),
-                    child: ExpansionTile(
-                      title: Text(
-                        bulkDeleteClassId.isEmpty
-                            ? 'Pilih Kelas'
-                            : 'Kelas: ${db.classrooms.firstWhere((c) => c.id == bulkDeleteClassId, orElse: () => db.classrooms.first).name}',
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                      shape: const Border(),
-                      children: db.classrooms.map((c) {
-                        return RadioListTile<String>(
-                          title: Text(c.name, style: const TextStyle(fontSize: 14)),
-                          value: c.id,
-                          groupValue: bulkDeleteClassId,
-                          onChanged: (val) {
-                            if (val != null) {
-                              setDialogState(() => bulkDeleteClassId = val);
-                            }
-                          },
-                          dense: true,
-                        );
-                      }).toList(),
-                    ),
+                  CustomExpandMenu(
+                    title: 'Pilih Kelas Dihapus',
+                    subtitle: bulkDeleteClassId.isEmpty
+                        ? 'Belum ada kelas dipilih'
+                        : db.classrooms.firstWhere((c) => c.id == bulkDeleteClassId, orElse: () => db.classrooms.first).name,
+                    items: db.classrooms.map((c) => {'value': c.id, 'label': c.name}).toList(),
+                    selectedValue: bulkDeleteClassId,
+                    onChanged: (val) {
+                      setDialogState(() => bulkDeleteClassId = val);
+                    },
                   ),
                 ],
               ),
@@ -591,39 +538,32 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(12.0),
-                    child: Row(
+                    child: Column(
                       children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _searchController,
-                            onChanged: (val) => setState(() => _searchQuery = val),
-                            decoration: const InputDecoration(
-                              hintText: 'Cari nama/NIS...',
-                              prefixIcon: Icon(Icons.search),
-                              contentPadding: EdgeInsets.zero,
-                            ),
+                        TextField(
+                          controller: _searchController,
+                          onChanged: (val) => setState(() => _searchQuery = val),
+                          decoration: const InputDecoration(
+                            hintText: 'Cari nama/NIS...',
+                            prefixIcon: Icon(Icons.search),
+                            contentPadding: EdgeInsets.zero,
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        SizedBox(
-                          width: 120,
-                          child: DropdownButtonFormField<String>(
-                            isExpanded: true,
-                            initialValue: _selectedClassRoomId,
-                            items: [
-                              const DropdownMenuItem(value: '', child: Text('Semua', overflow: TextOverflow.ellipsis)),
-                              ...db.classrooms.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name, overflow: TextOverflow.ellipsis))),
-                            ],
-                            onChanged: (val) {
-                              setState(() {
-                                _selectedClassRoomId = val ?? '';
-                                _currentPage = 1;
-                              });
-                            },
-                            decoration: const InputDecoration(
-                              contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            ),
-                          ),
+                        const SizedBox(height: 12),
+                        CustomExpandMenu(
+                          title: 'Filter Kelas',
+                          subtitle: _selectedClassRoomId.isEmpty ? 'Semua Kelas' : db.classrooms.firstWhere((c) => c.id == _selectedClassRoomId, orElse: () => db.classrooms.first).name,
+                          items: [
+                            const {'value': '', 'label': 'Semua Kelas'},
+                            ...db.classrooms.map((c) => {'value': c.id, 'label': c.name}),
+                          ],
+                          selectedValue: _selectedClassRoomId,
+                          onChanged: (val) {
+                            setState(() {
+                              _selectedClassRoomId = val;
+                              _currentPage = 1;
+                            });
+                          },
                         ),
                       ],
                     ),

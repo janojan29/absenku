@@ -5,6 +5,8 @@ import '../../../services/mock_database.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:open_file/open_file.dart';
 import '../../../services/api_client.dart';
+import '../../../core/widgets/custom_expand_menu.dart';
+
 
 class ReportScreen extends StatefulWidget {
   const ReportScreen({super.key});
@@ -161,25 +163,38 @@ class _ReportScreenState extends State<ReportScreen> with SingleTickerProviderSt
             const Text('Filter Rekap Absen', style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
             Row(children: [
-              Expanded(child: DropdownButtonFormField<String>(
-                initialValue: _detailClassRoomId, isExpanded: true,
-                decoration: const InputDecoration(labelText: 'Kelas', contentPadding: EdgeInsets.symmetric(horizontal: 8)),
-                items: [const DropdownMenuItem(value: '', child: Text('Semua Kelas')), ...db.classrooms.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name)))],
-                onChanged: (val) { setState(() => _detailClassRoomId = val ?? ''); _loadDetailReport(); },
+              Expanded(child: CustomExpandMenu(
+                title: 'Kelas',
+                subtitle: _detailClassRoomId.isEmpty
+                    ? 'Semua Kelas'
+                    : db.classrooms.firstWhere((c) => c.id == _detailClassRoomId, orElse: () => db.classrooms.first).name,
+                items: [
+                  const {'value': '', 'label': 'Semua Kelas'},
+                  ...db.classrooms.map((c) => {'value': c.id, 'label': c.name}),
+                ],
+                selectedValue: _detailClassRoomId,
+                onChanged: (val) { setState(() => _detailClassRoomId = val); _loadDetailReport(); },
               )),
               const SizedBox(width: 12),
-              Expanded(child: DropdownButtonFormField<String>(
-                initialValue: _detailStatus, isExpanded: true,
-                decoration: const InputDecoration(labelText: 'Status', contentPadding: EdgeInsets.symmetric(horizontal: 8)),
+              Expanded(child: CustomExpandMenu(
+                title: 'Status',
+                subtitle: _detailStatus.isEmpty
+                    ? 'Semua Status'
+                    : _detailStatus == 'present' ? 'Hadir'
+                    : _detailStatus == 'late' ? 'Terlambat'
+                    : _detailStatus == 'leave' ? 'Izin'
+                    : _detailStatus == 'sick' ? 'Sakit'
+                    : _detailStatus == 'absent' ? 'Alfa' : _detailStatus,
                 items: const [
-                  DropdownMenuItem(value: '', child: Text('Semua Status')),
-                  DropdownMenuItem(value: 'present', child: Text('Hadir')),
-                  DropdownMenuItem(value: 'late', child: Text('Terlambat')),
-                  DropdownMenuItem(value: 'leave', child: Text('Izin')),
-                  DropdownMenuItem(value: 'sick', child: Text('Sakit')),
-                  DropdownMenuItem(value: 'absent', child: Text('Alfa')),
+                  {'value': '', 'label': 'Semua Status'},
+                  {'value': 'present', 'label': 'Hadir'},
+                  {'value': 'late', 'label': 'Terlambat'},
+                  {'value': 'leave', 'label': 'Izin'},
+                  {'value': 'sick', 'label': 'Sakit'},
+                  {'value': 'absent', 'label': 'Alfa'},
                 ],
-                onChanged: (val) { setState(() => _detailStatus = val ?? ''); _loadDetailReport(); },
+                selectedValue: _detailStatus,
+                onChanged: (val) { setState(() => _detailStatus = val); _loadDetailReport(); },
               )),
             ]),
             const SizedBox(height: 12),
@@ -290,11 +305,17 @@ class _ReportScreenState extends State<ReportScreen> with SingleTickerProviderSt
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             const Text('Filter Rekap Keterangan', style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
-            DropdownButtonFormField<String>(
-              initialValue: _summaryClassRoomId, isExpanded: true,
-              decoration: const InputDecoration(labelText: 'Kelas', contentPadding: EdgeInsets.symmetric(horizontal: 8)),
-              items: [const DropdownMenuItem(value: '', child: Text('Semua Kelas')), ...db.classrooms.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name)))],
-              onChanged: (val) { setState(() => _summaryClassRoomId = val ?? ''); _loadSummaryReport(); },
+            CustomExpandMenu(
+              title: 'Kelas',
+              subtitle: _summaryClassRoomId.isEmpty
+                  ? 'Semua Kelas'
+                  : db.classrooms.firstWhere((c) => c.id == _summaryClassRoomId, orElse: () => db.classrooms.first).name,
+              items: [
+                const {'value': '', 'label': 'Semua Kelas'},
+                ...db.classrooms.map((c) => {'value': c.id, 'label': c.name}),
+              ],
+              selectedValue: _summaryClassRoomId,
+              onChanged: (val) { setState(() => _summaryClassRoomId = val); _loadSummaryReport(); },
             ),
             const SizedBox(height: 12),
             Row(children: [

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../core/config/theme.dart';
 import '../../../services/mock_database.dart';
+import '../../../core/widgets/custom_expand_menu.dart';
+
 
 class LeaveRequestScreen extends StatefulWidget {
   const LeaveRequestScreen({super.key});
@@ -134,26 +136,25 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                           ),
                           const SizedBox(height: 20),
 
-                          // Jenis Izin
+                           // Jenis Izin
                           const Text('Jenis Izin', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                           const SizedBox(height: 6),
-                          DropdownButtonFormField<String>(
-                            initialValue: _leaveType,
+                          CustomExpandMenu(
+                            title: 'Pilih Jenis Izin',
+                            subtitle: _leaveType == 'absent' ? 'Izin Tidak Masuk' : 'Izin Pulang Lebih Awal',
                             items: const [
-                              DropdownMenuItem(value: 'absent', child: Text('Izin Tidak Masuk')),
-                              DropdownMenuItem(value: 'early_leave', child: Text('Izin Pulang Lebih Awal')),
+                              {'value': 'absent', 'label': 'Izin Tidak Masuk'},
+                              {'value': 'early_leave', 'label': 'Izin Pulang Lebih Awal'},
                             ],
+                            selectedValue: _leaveType,
                             onChanged: (value) {
-                              if (value != null) {
-                                setState(() {
-                                  _leaveType = value;
-                                  if (_leaveType == 'early_leave') {
-                                    _leaveDate = today;
-                                  }
-                                });
-                              }
+                              setState(() {
+                                _leaveType = value;
+                                if (_leaveType == 'early_leave') {
+                                  _leaveDate = today;
+                                }
+                              });
                             },
-                            decoration: const InputDecoration(contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8)),
                           ),
                           const SizedBox(height: 16),
 
@@ -161,26 +162,25 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                           if (_leaveType == 'absent') ...[
                             const Text('Waktu Izin', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                             const SizedBox(height: 6),
-                            DropdownButtonFormField<DateTime>(
-                              initialValue: _leaveDate.day == today.day ? _leaveDate : tomorrow,
+                            CustomExpandMenu(
+                              title: 'Pilih Waktu Izin',
+                              subtitle: _leaveDate.day == today.day
+                                  ? 'Hari Ini (${DateFormat('dd/MM/yyyy').format(today)})'
+                                  : 'Besok (${DateFormat('dd/MM/yyyy').format(tomorrow)})',
                               items: [
-                                DropdownMenuItem(
-                                  value: _leaveDate.day == today.day ? _leaveDate : today,
-                                  child: Text('Hari Ini (${DateFormat('dd/MM/yyyy').format(today)})'),
-                                ),
-                                DropdownMenuItem(
-                                  value: _leaveDate.day == tomorrow.day ? _leaveDate : tomorrow,
-                                  child: Text('Besok (${DateFormat('dd/MM/yyyy').format(tomorrow)})'),
-                                ),
+                                {'value': 'today', 'label': 'Hari Ini (${DateFormat('dd/MM/yyyy').format(today)})'},
+                                {'value': 'tomorrow', 'label': 'Besok (${DateFormat('dd/MM/yyyy').format(tomorrow)})'},
                               ],
+                              selectedValue: _leaveDate.day == today.day ? 'today' : 'tomorrow',
                               onChanged: (value) {
-                                if (value != null) {
-                                  setState(() {
-                                    _leaveDate = value;
-                                  });
-                                }
+                                setState(() {
+                                  if (value == 'today') {
+                                    _leaveDate = today;
+                                  } else {
+                                    _leaveDate = tomorrow;
+                                  }
+                                });
                               },
-                              decoration: const InputDecoration(contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8)),
                             ),
                             const SizedBox(height: 4),
                             const Text(
@@ -193,20 +193,19 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                           // Alasan
                           const Text('Alasan Izin', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                           const SizedBox(height: 6),
-                          DropdownButtonFormField<String>(
-                            initialValue: _leaveReason,
+                          CustomExpandMenu(
+                            title: 'Pilih Alasan Izin',
+                            subtitle: _leaveReason == 'sick' ? 'Sakit' : 'Urusan Penting / Mendadak',
                             items: const [
-                              DropdownMenuItem(value: 'sick', child: Text('Sakit')),
-                              DropdownMenuItem(value: 'urgent', child: Text('Urusan Penting / Mendadak')),
+                              {'value': 'sick', 'label': 'Sakit'},
+                              {'value': 'urgent', 'label': 'Urusan Penting / Mendadak'},
                             ],
+                            selectedValue: _leaveReason,
                             onChanged: (value) {
-                              if (value != null) {
-                                setState(() {
-                                  _leaveReason = value;
-                                });
-                              }
+                              setState(() {
+                                _leaveReason = value;
+                              });
                             },
-                            decoration: const InputDecoration(contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8)),
                           ),
                           const SizedBox(height: 16),
 

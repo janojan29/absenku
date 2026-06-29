@@ -5,6 +5,8 @@ import '../../../services/mock_database.dart';
 import '../../picket/screens/leave_queue_screen.dart';
 import '../../profile/screens/profile_screen.dart';
 import 'report_screen.dart';
+import '../../../core/widgets/custom_expand_menu.dart';
+
 
 class TeacherDashboardScreen extends StatefulWidget {
   const TeacherDashboardScreen({super.key});
@@ -215,23 +217,23 @@ class _TodaySummaryTabState extends State<_TodaySummaryTab> {
                           Text(DateFormat('dd MMMM yyyy', 'id_ID').format(today), style: const TextStyle(fontSize: 12, color: AppTheme.textMuted)),
                         ]),
                       ),
-                      SizedBox(
-                        width: 140,
-                        child: DropdownButtonFormField<String>(
-                          initialValue: _selectedClassRoomId,
-                          isExpanded: true,
-                          items: [
-                            const DropdownMenuItem(value: '', child: Text('Semua Kelas', style: TextStyle(fontSize: 12))),
-                            ...db.classrooms.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name, style: const TextStyle(fontSize: 12)))),
-                          ],
-                          onChanged: (value) {
-                            setState(() => _selectedClassRoomId = value ?? '');
-                            _loadData(classRoomId: value?.isEmpty == true ? 'all' : value);
-                          },
-                          decoration: const InputDecoration(contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 4)),
-                        ),
-                      ),
                     ],
+                  ),
+                  const SizedBox(height: 12),
+                  CustomExpandMenu(
+                    title: 'Pilih Kelas',
+                    subtitle: _selectedClassRoomId.isEmpty
+                        ? 'Semua Kelas'
+                        : db.classrooms.firstWhere((c) => c.id == _selectedClassRoomId, orElse: () => db.classrooms.first).name,
+                    items: [
+                      const {'value': '', 'label': 'Semua Kelas'},
+                      ...db.classrooms.map((c) => {'value': c.id, 'label': c.name}),
+                    ],
+                    selectedValue: _selectedClassRoomId,
+                    onChanged: (value) {
+                      setState(() => _selectedClassRoomId = value);
+                      _loadData(classRoomId: value.isEmpty ? 'all' : value);
+                    },
                   ),
                 ],
               ),
