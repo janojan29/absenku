@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:intl/intl.dart';
 import '../../../core/config/theme.dart';
 import '../../../services/mock_database.dart';
@@ -18,11 +19,15 @@ class LeaveQueueScreen extends StatefulWidget {
 class _LeaveQueueScreenState extends State<LeaveQueueScreen> {
   final TeacherService _teacherService = TeacherService();
   bool _initialLoading = true;
+  Timer? _refreshTimer;
 
   @override
   void initState() {
     super.initState();
     _loadData();
+    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      MockDatabase().fetchLeaveQueue();
+    });
   }
 
   Future<void> _loadData() async {
@@ -41,6 +46,7 @@ class _LeaveQueueScreenState extends State<LeaveQueueScreen> {
 
   @override
   void dispose() {
+    _refreshTimer?.cancel();
     _searchController.dispose();
     _noteController.dispose();
     super.dispose();
@@ -174,11 +180,28 @@ class _LeaveQueueScreenState extends State<LeaveQueueScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Pending section
-                Row(children: [
-                  Container(width: 8, height: 8, decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle)),
-                  const SizedBox(width: 8),
-                  Text('Antrian Pending (${pendingLeaves.length})', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.textDark)),
-                ]),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Container(width: 8, height: 8, decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle)),
+                        const SizedBox(width: 8),
+                        Text('Antrian Pending (${pendingLeaves.length})', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.textDark)),
+                      ],
+                    ),
+                    const Row(
+                      children: [
+                        SizedBox(
+                          width: 12, height: 12,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.textMuted),
+                        ),
+                        SizedBox(width: 6),
+                        Text('Segarkan otomatis', style: TextStyle(fontSize: 10, color: AppTheme.textMuted)),
+                      ],
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 12),
 
                 if (pendingLeaves.isEmpty)

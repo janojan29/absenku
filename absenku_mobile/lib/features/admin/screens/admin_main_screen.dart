@@ -3,7 +3,8 @@ import '../../../core/config/theme.dart';
 import '../../../services/mock_database.dart';
 import 'student_management_screen.dart';
 import 'teacher_management_screen.dart';
-import '../../profile/screens/profile_screen.dart';
+
+import '../../../core/widgets/profile_bottom_sheet.dart';
 import '../../../models/user.dart';
 
 class AdminMainScreen extends StatefulWidget {
@@ -50,46 +51,18 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
             ),
             actions: [
-              PopupMenuButton<String>(
-                onSelected: (value) {
-                  if (value == 'profile') {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => const ProfileScreen()));
-                  } else if (value == 'logout') {
-                    db.logout();
-                  }
-                },
-                itemBuilder: (BuildContext context) {
-                  return [
-                    PopupMenuItem<String>(
-                      enabled: false,
-                      child: Text(db.currentUser?.name ?? 'Admin', style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryNavy)),
+              InkWell(
+                onTap: () => ProfileBottomSheet.show(context, db),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: CircleAvatar(
+                    radius: 16,
+                    backgroundColor: Colors.white.withValues(alpha: 0.2),
+                    child: Text(
+                      (db.currentUser?.name ?? 'U')[0].toUpperCase(),
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
                     ),
-                    const PopupMenuDivider(),
-                    const PopupMenuItem<String>(
-                      value: 'profile',
-                      child: Row(
-                        children: [
-                          Icon(Icons.person_outline, size: 20, color: AppTheme.textMuted),
-                          SizedBox(width: 12),
-                          Text('Profil'),
-                        ],
-                      ),
-                    ),
-                    const PopupMenuItem<String>(
-                      value: 'logout',
-                      child: Row(
-                        children: [
-                          Icon(Icons.logout, size: 20, color: AppTheme.statusAbsent),
-                          SizedBox(width: 12),
-                          Text('Keluar', style: TextStyle(color: AppTheme.statusAbsent)),
-                        ],
-                      ),
-                    ),
-                  ];
-                },
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Icon(Icons.account_circle, size: 28),
+                  ),
                 ),
               ),
             ],
@@ -400,6 +373,7 @@ class _SettingsTabState extends State<_SettingsTab> {
   final _checkOutStartController = TextEditingController();
   final _checkOutEndController = TextEditingController();
   final _lateToleranceController = TextEditingController();
+  bool _isAttendanceActive = true;
   bool _loading = true;
 
   @override
@@ -420,6 +394,7 @@ class _SettingsTabState extends State<_SettingsTab> {
       _checkOutStartController.text = db.checkOutStart;
       _checkOutEndController.text = db.checkOutEnd;
       _lateToleranceController.text = db.lateToleranceMinutes.toString();
+      _isAttendanceActive = db.isAttendanceActive;
       setState(() => _loading = false);
     }
   }
@@ -449,6 +424,7 @@ class _SettingsTabState extends State<_SettingsTab> {
       checkOutStart: _checkOutStartController.text,
       checkOutEnd: _checkOutEndController.text,
       lateToleranceMinutes: int.parse(_lateToleranceController.text),
+      isAttendanceActive: _isAttendanceActive,
     );
 
     if (mounted) {
@@ -470,6 +446,7 @@ class _SettingsTabState extends State<_SettingsTab> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -580,7 +557,45 @@ class _SettingsTabState extends State<_SettingsTab> {
                 ),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
+            Card(
+              color: Colors.blue.shade50.withValues(alpha: 0.3),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(
+                  color: _isAttendanceActive ? AppTheme.accentBlue.withValues(alpha: 0.3) : Colors.grey.shade300, 
+                  width: 1.5,
+                ),
+              ),
+              elevation: 0,
+              child: SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                title: Text(
+                  'Aktifkan Absensi Harian',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold, 
+                    fontSize: 16,
+                    color: _isAttendanceActive ? AppTheme.primaryNavy : Colors.black87,
+                  ),
+                ),
+                subtitle: const Padding(
+                  padding: EdgeInsets.only(top: 8.0),
+                  child: Text(
+                    'Matikan sistem adsensi saat sedang libur semester atau hari libur nasional.',
+                    style: TextStyle(fontSize: 13, height: 1.4, color: Colors.black54),
+                  ),
+                ),
+                value: _isAttendanceActive,
+                activeThumbColor: Colors.white,
+                activeTrackColor: AppTheme.accentBlue,
+                inactiveThumbColor: Colors.white,
+                inactiveTrackColor: Colors.grey.shade500,
+                onChanged: (val) {
+                  setState(() => _isAttendanceActive = val);
+                },
+              ),
+            ),
+            const SizedBox(height: 24),
             ElevatedButton(
               onPressed: () => _save(db),
               child: const Text('SIMPAN SEMUA PENGATURAN'),

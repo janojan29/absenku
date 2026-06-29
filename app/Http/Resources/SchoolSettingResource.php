@@ -20,6 +20,7 @@ class SchoolSettingResource extends JsonResource
             'late_tolerance_minutes' => $this->late_tolerance_minutes,
             'check_out_start_time' => $this->check_out_start_time ? substr($this->check_out_start_time, 0, 5) : null,
             'check_out_end_time' => $this->check_out_end_time ? substr($this->check_out_end_time, 0, 5) : null,
+            'is_attendance_active' => (bool) $this->is_attendance_active,
         ];
     }
 }

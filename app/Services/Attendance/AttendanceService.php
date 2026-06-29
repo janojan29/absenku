@@ -25,9 +25,13 @@ class AttendanceService
 
     public function checkIn(User $user, float $latitude, float $longitude, float $accuracy): string
     {
+        $setting = SchoolSetting::singleton();
+        if (!$setting->is_attendance_active) {
+            throw new \Exception('Sistem absensi sedang dinonaktifkan.');
+        }
+
         $this->validateAccuracy($accuracy);
 
-        $setting = SchoolSetting::singleton();
         $today = Carbon::today();
 
         if (\App\Helpers\HolidayHelper::isHoliday($today)) {
@@ -138,6 +142,10 @@ class AttendanceService
         $this->validateAccuracy($accuracy);
 
         $setting = SchoolSetting::singleton();
+        if (!$setting->is_attendance_active) {
+            throw new \Exception('Sistem absensi sedang dinonaktifkan.');
+        }
+
         $today = Carbon::today();
 
         if (\App\Helpers\HolidayHelper::isHoliday($today)) {

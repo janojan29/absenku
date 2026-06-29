@@ -3,7 +3,8 @@ import 'package:intl/intl.dart';
 import '../../../core/config/theme.dart';
 import '../../../services/mock_database.dart';
 import '../../picket/screens/leave_queue_screen.dart';
-import '../../profile/screens/profile_screen.dart';
+
+import '../../../core/widgets/profile_bottom_sheet.dart';
 import 'report_screen.dart';
 import '../../../core/widgets/custom_expand_menu.dart';
 
@@ -79,46 +80,18 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
           appBar: AppBar(
             title: Text(title),
             actions: [
-              PopupMenuButton<String>(
-                onSelected: (value) {
-                  if (value == 'profile') {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => const ProfileScreen()));
-                  } else if (value == 'logout') {
-                    db.logout();
-                  }
-                },
-                itemBuilder: (BuildContext context) {
-                  return [
-                    PopupMenuItem<String>(
-                      enabled: false,
-                      child: Text(db.currentUser?.name ?? 'Guru', style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryNavy)),
+              InkWell(
+                onTap: () => ProfileBottomSheet.show(context, db),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: CircleAvatar(
+                    radius: 16,
+                    backgroundColor: Colors.white.withValues(alpha: 0.2),
+                    child: Text(
+                      (db.currentUser?.name ?? 'U')[0].toUpperCase(),
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
                     ),
-                    const PopupMenuDivider(),
-                    const PopupMenuItem<String>(
-                      value: 'profile',
-                      child: Row(
-                        children: [
-                          Icon(Icons.person_outline, size: 20, color: AppTheme.textMuted),
-                          SizedBox(width: 12),
-                          Text('Profil'),
-                        ],
-                      ),
-                    ),
-                    const PopupMenuItem<String>(
-                      value: 'logout',
-                      child: Row(
-                        children: [
-                          Icon(Icons.logout, size: 20, color: AppTheme.statusAbsent),
-                          SizedBox(width: 12),
-                          Text('Keluar', style: TextStyle(color: AppTheme.statusAbsent)),
-                        ],
-                      ),
-                    ),
-                  ];
-                },
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Icon(Icons.account_circle, size: 28),
+                  ),
                 ),
               ),
             ],

@@ -78,7 +78,7 @@ class _ReportScreenState extends State<ReportScreen> with SingleTickerProviderSt
     setState(() => _loadingSummary = true);
     final db = MockDatabase();
     if (db.classrooms.isEmpty) await db.fetchClassrooms();
-    final result = await db.fetchTeacherReport(
+    final result = await db.fetchTeacherSummaryReport(
       classRoomId: _summaryClassRoomId,
       startDate: DateFormat('yyyy-MM-dd').format(_summaryStartDate),
       endDate: DateFormat('yyyy-MM-dd').format(_summaryEndDate),
@@ -86,29 +86,21 @@ class _ReportScreenState extends State<ReportScreen> with SingleTickerProviderSt
     );
     final rows = result['rows'] as List<dynamic>? ?? [];
     final meta = result['meta']?['pagination'] as Map<String, dynamic>? ?? {};
-    final Map<String, Map<String, dynamic>> studentSummary = {};
-    for (final row in rows) {
-      final String name = row['Nama'] as String? ?? '';
-      final String className = row['Kelas'] as String? ?? '-';
-      final String jurusan = row['Jurusan'] as String? ?? '-';
-      final String status = row['Status'] as String? ?? '';
-      if (!studentSummary.containsKey(name)) {
-        studentSummary[name] = {'nama': name, 'kelas': className, 'jurusan': jurusan, 'present': 0, 'late': 0, 'leave': 0, 'absent': 0};
-      }
-      final s = studentSummary[name]!;
-      if (status.contains('Hadir')) {
-        s['present'] = (s['present'] as int) + 1;
-      } else if (status.contains('Terlambat')) {
-        s['late'] = (s['late'] as int) + 1;
-      } else if (status.contains('Izin') || status.contains('Sakit')) {
-        s['leave'] = (s['leave'] as int) + 1;
-      } else if (status.contains('Alfa')) {
-        s['absent'] = (s['absent'] as int) + 1;
-      }
-    }
+
     if (mounted) {
       setState(() { 
-        _summaryRows = studentSummary.values.toList(); 
+        _summaryRows = rows.map((row) {
+          final r = row as Map<String, dynamic>;
+          return {
+            'nama': r['Nama'] ?? '-',
+            'kelas': r['Kelas'] ?? '-',
+            'jurusan': r['Jurusan'] ?? '-',
+            'present': r['Hadir'] ?? 0,
+            'late': r['Telat'] ?? 0,
+            'leave': r['Izin'] ?? 0,
+            'absent': r['Alfa'] ?? 0,
+          };
+        }).toList(); 
         _summaryCurrentPage = meta['current_page'] as int? ?? 1;
         _summaryLastPage = meta['last_page'] as int? ?? 1;
         _loadingSummary = false; 

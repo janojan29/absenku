@@ -34,6 +34,7 @@ class SchoolSettingController extends Controller
             'late_tolerance_minutes' => ['required', 'integer', 'min:0', 'max:180'],
             'check_out_start_time' => ['required', 'date_format:H:i'],
             'check_out_end_time' => ['required', 'date_format:H:i'],
+            'is_attendance_active' => ['required', 'boolean'],
         ]);
 
         $validator->after(function ($validator) use ($request) {

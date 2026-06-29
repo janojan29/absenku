@@ -59,6 +59,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/reports/attendance', [ApiTeacherReportController::class, 'index']);
         Route::get('/reports/attendance/excel', [ApiTeacherReportController::class, 'exportExcel']);
         Route::get('/reports/attendance/pdf', [ApiTeacherReportController::class, 'exportPdf']);
+        Route::get('/reports/attendance/summary', [ApiTeacherReportController::class, 'summary']);
         Route::get('/reports/attendance/summary/excel', [ApiTeacherReportController::class, 'exportSummaryExcel']);
         Route::get('/reports/attendance/summary/pdf', [ApiTeacherReportController::class, 'exportSummaryPdf']);
     });

@@ -78,6 +78,25 @@
                     </div>
                 </div>
 
+                {{-- Status Absensi Global --}}
+                <div class="space-y-4 pt-4">
+                    <h3 class="font-bold text-navy-800 border-b border-bw-200 pb-2 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-electric-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5.636 5.636a9 9 0 1 0 12.728 0M12 3v9" /></svg>
+                        Status Sistem Absensi
+                    </h3>
+                    <label class="flex items-start sm:items-center gap-4 bg-surface-100 hover:bg-surface-200/50 p-5 rounded-2xl border border-bw-200 cursor-pointer transition-colors duration-200 group">
+                        <input type="hidden" name="is_attendance_active" value="0">
+                        <div class="relative inline-flex items-center shrink-0 mt-1 sm:mt-0">
+                            <input type="checkbox" name="is_attendance_active" value="1" class="sr-only peer" {{ old('is_attendance_active', $setting->is_attendance_active) ? 'checked' : '' }}>
+                            <div class="w-14 h-7 bg-gray-500 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-electric-300/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-bw-200 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-electric-600 group-hover:shadow-sm"></div>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-base font-bold text-black">Aktifkan Absensi Harian</p>
+                            <p class="text-sm text-gray-800 mt-1 leading-relaxed">Matikan sistem adsensi saat sedang libur semester atau hari libur nasional.</p>
+                        </div>
+                    </label>
+                </div>
+
                 {{-- Form Actions --}}
                 <div class="pt-6 border-t border-bw-200 flex items-center justify-end gap-3">
                     <a href="{{ route('dashboard') }}" class="btn-secondary h-10 px-6">Kembali</a>

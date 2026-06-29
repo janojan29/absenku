@@ -16,6 +16,7 @@ class SchoolSetting extends Model
         'late_tolerance_minutes',
         'check_out_start_time',
         'check_out_end_time',
+        'is_attendance_active',
     ];
 
     protected $casts = [
@@ -27,6 +28,7 @@ class SchoolSetting extends Model
         'late_tolerance_minutes' => 'integer',
         'check_out_start_time' => 'string',
         'check_out_end_time' => 'string',
+        'is_attendance_active' => 'boolean',
     ];
 
     public static function singleton(): self
@@ -43,6 +45,7 @@ class SchoolSetting extends Model
                 'late_tolerance_minutes' => 15,
                 'check_out_start_time' => '15:00:00',
                 'check_out_end_time' => '17:00:00',
+                'is_attendance_active' => true,
             ]
         );
     }

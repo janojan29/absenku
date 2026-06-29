@@ -252,6 +252,33 @@ class ReportController extends Controller
         })->values();
     }
 
+    public function summary(Request $request): JsonResponse
+    {
+        [$summaryRows, $summaryFilter] = $this->buildSummaryRecap($request);
+
+        $page = max(1, (int) $request->query('page', 1));
+        $perPage = 20;
+        
+        // $summaryRows is a Collection returned by buildSummaryRecap
+        $total = $summaryRows->count();
+        $paginatedRows = $summaryRows->slice(($page - 1) * $perPage, $perPage)->values();
+
+        return response()->json([
+            'data' => [
+                'rows' => $paginatedRows,
+                'meta' => [
+                    'pagination' => [
+                        'current_page' => $page,
+                        'last_page' => ceil($total / $perPage),
+                        'per_page' => $perPage,
+                        'total' => $total,
+                    ],
+                ],
+                'filters' => $summaryFilter,
+            ],
+        ]);
+    }
+
     public function exportSummaryExcel(Request $request)
     {
         [$summaryRows, $summaryFilter] = $this->buildSummaryRecap($request);

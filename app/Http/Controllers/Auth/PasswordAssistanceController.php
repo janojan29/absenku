@@ -131,11 +131,11 @@ class PasswordAssistanceController extends Controller
         $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
         $user->update([
             'whatsapp_otp' => $otp,
-            'whatsapp_otp_expires_at' => now()->addSeconds(30),
+            'whatsapp_otp_expires_at' => now()->addMinutes(1),
         ]);
 
         // Send OTP via WhatsApp
-        $message = "Kode OTP untuk verifikasi lupa password: *{$otp}*\n\nKode ini berlaku 30 detik. Jangan bagikan ke siapapun.";
+        $message = "Kode OTP untuk verifikasi lupa password: *{$otp}*\n\nKode ini berlaku 1 menit. Jangan bagikan ke siapapun.";
         SendWhatsAppMessage::dispatch(
             to: $whatsappNumber,
             message: $message,
@@ -145,7 +145,7 @@ class PasswordAssistanceController extends Controller
 
         $request->session()->put('password_reset_user_id', $user->id);
         $request->session()->put('password_reset_otp_sent_at', now()->timestamp);
-        $request->session()->put('password_reset_otp_ttl', 30);
+        $request->session()->put('password_reset_otp_ttl', 60);
 
         return redirect()
             ->route('password.request')
@@ -247,10 +247,10 @@ class PasswordAssistanceController extends Controller
         $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
         $user->update([
             'whatsapp_otp' => $otp,
-            'whatsapp_otp_expires_at' => now()->addSeconds(30),
+            'whatsapp_otp_expires_at' => now()->addMinutes(1),
         ]);
 
-        $message = "Kode OTP untuk verifikasi lupa password: *{$otp}*\n\nKode ini berlaku 30 detik. Jangan bagikan ke siapapun.";
+        $message = "Kode OTP untuk verifikasi lupa password: *{$otp}*\n\nKode ini berlaku 1 menit. Jangan bagikan ke siapapun.";
         SendWhatsAppMessage::dispatch(
             to: $whatsappNumber,
             message: $message,
@@ -259,7 +259,7 @@ class PasswordAssistanceController extends Controller
         );
 
         $request->session()->put('password_reset_otp_sent_at', now()->timestamp);
-        $request->session()->put('password_reset_otp_ttl', 30);
+        $request->session()->put('password_reset_otp_ttl', 60);
 
         return back()->with('status', 'Kode OTP baru telah dikirim ke nomor WhatsApp terdaftar.');
     }

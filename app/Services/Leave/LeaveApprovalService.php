@@ -40,6 +40,19 @@ class LeaveApprovalService
 
             $user = $leaveRequest->user()->with('studentProfile')->first();
             $message = 'Pengajuan izin kamu untuk tanggal ' . $leaveRequest->date->format('d/m/Y') . ' telah DISETUJUI.';
+            if (!empty($decisionNote)) {
+                $message .= "\n\nCatatan: " . $decisionNote;
+            }
+
+            $cleanNumber = function ($number) {
+                if (empty($number)) return null;
+                $num = preg_replace('/[^0-9]/', '', $number);
+                if (str_starts_with($num, '62')) return substr($num, 2);
+                if (str_starts_with($num, '0')) return substr($num, 1);
+                return $num;
+            };
+
+            $sentCleaned = [];
 
             if (! empty($user?->whatsapp_number)) {
                 SendWhatsAppMessage::dispatch(
@@ -48,10 +61,11 @@ class LeaveApprovalService
                     relatedType: LeaveRequest::class,
                     relatedId: $leaveRequest->id,
                 );
+                $sentCleaned[] = $cleanNumber($user->whatsapp_number);
             }
 
             $parentWa = $user?->studentProfile?->parent_phone_wa ?: $user?->studentProfile?->parent_whatsapp_number;
-            if (! empty($parentWa)) {
+            if (! empty($parentWa) && !in_array($cleanNumber($parentWa), $sentCleaned)) {
                 SendWhatsAppMessage::dispatch(
                     to: $parentWa,
                     message: $message,
@@ -84,6 +98,19 @@ class LeaveApprovalService
 
             $user = $leaveRequest->user()->with('studentProfile')->first();
             $message = 'Pengajuan izin kamu untuk tanggal ' . $leaveRequest->date->format('d/m/Y') . ' telah DITOLAK.';
+            if (!empty($decisionNote)) {
+                $message .= "\n\nAlasan: " . $decisionNote;
+            }
+
+            $cleanNumber = function ($number) {
+                if (empty($number)) return null;
+                $num = preg_replace('/[^0-9]/', '', $number);
+                if (str_starts_with($num, '62')) return substr($num, 2);
+                if (str_starts_with($num, '0')) return substr($num, 1);
+                return $num;
+            };
+
+            $sentCleaned = [];
 
             if (! empty($user?->whatsapp_number)) {
                 SendWhatsAppMessage::dispatch(
@@ -92,10 +119,11 @@ class LeaveApprovalService
                     relatedType: LeaveRequest::class,
                     relatedId: $leaveRequest->id,
                 );
+                $sentCleaned[] = $cleanNumber($user->whatsapp_number);
             }
 
             $parentWa = $user?->studentProfile?->parent_phone_wa ?: $user?->studentProfile?->parent_whatsapp_number;
-            if (! empty($parentWa)) {
+            if (! empty($parentWa) && !in_array($cleanNumber($parentWa), $sentCleaned)) {
                 SendWhatsAppMessage::dispatch(
                     to: $parentWa,
                     message: $message,

@@ -32,7 +32,7 @@
         @forelse ($leaveRequests as $leave)
             <div class="group relative p-4 rounded-xl border border-bw-200/80 hover:border-navy-200 bg-bw-50/50 hover:bg-white mb-3 last:mb-0 transition-all duration-250"
                  style="border-left: 4px solid {{ $leave->type === 'absent' ? '#06b6d4' : '#f59e0b' }};"
-                 x-data="{ expanded: false }">
+                 x-data="{ expanded: false, showAction: null }">
                 <div class="flex flex-col sm:flex-row sm:items-center gap-3">
                     {{-- Avatar + Info --}}
                     <div class="flex items-center gap-3 flex-1 min-w-0">
@@ -76,20 +76,40 @@
                 @endif
 
                 {{-- Action Buttons --}}
-                <div class="flex items-center gap-2 mt-4">
-                    <form method="POST" action="{{ route('picket.leave-requests.approve', $leave) }}" class="flex-1">
+                <div x-show="!showAction" class="flex items-center gap-2 mt-4">
+                    <button @click="showAction = 'approve'" type="button" class="btn-success w-full h-10 text-sm flex-1 justify-center transition-transform hover:scale-[1.02]">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                        Terima
+                    </button>
+                    <button @click="showAction = 'reject'" type="button" class="btn-danger w-full h-10 text-sm flex-1 justify-center transition-transform hover:scale-[1.02]">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+                        Tolak
+                    </button>
+                </div>
+
+                {{-- Approval Form --}}
+                <div x-show="showAction == 'approve'" x-transition x-cloak class="mt-4 p-4 rounded-xl border border-green-200 bg-green-50 shadow-inner">
+                    <form method="POST" action="{{ route('picket.leave-requests.approve', $leave) }}">
                         @csrf
-                        <button type="submit" class="btn-success btn-ripple w-full h-10 text-sm">
-                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
-                            Terima
-                        </button>
+                        <label class="block text-sm font-semibold text-green-800 mb-1.5">Catatan Persetujuan <span class="text-green-600">*</span></label>
+                        <textarea name="decision_note" rows="2" class="form-input-clean w-full text-sm bg-white focus:border-green-400 focus:ring-green-400" required></textarea>
+                        <div class="flex items-center gap-2 mt-3">
+                            <button @click="showAction = null" type="button" class="btn-secondary h-9 text-sm px-4 flex-1 justify-center">Batal</button>
+                            <button type="submit" class="btn-success h-9 text-sm px-4 flex-1 justify-center">Konfirmasi Terima</button>
+                        </div>
                     </form>
-                    <form method="POST" action="{{ route('picket.leave-requests.reject', $leave) }}" class="flex-1">
+                </div>
+
+                {{-- Rejection Form --}}
+                <div x-show="showAction == 'reject'" x-transition x-cloak class="mt-4 p-4 rounded-xl border border-red-200 bg-red-50 shadow-inner">
+                    <form method="POST" action="{{ route('picket.leave-requests.reject', $leave) }}">
                         @csrf
-                        <button type="submit" class="btn-danger btn-ripple w-full h-10 text-sm">
-                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
-                            Tolak
-                        </button>
+                        <label class="block text-sm font-semibold text-red-800 mb-1.5">Alasan Penolakan <span class="text-red-500">*</span></label>
+                        <textarea name="decision_note" rows="2" class="form-input-clean w-full text-sm bg-white border-red-300 focus:border-red-500 focus:ring-red-500" required></textarea>
+                        <div class="flex items-center gap-2 mt-3">
+                            <button @click="showAction = null" type="button" class="btn-secondary h-9 text-sm px-4 flex-1 justify-center">Batal</button>
+                            <button type="submit" class="btn-danger h-9 text-sm px-4 flex-1 justify-center">Konfirmasi Tolak</button>
+                        </div>
                     </form>
                 </div>
             </div>

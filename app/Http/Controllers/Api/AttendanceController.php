@@ -87,21 +87,22 @@ class AttendanceController extends Controller
         $now = now();
 
         $isHolidayToday = \App\Helpers\HolidayHelper::isHoliday($today);
+        $isAttendanceActive = (bool) $setting->is_attendance_active;
 
         $hasReachedCheckInStart = $now->greaterThanOrEqualTo($checkInStart);
         $isAfterCheckInEnd = $now->greaterThan($checkInEnd);
-        $canCheckInNow = $hasReachedCheckInStart && ! $isAfterCheckInEnd && !$isHolidayToday;
+        $canCheckInNow = $hasReachedCheckInStart && ! $isAfterCheckInEnd && !$isHolidayToday && $isAttendanceActive;
 
         $hasReachedCheckOutStart = $now->greaterThanOrEqualTo($checkOutStart);
         $isAfterCheckOutEnd = $now->greaterThan($checkOutEnd);
-        $canCheckOutNow = $hasReachedCheckOutStart && ! $isAfterCheckOutEnd && !$isHolidayToday;
+        $canCheckOutNow = $hasReachedCheckOutStart && ! $isAfterCheckOutEnd && !$isHolidayToday && $isAttendanceActive;
 
         if ($hasApprovedAbsentLeaveToday) {
             $canCheckInNow = false;
             $canCheckOutNow = false;
         }
 
-        $showLeaveForm = true;
+        $showLeaveForm = $isAttendanceActive;
 
         return response()->json([
             'data' => [
@@ -120,6 +121,7 @@ class AttendanceController extends Controller
                 'absent_blocked_dates' => $absentBlockedDates,
                 'early_leave_blocked_today' => $earlyLeaveBlockedToday,
                 'is_holiday_today' => $isHolidayToday,
+                'is_attendance_active' => $isAttendanceActive,
             ],
         ]);
     }

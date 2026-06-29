@@ -35,6 +35,7 @@ class MockDatabase extends ChangeNotifier {
   String _checkOutStart = '';
   String _checkOutEnd = '';
   int _lateToleranceMinutes = 0;
+  bool _isAttendanceActive = true;
 
   // Simulated Device Coordinates (still local — GPS)
   double _deviceLatitude = 0.0;
@@ -80,6 +81,7 @@ class MockDatabase extends ChangeNotifier {
   String get checkOutStart => _checkOutStart;
   String get checkOutEnd => _checkOutEnd;
   int get lateToleranceMinutes => _lateToleranceMinutes;
+  bool get isAttendanceActive => _isAttendanceActive;
 
   double get deviceLatitude => _deviceLatitude;
   double get deviceLongitude => _deviceLongitude;
@@ -366,6 +368,7 @@ class MockDatabase extends ChangeNotifier {
         _hasApprovedAbsentLeaveToday = data['has_approved_absent_leave_today'] as bool? ?? false;
         _showLeaveForm = data['show_leave_form'] as bool? ?? true;
         _isHolidayToday = data['is_holiday_today'] as bool? ?? false;
+        _isAttendanceActive = data['is_attendance_active'] as bool? ?? true;
         _absentBlockedDates = (data['absent_blocked_dates'] as List?)?.map((e) => e.toString()).toList() ?? [];
         _earlyLeaveBlockedToday = data['early_leave_blocked_today'] as bool? ?? false;
 
@@ -612,6 +615,41 @@ class MockDatabase extends ChangeNotifier {
     return {'rows': <dynamic>[], 'meta': {}};
   }
 
+  Future<Map<String, dynamic>> fetchTeacherSummaryReport({
+    String? classRoomId,
+    String? startDate,
+    String? endDate,
+    int page = 1,
+  }) async {
+    try {
+      final queryParams = <String, dynamic>{'page': page};
+      if (classRoomId != null && classRoomId.isNotEmpty) {
+        queryParams['class_room_id'] = classRoomId;
+      }
+      if (startDate != null && startDate.isNotEmpty) {
+        queryParams['start_date'] = startDate;
+      }
+      if (endDate != null && endDate.isNotEmpty) {
+        queryParams['end_date'] = endDate;
+      }
+
+      final response = await _dio.get('/teacher/reports/attendance/summary', queryParameters: queryParams);
+      if (response.statusCode == 200 && response.data != null) {
+        final dataMap = response.data as Map<String, dynamic>;
+        final data = dataMap['data'] as Map<String, dynamic>?;
+        if (data != null && data['rows'] != null) {
+          return {
+            'rows': data['rows'] as List<dynamic>,
+            'meta': data['meta'] ?? {},
+          };
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching teacher summary report: $e');
+    }
+    return {'rows': <dynamic>[], 'meta': {}};
+  }
+
   // ──────────────────────────────────────────────
   // Admin Operations
   // ──────────────────────────────────────────────
@@ -631,6 +669,7 @@ class MockDatabase extends ChangeNotifier {
           _checkOutStart = setting['check_out_start_time'] as String? ?? _checkOutStart;
           _checkOutEnd = setting['check_out_end_time'] as String? ?? _checkOutEnd;
           _lateToleranceMinutes = (setting['late_tolerance_minutes'] as num?)?.toInt() ?? _lateToleranceMinutes;
+          _isAttendanceActive = setting['is_attendance_active'] as bool? ?? true;
           notifyListeners();
         }
       }
@@ -648,6 +687,7 @@ class MockDatabase extends ChangeNotifier {
     required String checkOutStart,
     required String checkOutEnd,
     required int lateToleranceMinutes,
+    required bool isAttendanceActive,
   }) async {
     try {
       await _dio.patch('/admin/settings', data: {
@@ -659,6 +699,7 @@ class MockDatabase extends ChangeNotifier {
         'check_out_start_time': checkOutStart,
         'check_out_end_time': checkOutEnd,
         'late_tolerance_minutes': lateToleranceMinutes,
+        'is_attendance_active': isAttendanceActive,
       });
 
       _latitude = latitude;
@@ -669,6 +710,7 @@ class MockDatabase extends ChangeNotifier {
       _checkOutStart = checkOutStart;
       _checkOutEnd = checkOutEnd;
       _lateToleranceMinutes = lateToleranceMinutes;
+      _isAttendanceActive = isAttendanceActive;
       notifyListeners();
     } on DioException catch (e) {
       if (e.response?.data != null && e.response?.data['message'] != null) {
