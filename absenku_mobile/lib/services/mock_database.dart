@@ -20,6 +20,8 @@ class MockDatabase extends ChangeNotifier {
   // State
   List<ClassRoom> _classrooms = [];
   List<User> _users = [];
+  List<User> _studentUsers = [];
+  List<User> _teacherUsers = [];
   List<Attendance> _attendance = [];
   List<LeaveRequest> _leaveRequests = [];
   User? _currentUser;
@@ -517,15 +519,43 @@ class MockDatabase extends ChangeNotifier {
     }
   }
 
+  // Helper to merge student + teacher user lists
+  void _mergeUserLists() {
+    _users = [..._studentUsers, ..._teacherUsers];
+    notifyListeners();
+  }
+
   // Admin Classroom Operations
   Future<void> fetchClassrooms() async {
     try {
-      final response = await _dio.get('/admin/class-rooms');
-      if (response.statusCode == 200) {
-        final data = response.data['data'] as List? ?? response.data as List? ?? [];
-        _classrooms = data.map((item) => ClassRoom.fromJson(item as Map<String, dynamic>)).toList();
-        notifyListeners();
-      }
+      final List<ClassRoom> allClassrooms = [];
+      int currentPage = 1;
+      int lastPage = 1;
+
+      do {
+        final response = await _dio.get('/admin/class-rooms', queryParameters: {'page': currentPage});
+        if (response.statusCode == 200) {
+          final data = response.data['data'] as List? ?? response.data as List? ?? [];
+          allClassrooms.addAll(
+            data.map((item) => ClassRoom.fromJson(item as Map<String, dynamic>)),
+          );
+
+          // Check for pagination metadata
+          final meta = response.data['meta'] as Map<String, dynamic>?;
+          final pagination = meta?['pagination'] as Map<String, dynamic>?;
+          if (pagination != null) {
+            lastPage = (pagination['last_page'] as num?)?.toInt() ?? 1;
+          } else {
+            lastPage = 1;
+          }
+        } else {
+          break;
+        }
+        currentPage++;
+      } while (currentPage <= lastPage);
+
+      _classrooms = allClassrooms;
+      notifyListeners();
     } catch (e) {
       debugPrint('Error fetching classrooms: $e');
     }
@@ -562,15 +592,33 @@ class MockDatabase extends ChangeNotifier {
   // Admin Student Operations
   Future<void> fetchStudents() async {
     try {
-      final response = await _dio.get('/admin/students');
-      if (response.statusCode == 200) {
-        final data = response.data['data'] as List? ?? [];
-        _users = data.map((item) {
-          final map = item as Map<String, dynamic>;
-          return User.fromApiJson(map);
-        }).toList();
-        notifyListeners();
-      }
+      final List<User> allStudents = [];
+      int currentPage = 1;
+      int lastPage = 1;
+
+      do {
+        final response = await _dio.get('/admin/students', queryParameters: {'page': currentPage});
+        if (response.statusCode == 200) {
+          final data = response.data['data'] as List? ?? [];
+          allStudents.addAll(
+            data.map((item) => User.fromApiJson(item as Map<String, dynamic>)),
+          );
+
+          final meta = response.data['meta'] as Map<String, dynamic>?;
+          final pagination = meta?['pagination'] as Map<String, dynamic>?;
+          if (pagination != null) {
+            lastPage = (pagination['last_page'] as num?)?.toInt() ?? 1;
+          } else {
+            lastPage = 1;
+          }
+        } else {
+          break;
+        }
+        currentPage++;
+      } while (currentPage <= lastPage);
+
+      _studentUsers = allStudents;
+      _mergeUserLists();
     } catch (e) {
       debugPrint('Error fetching students: $e');
     }
@@ -644,7 +692,7 @@ class MockDatabase extends ChangeNotifier {
 
   Future<void> deleteStudent(String id) async {
     try {
-      await _dio.delete('/admin/students/$id');
+      await _dio.delete('/admin/users/$id');
       await fetchStudents();
     } catch (e) {
       if (e is DioException && e.response?.data != null) {
@@ -657,19 +705,33 @@ class MockDatabase extends ChangeNotifier {
   // Admin Teacher Operations
   Future<void> fetchTeachers() async {
     try {
-      final response = await _dio.get('/admin/teachers');
-      if (response.statusCode == 200) {
-        final data = response.data['data'] as List? ?? [];
-        // Don't overwrite _users, add teacher users separately
-        final teacherUsers = data.map((item) {
-          final map = item as Map<String, dynamic>;
-          return User.fromApiJson(map);
-        }).toList();
-        // Remove existing teacher users from _users and add new ones
-        _users.removeWhere((u) => u.role == 'guru' || u.role == 'guru_walikelas' || u.role == 'petugas_piket');
-        _users.addAll(teacherUsers);
-        notifyListeners();
-      }
+      final List<User> allTeachers = [];
+      int currentPage = 1;
+      int lastPage = 1;
+
+      do {
+        final response = await _dio.get('/admin/teachers', queryParameters: {'page': currentPage});
+        if (response.statusCode == 200) {
+          final data = response.data['data'] as List? ?? [];
+          allTeachers.addAll(
+            data.map((item) => User.fromApiJson(item as Map<String, dynamic>)),
+          );
+
+          final meta = response.data['meta'] as Map<String, dynamic>?;
+          final pagination = meta?['pagination'] as Map<String, dynamic>?;
+          if (pagination != null) {
+            lastPage = (pagination['last_page'] as num?)?.toInt() ?? 1;
+          } else {
+            lastPage = 1;
+          }
+        } else {
+          break;
+        }
+        currentPage++;
+      } while (currentPage <= lastPage);
+
+      _teacherUsers = allTeachers;
+      _mergeUserLists();
     } catch (e) {
       debugPrint('Error fetching teachers: $e');
     }
@@ -743,8 +805,8 @@ class MockDatabase extends ChangeNotifier {
   Future<void> deleteTeacher(String id) async {
     try {
       await _dio.delete('/admin/users/$id');
-      _users.removeWhere((u) => u.id == id);
-      notifyListeners();
+      _teacherUsers.removeWhere((u) => u.id == id);
+      _mergeUserLists();
     } on DioException catch (e) {
       if (e.response?.data != null && e.response?.data['message'] != null) {
         throw Exception(e.response!.data['message'].toString());
@@ -757,7 +819,7 @@ class MockDatabase extends ChangeNotifier {
   Future<void> bulkUpdateClass(List<String> studentIds, String newClassId) async {
     // The admin API may not have a bulk endpoint, update one by one
     for (var id in studentIds) {
-      final student = _users.firstWhere((u) => u.id == id, orElse: () => User(id: '', name: '', email: '', role: 'siswa'));
+      final student = _studentUsers.firstWhere((u) => u.id == id, orElse: () => User(id: '', name: '', email: '', role: 'siswa'));
       if (student.id.isNotEmpty) {
         try {
           await _dio.patch('/admin/students/$id', data: {
@@ -770,13 +832,13 @@ class MockDatabase extends ChangeNotifier {
   }
 
   Future<void> bulkDeleteByClass(String classId) async {
-    final studentsInClass = _users.where((u) => u.classRoomId == classId).toList();
+    final studentsInClass = _studentUsers.where((u) => u.classRoomId == classId).toList();
     for (var student in studentsInClass) {
       try {
         await _dio.delete('/admin/users/${student.id}');
       } catch (_) {}
     }
-    _users.removeWhere((u) => u.classRoomId == classId);
-    notifyListeners();
+    _studentUsers.removeWhere((u) => u.classRoomId == classId);
+    _mergeUserLists();
   }
 }
