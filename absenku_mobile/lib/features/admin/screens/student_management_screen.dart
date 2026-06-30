@@ -1,5 +1,6 @@
 // ignore_for_file: deprecated_member_use
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../core/config/theme.dart';
 import '../../../services/mock_database.dart';
 import '../../../models/user.dart';
@@ -97,12 +98,20 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                       TextField(
                         controller: _nameController,
                         decoration: const InputDecoration(labelText: 'Nama Lengkap'),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(RegExp(r"[a-zA-Z\s.,'-]")),
+                          LengthLimitingTextInputFormatter(255),
+                        ],
                       ),
                       const SizedBox(height: 12),
                       TextField(
                         controller: _nisController,
                         decoration: const InputDecoration(labelText: 'NISN'),
                         keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          LengthLimitingTextInputFormatter(50),
+                        ],
                       ),
                       const SizedBox(height: 12),
                       CustomExpandMenu(
@@ -121,12 +130,20 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                         controller: _whatsappController,
                         decoration: const InputDecoration(labelText: 'No. WhatsApp Siswa (08...)'),
                         keyboardType: TextInputType.phone,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          LengthLimitingTextInputFormatter(30),
+                        ],
                       ),
                       const SizedBox(height: 12),
                       TextField(
                         controller: _parentWhatsappController,
                         decoration: const InputDecoration(labelText: 'No. WhatsApp Orang Tua (08...)'),
                         keyboardType: TextInputType.phone,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          LengthLimitingTextInputFormatter(30),
+                        ],
                       ),
                       const SizedBox(height: 12),
                       TextField(

@@ -293,4 +293,96 @@ class StudentController extends Controller
     {
         return Excel::download(new \App\Exports\StudentsTemplateExport(), 'template-import-siswa.xlsx');
     }
+
+    public function bulkDeleteByClass(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'class_room_id' => ['required', 'integer', 'exists:class_rooms,id'],
+        ]);
+
+        $classRoomId = (int) $data['class_room_id'];
+
+        $studentUserIds = StudentProfile::query()
+            ->where('class_room_id', $classRoomId)
+            ->pluck('user_id');
+
+        if ($studentUserIds->isEmpty()) {
+            return response()->json([
+                'message' => 'Tidak ada siswa pada kelas tersebut.',
+            ], 404);
+        }
+
+        DB::transaction(function () use ($classRoomId, $studentUserIds) {
+            StudentProfile::query()->where('class_room_id', $classRoomId)->delete();
+            User::query()->role('siswa')->whereIn('id', $studentUserIds)->delete();
+        });
+
+        return response()->json([
+            'message' => 'Semua akun siswa pada kelas terpilih berhasil dihapus.',
+        ]);
+    }
+
+    public function bulkUpdateClass(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'from_class_room_id' => ['required', 'integer', 'exists:class_rooms,id'],
+            'to_class_room_id' => ['required', 'integer', 'exists:class_rooms,id', 'different:from_class_room_id'],
+        ], [
+            'to_class_room_id.different' => 'Kelas asal dan kelas tujuan harus berbeda.',
+        ]);
+
+        $fromClassId = (int) $data['from_class_room_id'];
+        $toClassId = (int) $data['to_class_room_id'];
+
+        $fromClass = ClassRoom::query()->findOrFail($fromClassId);
+        $toClass = ClassRoom::query()->findOrFail($toClassId);
+
+        if (mb_strtolower(trim($fromClass->jurusan ?? '')) !== mb_strtolower(trim($toClass->jurusan ?? ''))) {
+            return response()->json([
+                'message' => 'Jurusan kelas asal dan kelas tujuan harus sama.',
+                'errors' => [
+                    'to_class_room_id' => ['Jurusan kelas asal dan kelas tujuan harus sama.']
+                ]
+            ], 422);
+        }
+
+        $toClassHasStudents = StudentProfile::query()
+            ->where('class_room_id', $toClassId)
+            ->exists();
+
+        if ($toClassHasStudents) {
+            return response()->json([
+                'message' => 'Kelas tujuan masih memiliki siswa. Kosongkan kelas tujuan terlebih dahulu untuk menghindari penumpukan.',
+                'errors' => [
+                    'to_class_room_id' => ['Kelas tujuan masih memiliki siswa. Kosongkan kelas tujuan terlebih dahulu untuk menghindari penumpukan.']
+                ]
+            ], 422);
+        }
+
+        $count = StudentProfile::query()
+            ->where('class_room_id', $fromClassId)
+            ->count();
+
+        if ($count === 0) {
+            return response()->json([
+                'message' => 'Tidak ada siswa pada kelas asal tersebut.',
+                'errors' => [
+                    'from_class_room_id' => ['Tidak ada siswa pada kelas asal tersebut.']
+                ]
+            ], 422);
+        }
+
+        DB::transaction(function () use ($fromClassId, $toClassId, $toClass) {
+            StudentProfile::query()
+                ->where('class_room_id', $fromClassId)
+                ->update([
+                    'class_room_id' => $toClassId,
+                    'jurusan' => $toClass->jurusan,
+                ]);
+        });
+
+        return response()->json([
+            'message' => "Berhasil memindahkan {$count} siswa ke kelas {$toClass->name}.",
+        ]);
+    }
 }

@@ -81,6 +81,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/students', [ApiStudentController::class, 'index']);
         Route::post('/students', [ApiStudentController::class, 'store']);
+        Route::post('/students/bulk-class', [ApiStudentController::class, 'bulkUpdateClass']);
+        Route::delete('/students/bulk-delete', [ApiStudentController::class, 'bulkDeleteByClass']);
         Route::post('/students/import', [ApiStudentController::class, 'import']);
         Route::get('/students/import/template', [ApiStudentController::class, 'downloadTemplate']);
         Route::patch('/students/{user}', [ApiStudentController::class, 'update']);

@@ -1,5 +1,6 @@
 // ignore_for_file: deprecated_member_use
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../core/config/theme.dart';
 import '../../../services/mock_database.dart';
 import '../../../models/user.dart';
@@ -117,29 +118,47 @@ class _TeacherManagementScreenState extends State<TeacherManagementScreen> {
                       TextField(
                         controller: _nameController,
                         decoration: const InputDecoration(labelText: 'Nama Lengkap'),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(RegExp(r"[a-zA-Z\s.,'-]")),
+                          LengthLimitingTextInputFormatter(255),
+                        ],
                       ),
                       const SizedBox(height: 12),
                       TextField(
                         controller: _nipController,
                         decoration: const InputDecoration(labelText: 'NIP / ID Petugas'),
                         keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          LengthLimitingTextInputFormatter(50),
+                        ],
                       ),
                       const SizedBox(height: 12),
                       TextField(
                         controller: _whatsappController,
                         decoration: const InputDecoration(labelText: 'No. WhatsApp (08...)'),
                         keyboardType: TextInputType.phone,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          LengthLimitingTextInputFormatter(30),
+                        ],
                       ),
                       const SizedBox(height: 12),
                       TextField(
                         controller: _subjectController,
                         decoration: const InputDecoration(labelText: 'Mata Pelajaran (Opsional)'),
+                        inputFormatters: [
+                          LengthLimitingTextInputFormatter(150),
+                        ],
                       ),
                       if (_selectedRole == 'guru_walikelas') ...[
                         const SizedBox(height: 12),
                         TextField(
                           controller: _waliKelasController,
                           decoration: const InputDecoration(labelText: 'Wali Kelas (contoh: X TSM 1)'),
+                          inputFormatters: [
+                            LengthLimitingTextInputFormatter(100),
+                          ],
                         ),
                       ],
                       const SizedBox(height: 12),
