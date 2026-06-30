@@ -66,5 +66,9 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Aplikasi ini memerlukan akses lokasi untuk memverifikasi posisi Anda saat melakukan absen masuk dan absen pulang.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Aplikasi ini memerlukan akses lokasi untuk memverifikasi posisi Anda saat melakukan absen masuk dan absen pulang.</string>
 </dict>
 </plist>

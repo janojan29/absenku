@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:geolocator/geolocator.dart';
 import '../../../core/config/theme.dart';
 import '../../../services/mock_database.dart';
 import '../../../services/attendance_service.dart';
@@ -19,6 +20,7 @@ class AttendanceScreen extends StatefulWidget {
 class _AttendanceScreenState extends State<AttendanceScreen> {
   final AttendanceService _attendanceService = AttendanceService();
   late Timer _clockTimer;
+  StreamSubscription<Position>? _positionStreamSubscription;
   String _currentTime = '';
   String _currentDate = '';
   bool _initialLoading = true;
@@ -31,6 +33,33 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       _updateTime();
     });
     _loadData();
+    _startLocationUpdates();
+  }
+
+  Future<void> _startLocationUpdates() async {
+    try {
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) return;
+      
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      
+      if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
+        const locationSettings = LocationSettings(
+          accuracy: LocationAccuracy.best,
+          distanceFilter: 2,
+        );
+        _positionStreamSubscription = Geolocator.getPositionStream(locationSettings: locationSettings).listen((Position position) {
+          if (mounted) {
+            MockDatabase().setDeviceLocation(position.latitude, position.longitude);
+          }
+        });
+      }
+    } catch (e) {
+      // ignore
+    }
   }
 
   Future<void> _loadData() async {
@@ -45,6 +74,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   @override
   void dispose() {
     _clockTimer.cancel();
+    _positionStreamSubscription?.cancel();
     super.dispose();
   }
 
@@ -309,6 +339,9 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   }
 
   Widget _buildActionButton(MockDatabase db, Attendance todayAttendance, bool isInRange, bool canCheckInNow, bool canCheckOutNow, bool isAfterCheckInEnd, bool isAfterCheckOutEnd) {
+    if (!db.isAttendanceActive) {
+      return _buildInfoBox(Icons.block, 'Absensi Dinonaktifkan', 'Akses absensi saat ini sedang ditutup oleh Admin.', const Color(0xFFDC2626), const Color(0xFFFEF2F2));
+    }
     if (db.isHolidayToday) {
       return _buildInfoBox(Icons.calendar_today_outlined, 'Hari Libur', 'Absensi masuk & pulang dinonaktifkan hari ini.', AppTheme.textMuted, const Color(0xFFF1F5F9));
     }

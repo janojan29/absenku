@@ -32,33 +32,94 @@ class AttendanceService {
     return distance <= _db.radiusMeters;
   }
 
-  /// Anti fake GPS check using geolocator
-  Future<bool> isUsingFakeGps() async {
-    try {
-      final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
-      );
-      return position.isMocked;
-    } catch (e) {
-      // If we can't get the position (e.g., permissions), we can't verify.
-      // You could throw an error here, but returning false allows fallback.
-      return false;
+  Future<Position> getCurrentLocation() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      return Future.error('Layanan lokasi (GPS) tidak aktif. Mohon aktifkan GPS Anda.');
     }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return Future.error('Izin lokasi ditolak.');
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      return Future.error('Izin lokasi ditolak secara permanen. Mohon izinkan melalui pengaturan HP Anda.');
+    }
+
+    return await Geolocator.getCurrentPosition(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.best,
+      ),
+    );
+  }
+
+  /// Anti fake GPS check using geolocator
+  Future<bool> isUsingFakeGps(Position position, List<Position> samples) async {
+    if (position.isMocked) return true;
+
+    if (samples.length >= 2) {
+      bool identical = true;
+      for (int i = 1; i < samples.length; i++) {
+        if (samples[i].latitude != samples[0].latitude || 
+            samples[i].longitude != samples[0].longitude) {
+          identical = false;
+          break;
+        }
+      }
+      if (identical) return true;
+    }
+
+    return false;
+  }
+
+  Future<List<Position>> _collectGpsSamples() async {
+    final List<Position> samples = [];
+    final subscription = Geolocator.getPositionStream(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.best,
+        distanceFilter: 0,
+      ),
+    ).listen((pos) {
+      samples.add(pos);
+    });
+
+    await Future.delayed(const Duration(seconds: 3));
+    await subscription.cancel();
+    return samples;
   }
 
   /// Check in via API — sends coordinates to Laravel
-  Future<String> checkIn(double lat, double lng) async {
-    if (await isUsingFakeGps()) {
-      throw Exception('Sistem mendeteksi penggunaan Fake GPS. Silakan matikan Fake GPS Anda.');
+  Future<String> checkIn(double? lat, double? lng) async {
+    final position = await getCurrentLocation();
+    final samples = await _collectGpsSamples();
+
+    if (await isUsingFakeGps(position, samples)) {
+      throw Exception('Sistem mendeteksi penggunaan Fake GPS (Lokasi tidak natural/statis). Silakan matikan Fake GPS Anda.');
     }
-    return await _db.checkIn(lat, lng);
+    _db.setDeviceLocation(position.latitude, position.longitude);
+    
+    final samplesJson = samples.map((p) => {'lat': p.latitude, 'lng': p.longitude}).toList();
+    return await _db.checkIn(position.latitude, position.longitude, accuracy: position.accuracy, samples: samplesJson);
   }
 
   /// Check out via API — sends coordinates to Laravel
-  Future<String> checkOut(double lat, double lng) async {
-    if (await isUsingFakeGps()) {
-      throw Exception('Sistem mendeteksi penggunaan Fake GPS. Silakan matikan Fake GPS Anda.');
+  Future<String> checkOut(double? lat, double? lng) async {
+    final position = await getCurrentLocation();
+    final samples = await _collectGpsSamples();
+
+    if (await isUsingFakeGps(position, samples)) {
+      throw Exception('Sistem mendeteksi penggunaan Fake GPS (Lokasi tidak natural/statis). Silakan matikan Fake GPS Anda.');
     }
-    return await _db.checkOut(lat, lng);
+    _db.setDeviceLocation(position.latitude, position.longitude);
+    
+    final samplesJson = samples.map((p) => {'lat': p.latitude, 'lng': p.longitude}).toList();
+    return await _db.checkOut(position.latitude, position.longitude, accuracy: position.accuracy, samples: samplesJson);
   }
 }

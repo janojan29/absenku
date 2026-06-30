@@ -17,6 +17,7 @@ class CheckOutRequest extends FormRequest
             'latitude' => ['required', 'numeric', 'between:-90,90'],
             'longitude' => ['required', 'numeric', 'between:-180,180'],
             'accuracy' => ['required', 'numeric', 'min:1'],
+            'location_samples' => ['nullable'],
         ];
     }
 }

@@ -72,6 +72,10 @@ class AttendanceController extends Controller
             ->whereIn('status', ['pending', 'approved'])
             ->exists();
 
+        if ($attendance && $attendance->check_out_at !== null) {
+            $earlyLeaveBlockedToday = true;
+        }
+
         $checkInStart = Carbon::today()->setTimeFromTimeString($setting->check_in_start_time);
         $checkInEnd = Carbon::today()->setTimeFromTimeString($setting->check_in_end_time);
         $checkOutStart = Carbon::today()->setTimeFromTimeString($setting->check_out_start_time);
@@ -79,21 +83,22 @@ class AttendanceController extends Controller
         $now = now();
 
         $isHolidayToday = \App\Helpers\HolidayHelper::isHoliday($today);
+        $isAttendanceActive = (bool) $setting->is_attendance_active;
 
         $hasReachedCheckInStart = $now->greaterThanOrEqualTo($checkInStart);
         $isAfterCheckInEnd = $now->greaterThan($checkInEnd);
-        $canCheckInNow = $hasReachedCheckInStart && ! $isAfterCheckInEnd && !$isHolidayToday;
+        $canCheckInNow = $hasReachedCheckInStart && ! $isAfterCheckInEnd && !$isHolidayToday && $isAttendanceActive;
 
         $hasReachedCheckOutStart = $now->greaterThanOrEqualTo($checkOutStart);
         $isAfterCheckOutEnd = $now->greaterThan($checkOutEnd);
-        $canCheckOutNow = $hasReachedCheckOutStart && ! $isAfterCheckOutEnd && !$isHolidayToday;
+        $canCheckOutNow = $hasReachedCheckOutStart && ! $isAfterCheckOutEnd && !$isHolidayToday && $isAttendanceActive;
 
         if ($hasApprovedAbsentLeaveToday) {
             $canCheckInNow = false;
             $canCheckOutNow = false;
         }
 
-        $showLeaveForm = true;
+        $showLeaveForm = $isAttendanceActive;
 
         $recentDates = $recent->pluck('date')->map(fn($d) => $d->toDateString())->all();
         $leaveRequests = LeaveRequest::query()
@@ -119,17 +124,23 @@ class AttendanceController extends Controller
             'earlyLeaveBlockedToday' => $earlyLeaveBlockedToday,
             'leaveRequests' => $leaveRequests,
             'isHolidayToday' => $isHolidayToday,
+            'isAttendanceActive' => $isAttendanceActive,
         ]);
     }
 
     public function checkIn(CheckInRequest $request, AttendanceService $service): RedirectResponse
     {
         $user = $request->user();
+        $samplesRaw = $request->validated('location_samples');
+        $samples = is_string($samplesRaw) ? json_decode($samplesRaw, true) : $samplesRaw;
+        $samples = is_array($samples) ? $samples : [];
+
         $message = $service->checkIn(
             $user,
             (float) $request->validated('latitude'),
             (float) $request->validated('longitude'),
             (float) $request->validated('accuracy'),
+            $samples
         );
 
         return back()->with('status', $message);
@@ -138,11 +149,16 @@ class AttendanceController extends Controller
     public function checkOut(CheckOutRequest $request, AttendanceService $service): RedirectResponse
     {
         $user = $request->user();
+        $samplesRaw = $request->validated('location_samples');
+        $samples = is_string($samplesRaw) ? json_decode($samplesRaw, true) : $samplesRaw;
+        $samples = is_array($samples) ? $samples : [];
+
         $message = $service->checkOut(
             $user,
             (float) $request->validated('latitude'),
             (float) $request->validated('longitude'),
             (float) $request->validated('accuracy'),
+            $samples
         );
 
         return back()->with('status', $message);

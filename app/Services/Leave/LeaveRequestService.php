@@ -59,6 +59,12 @@ class LeaveRequestService
                     'leave' => 'Izin pulang lebih awal hanya bisa diajukan setelah absen masuk.',
                 ]);
             }
+
+            if ($attendance->check_out_at !== null) {
+                throw ValidationException::withMessages([
+                    'leave' => 'Kamu sudah absen pulang hari ini, jadi tidak bisa mengajukan izin pulang lebih awal.',
+                ]);
+            }
         }
 
         $existingQuery = LeaveRequest::query()

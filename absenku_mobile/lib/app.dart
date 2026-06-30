@@ -35,6 +35,7 @@ class MyApp extends StatelessWidget {
         }
 
         return MaterialApp(
+          key: ValueKey(user?.id ?? 'guest'),
           locale: DevicePreview.locale(context),
           builder: DevicePreview.appBuilder,
           title: 'Absenku Mobile',

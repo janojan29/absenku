@@ -80,6 +80,10 @@ class AttendanceController extends Controller
             ->whereIn('status', ['pending', 'approved'])
             ->exists();
 
+        if ($attendance && $attendance->check_out_at !== null) {
+            $earlyLeaveBlockedToday = true;
+        }
+
         $checkInStart = Carbon::today()->setTimeFromTimeString($setting->check_in_start_time);
         $checkInEnd = Carbon::today()->setTimeFromTimeString($setting->check_in_end_time);
         $checkOutStart = Carbon::today()->setTimeFromTimeString($setting->check_out_start_time);
@@ -133,11 +137,16 @@ class AttendanceController extends Controller
             return response()->json(['message' => 'Unauthenticated.'], 401);
         }
 
+        $samplesRaw = $request->validated('location_samples');
+        $samples = is_string($samplesRaw) ? json_decode($samplesRaw, true) : $samplesRaw;
+        $samples = is_array($samples) ? $samples : [];
+
         $message = $service->checkIn(
             $user,
             (float) $request->validated('latitude'),
             (float) $request->validated('longitude'),
             (float) $request->validated('accuracy'),
+            $samples
         );
 
         return response()->json(['message' => $message]);
@@ -150,11 +159,16 @@ class AttendanceController extends Controller
             return response()->json(['message' => 'Unauthenticated.'], 401);
         }
 
+        $samplesRaw = $request->validated('location_samples');
+        $samples = is_string($samplesRaw) ? json_decode($samplesRaw, true) : $samplesRaw;
+        $samples = is_array($samples) ? $samples : [];
+
         $message = $service->checkOut(
             $user,
             (float) $request->validated('latitude'),
             (float) $request->validated('longitude'),
             (float) $request->validated('accuracy'),
+            $samples
         );
 
         return response()->json(['message' => $message]);

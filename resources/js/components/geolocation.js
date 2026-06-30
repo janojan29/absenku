@@ -235,6 +235,8 @@ export default function geolocationComponent(schoolLat = 0, schoolLng = 0, maxRa
                         form.querySelector('input[name="latitude"]').value = pos.coords.latitude;
                         form.querySelector('input[name="longitude"]').value = pos.coords.longitude;
                         form.querySelector('input[name="accuracy"]').value = pos.coords.accuracy;
+                        const inputSamples1 = form.querySelector('input[name="location_samples"]');
+                        if (inputSamples1) inputSamples1.value = JSON.stringify(this._samples.map(s => ({lat: s.lat, lng: s.lng})));
                         form.submit();
                     },
                     (err) => {
@@ -250,6 +252,8 @@ export default function geolocationComponent(schoolLat = 0, schoolLng = 0, maxRa
             form.querySelector('input[name="latitude"]').value = this.latitude;
             form.querySelector('input[name="longitude"]').value = this.longitude;
             form.querySelector('input[name="accuracy"]').value = this.accuracy;
+            const inputSamples2 = form.querySelector('input[name="location_samples"]');
+            if (inputSamples2) inputSamples2.value = JSON.stringify(this._samples.map(s => ({lat: s.lat, lng: s.lng})));
             form.submit();
         },
 

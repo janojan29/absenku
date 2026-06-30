@@ -395,12 +395,13 @@ class MockDatabase extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<String> checkIn(double lat, double lng) async {
+  Future<String> checkIn(double lat, double lng, {double accuracy = 10.0, List<Map<String, dynamic>>? samples}) async {
     try {
       final response = await _dio.post('/attendance/check-in', data: {
         'latitude': lat,
         'longitude': lng,
-        'accuracy': 10.0,
+        'accuracy': accuracy,
+        'location_samples': samples ?? [],
       });
       await fetchAttendanceData(); // Refresh data
       return response.data['message'] as String? ?? 'Berhasil Absen Masuk!';
@@ -412,12 +413,13 @@ class MockDatabase extends ChangeNotifier {
     }
   }
 
-  Future<String> checkOut(double lat, double lng) async {
+  Future<String> checkOut(double lat, double lng, {double accuracy = 10.0, List<Map<String, dynamic>>? samples}) async {
     try {
       final response = await _dio.post('/attendance/check-out', data: {
         'latitude': lat,
         'longitude': lng,
-        'accuracy': 10.0,
+        'accuracy': accuracy,
+        'location_samples': samples ?? [],
       });
       await fetchAttendanceData(); // Refresh data
       return response.data['message'] as String? ?? 'Berhasil Absen Pulang!';

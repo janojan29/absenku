@@ -126,7 +126,15 @@
 
 
                 {{-- Attendance Buttons --}}
-                @if (!empty($isHolidayToday) && $isHolidayToday)
+                @if (isset($isAttendanceActive) && !$isAttendanceActive)
+                    <div class="text-center p-5 rounded-xl bg-red-50 border border-red-200/70">
+                        <svg class="w-10 h-10 mx-auto text-red-500 mb-2" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636" />
+                        </svg>
+                        <div class="font-semibold text-red-700">Absensi Dinonaktifkan</div>
+                        <div class="text-sm text-red-600 mt-1">Akses absensi saat ini sedang ditutup oleh Admin.</div>
+                    </div>
+                @elseif (!empty($isHolidayToday) && $isHolidayToday)
                     <div class="text-center p-5 rounded-xl bg-bw-100/50 border border-bw-200">
                         <svg class="w-10 h-10 mx-auto text-bw-400 mb-2" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z"/>
@@ -147,6 +155,7 @@
                             <input type="hidden" name="latitude" value="">
                             <input type="hidden" name="longitude" value="">
                             <input type="hidden" name="accuracy" value="">
+                            <input type="hidden" name="location_samples" value="">
                             <button type="submit" :disabled="submitting" class="btn-primary btn-ripple w-full h-14 text-lg">
                                 <template x-if="!submitting"><span class="flex items-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75"/></svg>Absen Masuk</span></template>
                                 <template x-if="submitting"><span class="flex items-center gap-2"><svg class="w-5 h-5 animate-spin-smooth" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>Memproses...</span></template>
@@ -164,6 +173,7 @@
                             <input type="hidden" name="latitude" value="">
                             <input type="hidden" name="longitude" value="">
                             <input type="hidden" name="accuracy" value="">
+                            <input type="hidden" name="location_samples" value="">
                             <button type="submit" :disabled="submitting" class="w-full h-14 text-lg rounded-xl font-semibold text-white btn-ripple transition-all duration-350 ease-bounce-in hover:translate-y-[-2px]" style="background: linear-gradient(135deg, #1a2744, #1e3a5f);">
                                 <template x-if="!submitting"><span class="flex items-center justify-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15m-3 0-3-3m0 0 3-3m-3 3H15"/></svg>Absen Pulang</span></template>
                                 <template x-if="submitting"><span class="flex items-center justify-center gap-2"><svg class="w-5 h-5 animate-spin-smooth" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>Memproses...</span></template>

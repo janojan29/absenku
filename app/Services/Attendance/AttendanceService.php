@@ -23,14 +23,14 @@ class AttendanceService
 
     public function __construct(private readonly HaversineDistance $distance) {}
 
-    public function checkIn(User $user, float $latitude, float $longitude, float $accuracy): string
+    public function checkIn(User $user, float $latitude, float $longitude, float $accuracy, array $samples = []): string
     {
         $setting = SchoolSetting::singleton();
         if (!$setting->is_attendance_active) {
             throw new \Exception('Sistem absensi sedang dinonaktifkan.');
         }
 
-        $this->validateAccuracy($accuracy);
+        $this->validateAccuracy($accuracy, $samples);
 
         $today = Carbon::today();
 
@@ -137,9 +137,9 @@ class AttendanceService
         return $alreadyCheckedIn ? 'Kamu sudah absen masuk.' : 'Absen masuk berhasil.';
     }
 
-    public function checkOut(User $user, float $latitude, float $longitude, float $accuracy): string
+    public function checkOut(User $user, float $latitude, float $longitude, float $accuracy, array $samples = []): string
     {
-        $this->validateAccuracy($accuracy);
+        $this->validateAccuracy($accuracy, $samples);
 
         $setting = SchoolSetting::singleton();
         if (!$setting->is_attendance_active) {
@@ -239,7 +239,7 @@ class AttendanceService
      * which is practically impossible for real GPS hardware.
      * Very high accuracy values (> 100m) indicate unreliable positioning.
      */
-    private function validateAccuracy(float $accuracy): void
+    private function validateAccuracy(float $accuracy, array $samples = []): void
     {
         // Bypass fake GPS check in local development or ngrok, BUT only for desktop browsers
         $host = request()->getHost();
@@ -254,6 +254,23 @@ class AttendanceService
 
         if (!$isMobile && ($isLocalOrNgrok || app()->environment('local'))) {
             return;
+        }
+
+        if (count($samples) >= 2) {
+            $identical = true;
+            $first = $samples[0];
+            foreach ($samples as $sample) {
+                if (!isset($sample['lat']) || !isset($sample['lng'])) continue;
+                if ($sample['lat'] !== $first['lat'] || $sample['lng'] !== $first['lng']) {
+                    $identical = false;
+                    break;
+                }
+            }
+            if ($identical) {
+                throw ValidationException::withMessages([
+                    'geo' => 'Sistem mendeteksi penggunaan Fake GPS (Lokasi tidak natural/statis). Silakan matikan Fake GPS Anda.',
+                ]);
+            }
         }
 
         if ($accuracy < self::MIN_ACCURACY_METERS) {

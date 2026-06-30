@@ -245,9 +245,11 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                 border: Border.all(color: Colors.red[100]!),
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: const Text(
-                                'Pengajuan izin untuk tanggal ini sudah ada.',
-                                style: TextStyle(color: AppTheme.statusAbsent, fontSize: 11, fontWeight: FontWeight.bold),
+                              child: Text(
+                                _leaveType == 'early_leave' && db.todayAttendance?.checkOutAt != null
+                                    ? 'Kamu sudah absen pulang hari ini.'
+                                    : 'Pengajuan izin untuk tanggal ini sudah ada.',
+                                style: const TextStyle(color: AppTheme.statusAbsent, fontSize: 11, fontWeight: FontWeight.bold),
                                 textAlign: TextAlign.center,
                               ),
                             ),
