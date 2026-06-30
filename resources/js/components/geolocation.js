@@ -112,6 +112,22 @@ export default function geolocationComponent(schoolLat = 0, schoolLng = 0, maxRa
          * Fake GPS returns identical coordinates every time.
          */
         _checkStability() {
+            // Bypass fake GPS check in local development or ngrok, BUT only for desktop browsers
+            const hostname = window.location.hostname;
+            const isLocalOrNgrok = hostname === 'localhost' || 
+                                   hostname === '127.0.0.1' || 
+                                   hostname.endsWith('.ngrok-free.dev') || 
+                                   hostname.endsWith('.ngrok-free.app') || 
+                                   hostname.endsWith('.ngrok.io');
+
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+            if (isLocalOrNgrok && !isMobile) {
+                this.isSuspicious = false;
+                this._stabilityChecked = true;
+                return;
+            }
+
             const samples = this._samples;
             if (samples.length < 3) return;
 

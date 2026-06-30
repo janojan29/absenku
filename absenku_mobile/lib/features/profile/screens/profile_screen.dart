@@ -79,6 +79,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _oldPasswordController.text,
         _newPasswordController.text,
         _confirmPasswordController.text,
+        whatsappNumber: widget.forceChangePassword ? _phoneController.text.trim() : null,
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password berhasil diubah!')));
@@ -263,6 +264,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 16),
+                        if (widget.forceChangePassword) ...[
+                          TextFormField(
+                            controller: _phoneController,
+                            keyboardType: TextInputType.phone,
+                            decoration: const InputDecoration(
+                              labelText: 'Nomor WhatsApp',
+                              prefixIcon: Icon(Icons.phone),
+                              helperText: 'Pastikan diawali dengan 08/angka.',
+                            ),
+                            validator: (v) {
+                              final isPhoneEmpty = v == null || v.trim().isEmpty;
+                              final alreadyHasPhone = user.whatsappNumber != null && user.whatsappNumber!.isNotEmpty;
+
+                              if (!alreadyHasPhone && isPhoneEmpty) {
+                                return 'Nomor WhatsApp wajib diisi';
+                              }
+
+                              if (!isPhoneEmpty) {
+                                if (!RegExp(r'^08[0-9]+$').hasMatch(v.trim())) {
+                                  return 'Nomor WhatsApp harus diawali dengan 08 dan hanya berisi angka';
+                                }
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                        ],
                         TextFormField(
                           controller: _oldPasswordController,
                           obscureText: _obscureOld,

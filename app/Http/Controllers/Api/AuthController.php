@@ -128,10 +128,23 @@ class AuthController extends Controller
             ], 422);
         }
 
-        $data = $request->validate([
+        $rules = [
             'old_password' => ['required', 'string'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
-        ]);
+        ];
+
+        if (empty($user->whatsapp_number)) {
+            $rules['whatsapp_number'] = ['required', 'string', 'regex:/^08[0-9]+$/', 'max:30'];
+        } else {
+            $rules['whatsapp_number'] = ['nullable', 'string', 'regex:/^08[0-9]+$/', 'max:30'];
+        }
+
+        $messages = [
+            'whatsapp_number.regex' => 'Nomor WhatsApp harus diawali dengan 08 dan hanya berisi angka.',
+            'whatsapp_number.required' => 'Nomor WhatsApp wajib diisi.',
+        ];
+
+        $data = $request->validate($rules, $messages);
 
         if (!Hash::check($data['old_password'], $user->password)) {
             return response()->json([
@@ -142,12 +155,18 @@ class AuthController extends Controller
             ], 422);
         }
 
-        $user->update([
+        $updateData = [
             'password' => Hash::make($data['password']),
-        ]);
+        ];
+
+        if (!empty($data['whatsapp_number'])) {
+            $updateData['whatsapp_number'] = $data['whatsapp_number'];
+        }
+
+        $user->update($updateData);
 
         return response()->json([
-            'message' => 'Password berhasil diubah.',
+            'message' => 'Password dan nomor HP berhasil diubah.',
         ]);
     }
 

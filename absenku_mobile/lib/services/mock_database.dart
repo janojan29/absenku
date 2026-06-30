@@ -210,13 +210,19 @@ class MockDatabase extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> changePassword(String oldPassword, String newPassword, String newPasswordConfirmation) async {
+  Future<void> changePassword(String oldPassword, String newPassword, String newPasswordConfirmation, {String? whatsappNumber}) async {
     try {
-      final response = await _dio.post('/user/change-password', data: {
+      final Map<String, dynamic> requestData = {
         'old_password': oldPassword,
         'password': newPassword,
         'password_confirmation': newPasswordConfirmation,
-      });
+      };
+
+      if (whatsappNumber != null && whatsappNumber.isNotEmpty) {
+        requestData['whatsapp_number'] = whatsappNumber;
+      }
+
+      final response = await _dio.post('/user/change-password', data: requestData);
       if (response.statusCode == 200) {
         clearMustChangePassword();
         try {

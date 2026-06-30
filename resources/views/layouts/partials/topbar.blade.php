@@ -22,11 +22,10 @@
 
     {{-- Right Section --}}
     <div class="flex items-center gap-2 sm:gap-4">
-        <div class="lg:hidden relative" x-data="{ mobileUserMenu: false }">
+        <div class="lg:hidden relative" x-data="{ mobileUserMenu: false }" @click.outside="mobileUserMenu = false">
             <button
                 type="button"
                 @click="mobileUserMenu = !mobileUserMenu"
-                @click.outside="mobileUserMenu = false"
                 class="touch-target w-9 h-9 rounded-full bg-white/10 border border-white/15 flex items-center justify-center text-xs font-semibold text-white"
                 aria-label="Buka menu akun"
             >

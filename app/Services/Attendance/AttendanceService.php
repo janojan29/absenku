@@ -241,6 +241,21 @@ class AttendanceService
      */
     private function validateAccuracy(float $accuracy): void
     {
+        // Bypass fake GPS check in local development or ngrok, BUT only for desktop browsers
+        $host = request()->getHost();
+        $isLocalOrNgrok = $host === 'localhost' || 
+                          $host === '127.0.0.1' || 
+                          str_ends_with($host, '.ngrok-free.dev') || 
+                          str_ends_with($host, '.ngrok-free.app') || 
+                          str_ends_with($host, '.ngrok.io');
+
+        $userAgent = request()->userAgent() ?? '';
+        $isMobile = (bool) preg_match('/(android|iphone|ipad|ipod|webos|blackberry|iemobile|opera mini)/i', $userAgent);
+
+        if (!$isMobile && ($isLocalOrNgrok || app()->environment('local'))) {
+            return;
+        }
+
         if ($accuracy < self::MIN_ACCURACY_METERS) {
             throw ValidationException::withMessages([
                 'geo' => 'Akurasi GPS mencurigakan (' . round($accuracy, 1) . 'm). Pastikan kamu tidak menggunakan fake GPS.',
