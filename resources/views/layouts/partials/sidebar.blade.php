@@ -156,11 +156,10 @@
     </nav>
 
     {{-- User Profile Card with Dropdown --}}
-    <div class="shrink-0 border-t border-white/10 p-3" x-data="{ userMenu: false }">
+    <div class="shrink-0 border-t border-white/10 p-3" x-data="{ userMenu: false }" @click.window="if (! $el.contains($event.target)) userMenu = false" @scroll.window.capture="userMenu = false">
         {{-- Trigger --}}
         <button
             @click="userMenu = !userMenu"
-            @click.outside="userMenu = false"
             class="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-white/8 transition-all duration-250 group cursor-pointer text-left"
         >
             {{-- Avatar --}}

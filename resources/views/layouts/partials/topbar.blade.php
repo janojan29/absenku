@@ -22,7 +22,7 @@
 
     {{-- Right Section --}}
     <div class="flex items-center gap-2 sm:gap-4">
-        <div class="lg:hidden relative" x-data="{ mobileUserMenu: false }" @click.outside="mobileUserMenu = false" @scroll.window="mobileUserMenu = false">
+        <div class="relative" x-data="{ mobileUserMenu: false }" @click.window="if (! $el.contains($event.target)) mobileUserMenu = false" @scroll.window.capture="mobileUserMenu = false">
             <button
                 type="button"
                 @click="mobileUserMenu = !mobileUserMenu"

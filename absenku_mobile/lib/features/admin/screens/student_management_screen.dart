@@ -151,27 +151,93 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                 ),
                 ElevatedButton(
                   onPressed: () async {
-                    if (_nameController.text.trim().isEmpty ||
-                        _nisController.text.trim().isEmpty ||
-                        _formClassRoomId.isEmpty) {
+                    final name = _nameController.text.trim();
+                    final nis = _nisController.text.trim();
+                    final wa = _whatsappController.text.trim();
+                    final parentWa = _parentWhatsappController.text.trim();
+                    final pwd = _passwordController.text;
+                    final pwdConfirm = _passwordConfirmController.text;
+
+                    if (name.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Nama, NISN, dan Kelas wajib diisi!')),
+                        const SnackBar(content: Text('Nama Lengkap wajib diisi!')),
+                      );
+                      return;
+                    }
+                    if (name.length > 255) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Nama Lengkap maksimal 255 karakter!')),
+                      );
+                      return;
+                    }
+
+                    if (nis.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('NISN wajib diisi!')),
+                      );
+                      return;
+                    }
+                    if (nis.length > 50) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('NISN maksimal 50 karakter!')),
+                      );
+                      return;
+                    }
+
+                    if (_formClassRoomId.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Kelas wajib dipilih!')),
+                      );
+                      return;
+                    }
+
+                    if (wa.isNotEmpty && wa.length > 30) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Nomor WhatsApp Siswa maksimal 30 karakter!')),
+                      );
+                      return;
+                    }
+
+                    if (parentWa.isNotEmpty && parentWa.length > 30) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Nomor WhatsApp Orang Tua maksimal 30 karakter!')),
                       );
                       return;
                     }
 
                     if (!isEdit) {
-                      if (_passwordController.text.isEmpty || _passwordConfirmController.text.isEmpty) {
+                      if (pwd.isEmpty || pwdConfirm.isEmpty) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Password wajib diisi!')),
                         );
                         return;
                       }
-                      if (_passwordController.text != _passwordConfirmController.text) {
+                      if (pwd.length < 8) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Password minimal 8 karakter!')),
+                        );
+                        return;
+                      }
+                      if (pwd != pwdConfirm) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Password dan konfirmasi password tidak cocok!')),
                         );
                         return;
+                      }
+                    } else {
+                      if (pwd.isNotEmpty) {
+                        if (pwd.length < 8) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Password minimal 8 karakter!')),
+                          );
+                          return;
+                        }
+                        if (pwd != pwdConfirm) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Password dan konfirmasi password tidak cocok!')),
+                          );
+                          return;
+                        }
                       }
                     }
 

@@ -56,8 +56,8 @@ class RbacSeeder extends Seeder
 
         // Default 2 user Petugas Piket (maksimal 2)
         $picketUsers = [
-            ['email' => 'piket1@sekolah.local', 'name' => 'Petugas Piket 1'],
-            ['email' => 'piket2@sekolah.local', 'name' => 'Petugas Piket 2'],
+            ['email' => 'piket1@sekolah.local', 'name' => 'Petugas Piket 1', 'nip' => 'PKT001'],
+            ['email' => 'piket2@sekolah.local', 'name' => 'Petugas Piket 2', 'nip' => 'PKT002'],
         ];
 
         foreach ($picketUsers as $pu) {
@@ -71,6 +71,14 @@ class RbacSeeder extends Seeder
             );
 
             $user->syncRoles(['petugas_piket']);
+
+            \App\Models\Teacher::query()->updateOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'nip' => $pu['nip'],
+                    'subject' => 'Piket',
+                ]
+            );
         }
 
         $this->command?->info('Admin login: admin@sekolah.local / password123');

@@ -90,13 +90,17 @@ class User {
 
   /// Parse User from Laravel API response (nested structure with student_profile / teacher)
   factory User.fromApiJson(Map<String, dynamic> json) {
-    final studentProfile = json['student_profile'] as Map<String, dynamic>?;
-    final teacher = json['teacher'] as Map<String, dynamic>?;
+    final studentProfile = json['student_profile'] != null 
+        ? Map<String, dynamic>.from(json['student_profile'] as Map) 
+        : null;
+    final teacher = json['teacher'] != null 
+        ? Map<String, dynamic>.from(json['teacher'] as Map) 
+        : null;
 
     // Determine role — API returns role_name as a string
     String role = 'siswa';
     if (json['role_name'] != null) {
-      role = json['role_name'] as String;
+      role = json['role_name'].toString();
     } else if (json['roles'] != null && (json['roles'] as List).isNotEmpty) {
       role = (json['roles'] as List).first.toString();
     }
@@ -107,28 +111,30 @@ class User {
     String? parentPhoneWa;
     if (studentProfile != null) {
       classRoomId = studentProfile['class_room_id']?.toString();
-      jurusan = studentProfile['jurusan'] as String?;
-      parentPhoneWa = studentProfile['parent_phone_wa'] as String?;
-      final classRoom = studentProfile['class_room'] as Map<String, dynamic>?;
+      jurusan = studentProfile['jurusan']?.toString();
+      parentPhoneWa = studentProfile['parent_phone_wa']?.toString();
+      final classRoom = studentProfile['class_room'] != null 
+          ? Map<String, dynamic>.from(studentProfile['class_room'] as Map) 
+          : null;
       if (classRoom != null) {
-        classRoomName = classRoom['name'] as String?;
+        classRoomName = classRoom['name']?.toString();
       }
     }
 
     return User(
       id: json['id'].toString(),
-      name: json['name'] as String? ?? '',
-      email: json['email'] as String? ?? '',
+      name: json['name']?.toString() ?? '',
+      email: json['email']?.toString() ?? '',
       role: role,
-      nip: teacher?['nip'] as String?,
-      nis: studentProfile?['nis'] as String?,
+      nip: teacher?['nip']?.toString(),
+      nis: studentProfile?['nis']?.toString(),
       classRoomId: classRoomId,
       classRoomName: classRoomName,
-      whatsappNumber: json['whatsapp_number'] as String?,
+      whatsappNumber: json['whatsapp_number']?.toString(),
       parentPhoneWa: parentPhoneWa,
       jurusan: jurusan,
-      subject: teacher?['subject'] as String?,
-      waliKelas: teacher?['wali_kelas'] as String?,
+      subject: teacher?['subject']?.toString(),
+      waliKelas: teacher?['wali_kelas']?.toString(),
       hasDefaultPassword: json['has_default_password'] as bool? ?? false,
     );
   }

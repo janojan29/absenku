@@ -856,7 +856,15 @@ class MockDatabase extends ChangeNotifier {
       await fetchStudents();
     } catch (e) {
       if (e is DioException && e.response?.data != null) {
-        throw Exception(e.response!.data['message'].toString());
+        final data = e.response!.data;
+        if (data is Map) {
+          if (data['errors'] != null) {
+            final errors = data['errors'] as Map;
+            throw Exception(errors.values.expand((v) => v as List).join('\n'));
+          } else if (data['message'] != null) {
+            throw Exception(data['message'].toString());
+          }
+        }
       }
       throw Exception('Gagal menambahkan siswa.');
     }
@@ -891,7 +899,15 @@ class MockDatabase extends ChangeNotifier {
       await fetchStudents();
     } catch (e) {
       if (e is DioException && e.response?.data != null) {
-        throw Exception(e.response!.data['message'].toString());
+        final data = e.response!.data;
+        if (data is Map) {
+          if (data['errors'] != null) {
+            final errors = data['errors'] as Map;
+            throw Exception(errors.values.expand((v) => v as List).join('\n'));
+          } else if (data['message'] != null) {
+            throw Exception(data['message'].toString());
+          }
+        }
       }
       throw Exception('Gagal memperbarui siswa.');
     }
@@ -967,12 +983,16 @@ class MockDatabase extends ChangeNotifier {
       });
       await fetchTeachers();
     } on DioException catch (e) {
-      if (e.response?.data != null && e.response?.data['message'] != null) {
-        throw Exception(e.response!.data['message'].toString());
-      }
-      if (e.response?.data != null && e.response?.data['errors'] != null) {
-        final errors = e.response!.data['errors'] as Map<String, dynamic>;
-        throw Exception(errors.values.expand((v) => v as List).join('\n'));
+      if (e.response?.data != null) {
+        final data = e.response!.data;
+        if (data is Map) {
+          if (data['errors'] != null) {
+            final errors = data['errors'] as Map;
+            throw Exception(errors.values.expand((v) => v as List).join('\n'));
+          } else if (data['message'] != null) {
+            throw Exception(data['message'].toString());
+          }
+        }
       }
       throw Exception('Gagal menambahkan guru.');
     }
@@ -1003,12 +1023,16 @@ class MockDatabase extends ChangeNotifier {
       });
       await fetchTeachers();
     } on DioException catch (e) {
-      if (e.response?.data != null && e.response?.data['message'] != null) {
-        throw Exception(e.response!.data['message'].toString());
-      }
-      if (e.response?.data != null && e.response?.data['errors'] != null) {
-        final errors = e.response!.data['errors'] as Map<String, dynamic>;
-        throw Exception(errors.values.expand((v) => v as List).join('\n'));
+      if (e.response?.data != null) {
+        final data = e.response!.data;
+        if (data is Map) {
+          if (data['errors'] != null) {
+            final errors = data['errors'] as Map;
+            throw Exception(errors.values.expand((v) => v as List).join('\n'));
+          } else if (data['message'] != null) {
+            throw Exception(data['message'].toString());
+          }
+        }
       }
       throw Exception('Gagal mengubah data guru.');
     }

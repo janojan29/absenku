@@ -20,8 +20,8 @@ class UserResource extends JsonResource
             'roles' => $roles,
             'role_name' => $roleName,
             'has_default_password' => $this->hasDefaultPassword(),
-            'student_profile' => $this->whenLoaded('studentProfile', fn() => new StudentProfileResource($this->studentProfile)),
-            'teacher' => $this->whenLoaded('teacher', fn() => new TeacherResource($this->teacher)),
+            'student_profile' => $this->whenLoaded('studentProfile', fn() => $this->studentProfile ? new StudentProfileResource($this->studentProfile) : null),
+            'teacher' => $this->whenLoaded('teacher', fn() => $this->teacher ? new TeacherResource($this->teacher) : null),
         ];
     }
 }

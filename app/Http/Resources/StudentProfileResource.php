@@ -14,7 +14,7 @@ class StudentProfileResource extends JsonResource
             'nis' => $this->nis,
             'jurusan' => $this->jurusan,
             'class_room_id' => $this->class_room_id,
-            'class_room' => $this->whenLoaded('classRoom', fn() => new ClassRoomResource($this->classRoom)),
+            'class_room' => $this->whenLoaded('classRoom', fn() => $this->classRoom ? new ClassRoomResource($this->classRoom) : null),
             'parent_phone_wa' => $this->parent_phone_wa,
             'parent_whatsapp_number' => $this->parent_whatsapp_number,
             'photo' => $this->photo,
