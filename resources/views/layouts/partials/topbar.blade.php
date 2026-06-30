@@ -22,7 +22,7 @@
 
     {{-- Right Section --}}
     <div class="flex items-center gap-2 sm:gap-4">
-        <div class="lg:hidden relative" x-data="{ mobileUserMenu: false }" @click.outside="mobileUserMenu = false">
+        <div class="lg:hidden relative" x-data="{ mobileUserMenu: false }" @click.outside="mobileUserMenu = false" @scroll.window="mobileUserMenu = false">
             <button
                 type="button"
                 @click="mobileUserMenu = !mobileUserMenu"
@@ -34,6 +34,7 @@
 
             <div
                 x-show="mobileUserMenu"
+                @click="mobileUserMenu = false"
                 x-transition:enter="transition ease-out duration-150"
                 x-transition:enter-start="opacity-0 translate-y-1"
                 x-transition:enter-end="opacity-100 translate-y-0"
