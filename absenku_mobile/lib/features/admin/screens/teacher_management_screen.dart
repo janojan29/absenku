@@ -185,6 +185,12 @@ class _TeacherManagementScreenState extends State<TeacherManagementScreen> {
                       );
                       return;
                     }
+                    if (!RegExp(r"^[a-zA-Z\s.,'\-]+$").hasMatch(name)) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Nama Lengkap hanya boleh berisi huruf, spasi, dan tanda baca nama!')),
+                      );
+                      return;
+                    }
 
                     if (nip.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -198,12 +204,26 @@ class _TeacherManagementScreenState extends State<TeacherManagementScreen> {
                       );
                       return;
                     }
-
-                    if (wa.isNotEmpty && wa.length > 30) {
+                    if (!RegExp(r"^[0-9]+$").hasMatch(nip)) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Nomor WhatsApp maksimal 30 karakter!')),
+                        const SnackBar(content: Text('NIP / ID Petugas harus berupa angka!')),
                       );
                       return;
+                    }
+
+                    if (wa.isNotEmpty) {
+                      if (!RegExp(r'^08[0-9]+$').hasMatch(wa)) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Nomor WhatsApp harus diawali dengan 08 dan hanya berisi angka!')),
+                        );
+                        return;
+                      }
+                      if (wa.length > 30) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Nomor WhatsApp maksimal 30 karakter!')),
+                        );
+                        return;
+                      }
                     }
 
                     if (subj.isNotEmpty && subj.length > 150) {

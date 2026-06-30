@@ -415,22 +415,39 @@ class _SettingsTabState extends State<_SettingsTab> {
   void _save(MockDatabase db) async {
     if (!_formKey.currentState!.validate()) return;
 
-    await db.updateSettings(
-      latitude: double.parse(_latController.text),
-      longitude: double.parse(_lngController.text),
-      radiusMeters: int.parse(_radiusController.text),
-      checkInStart: _checkInStartController.text,
-      checkInEnd: _checkInEndController.text,
-      checkOutStart: _checkOutStartController.text,
-      checkOutEnd: _checkOutEndController.text,
-      lateToleranceMinutes: int.parse(_lateToleranceController.text),
-      isAttendanceActive: _isAttendanceActive,
-    );
-
-    if (mounted) {
+    final checkOutStart = _checkOutStartController.text.trim();
+    final checkOutEnd = _checkOutEndController.text.trim();
+    if (checkOutEnd.compareTo(checkOutStart) <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pengaturan sekolah berhasil diperbarui!')),
+        const SnackBar(content: Text('Batas check-out harus setelah jam buka check-out.')),
       );
+      return;
+    }
+
+    try {
+      await db.updateSettings(
+        latitude: double.parse(_latController.text.trim()),
+        longitude: double.parse(_lngController.text.trim()),
+        radiusMeters: int.parse(_radiusController.text.trim()),
+        checkInStart: _checkInStartController.text.trim(),
+        checkInEnd: _checkInEndController.text.trim(),
+        checkOutStart: checkOutStart,
+        checkOutEnd: checkOutEnd,
+        lateToleranceMinutes: int.parse(_lateToleranceController.text.trim()),
+        isAttendanceActive: _isAttendanceActive,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Pengaturan sekolah berhasil diperbarui!')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString().replaceAll('Exception:', ''))),
+        );
+      }
     }
   }
 
@@ -462,7 +479,13 @@ class _SettingsTabState extends State<_SettingsTab> {
                             controller: _latController,
                             decoration: const InputDecoration(labelText: 'Latitude'),
                             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            validator: (val) => val == null || double.tryParse(val) == null ? 'Nilai tidak valid' : null,
+                            validator: (val) {
+                              if (val == null || val.trim().isEmpty) return 'Wajib diisi';
+                              final d = double.tryParse(val.trim());
+                              if (d == null) return 'Nilai tidak valid';
+                              if (d < -90 || d > 90) return 'Latitude antara -90 dan 90';
+                              return null;
+                            },
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -471,7 +494,13 @@ class _SettingsTabState extends State<_SettingsTab> {
                             controller: _lngController,
                             decoration: const InputDecoration(labelText: 'Longitude'),
                             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            validator: (val) => val == null || double.tryParse(val) == null ? 'Nilai tidak valid' : null,
+                            validator: (val) {
+                              if (val == null || val.trim().isEmpty) return 'Wajib diisi';
+                              final d = double.tryParse(val.trim());
+                              if (d == null) return 'Nilai tidak valid';
+                              if (d < -180 || d > 180) return 'Longitude antara -180 dan 180';
+                              return null;
+                            },
                           ),
                         ),
                       ],
@@ -481,7 +510,13 @@ class _SettingsTabState extends State<_SettingsTab> {
                       controller: _radiusController,
                       decoration: const InputDecoration(labelText: 'Radius Sekolah (meter)'),
                       keyboardType: TextInputType.number,
-                      validator: (val) => val == null || int.tryParse(val) == null ? 'Nilai tidak valid' : null,
+                      validator: (val) {
+                        if (val == null || val.trim().isEmpty) return 'Wajib diisi';
+                        final d = int.tryParse(val.trim());
+                        if (d == null) return 'Nilai tidak valid';
+                        if (d < 10 || d > 5000) return 'Radius antara 10 dan 5000 m';
+                        return null;
+                      },
                     ),
                     const SizedBox(height: 8),
                     TextButton.icon(
@@ -515,6 +550,13 @@ class _SettingsTabState extends State<_SettingsTab> {
                           child: TextFormField(
                             controller: _checkInStartController,
                             decoration: const InputDecoration(labelText: 'Mulai', hintText: '06:00'),
+                            validator: (val) {
+                              if (val == null || val.trim().isEmpty) return 'Wajib diisi';
+                              if (!RegExp(r'^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$').hasMatch(val.trim())) {
+                                return 'Format H:i salah (cth: 06:00)';
+                              }
+                              return null;
+                            },
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -522,6 +564,13 @@ class _SettingsTabState extends State<_SettingsTab> {
                           child: TextFormField(
                             controller: _checkInEndController,
                             decoration: const InputDecoration(labelText: 'Batas Akhir', hintText: '08:00'),
+                            validator: (val) {
+                              if (val == null || val.trim().isEmpty) return 'Wajib diisi';
+                              if (!RegExp(r'^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$').hasMatch(val.trim())) {
+                                return 'Format H:i salah (cth: 08:00)';
+                              }
+                              return null;
+                            },
                           ),
                         ),
                       ],
@@ -535,6 +584,13 @@ class _SettingsTabState extends State<_SettingsTab> {
                           child: TextFormField(
                             controller: _checkOutStartController,
                             decoration: const InputDecoration(labelText: 'Mulai', hintText: '15:00'),
+                            validator: (val) {
+                              if (val == null || val.trim().isEmpty) return 'Wajib diisi';
+                              if (!RegExp(r'^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$').hasMatch(val.trim())) {
+                                return 'Format H:i salah (cth: 15:00)';
+                              }
+                              return null;
+                            },
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -542,6 +598,13 @@ class _SettingsTabState extends State<_SettingsTab> {
                           child: TextFormField(
                             controller: _checkOutEndController,
                             decoration: const InputDecoration(labelText: 'Batas Akhir', hintText: '17:00'),
+                            validator: (val) {
+                              if (val == null || val.trim().isEmpty) return 'Wajib diisi';
+                              if (!RegExp(r'^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$').hasMatch(val.trim())) {
+                                return 'Format H:i salah (cth: 17:00)';
+                              }
+                              return null;
+                            },
                           ),
                         ),
                       ],
@@ -551,7 +614,13 @@ class _SettingsTabState extends State<_SettingsTab> {
                       controller: _lateToleranceController,
                       decoration: const InputDecoration(labelText: 'Toleransi Keterlambatan (Menit)', hintText: 'Contoh: 15'),
                       keyboardType: TextInputType.number,
-                      validator: (val) => val == null || int.tryParse(val) == null ? 'Nilai tidak valid' : null,
+                      validator: (val) {
+                        if (val == null || val.trim().isEmpty) return 'Wajib diisi';
+                        final d = int.tryParse(val.trim());
+                        if (d == null) return 'Nilai tidak valid';
+                        if (d < 0 || d > 180) return 'Toleransi antara 0 dan 180 menit';
+                        return null;
+                      },
                     ),
                   ],
                 ),

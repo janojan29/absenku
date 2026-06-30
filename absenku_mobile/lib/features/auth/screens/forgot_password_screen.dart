@@ -48,21 +48,36 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 
   Future<void> _submitRequest() async {
-    if (_emailController.text.isEmpty ||
-        _fullNameController.text.isEmpty ||
-        _identifierController.text.isEmpty) {
+    final email = _emailController.text.trim();
+    final name = _fullNameController.text.trim();
+    final identifier = _identifierController.text.trim();
+
+    if (email.isEmpty || name.isEmpty || identifier.isEmpty) {
       _showError('Semua kolom harus diisi.');
       return;
     }
+    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
+      _showError('Format email tidak valid.');
+      return;
+    }
+    if (!RegExp(r"^[a-zA-Z\s.,'\-]+$").hasMatch(name)) {
+      _showError('Nama lengkap hanya boleh berisi huruf, spasi, dan tanda baca nama.');
+      return;
+    }
+    if (!RegExp(r'^[0-9]+$').hasMatch(identifier)) {
+      _showError('NISN/NIP harus berupa angka.');
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
     try {
       final res = await MockDatabase().requestPasswordReset(
-        _emailController.text,
-        _fullNameController.text,
-        _identifierController.text,
+        email,
+        name,
+        identifier,
       );
       if (mounted) {
         setState(() {
@@ -80,8 +95,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 
   Future<void> _submitOtp() async {
-    if (_otpController.text.length != 6) {
-      _showError('OTP harus 6 digit.');
+    final otp = _otpController.text.trim();
+    if (otp.length != 6 || !RegExp(r'^[0-9]{6}$').hasMatch(otp)) {
+      _showError('OTP harus 6 digit angka.');
       return;
     }
     setState(() {
@@ -90,7 +106,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     });
     try {
       final res = await MockDatabase()
-          .verifyPasswordResetOtp(_userId!, _otpController.text);
+          .verifyPasswordResetOtp(_userId!, otp);
       if (mounted) {
         setState(() {
           _resetToken = res['reset_token'];
@@ -107,12 +123,18 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 
   Future<void> _submitReset() async {
-    if (_passwordController.text.isEmpty ||
-        _confirmPasswordController.text.isEmpty) {
+    final pwd = _passwordController.text;
+    final pwdConfirm = _confirmPasswordController.text;
+
+    if (pwd.isEmpty || pwdConfirm.isEmpty) {
       _showError('Password tidak boleh kosong.');
       return;
     }
-    if (_passwordController.text != _confirmPasswordController.text) {
+    if (pwd.length < 8) {
+      _showError('Password minimal 8 karakter.');
+      return;
+    }
+    if (pwd != pwdConfirm) {
       _showError('Password konfirmasi tidak cocok.');
       return;
     }
@@ -124,8 +146,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       final res = await MockDatabase().submitNewPassword(
         _userId!,
         _resetToken!,
-        _passwordController.text,
-        _confirmPasswordController.text,
+        pwd,
+        pwdConfirm,
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

@@ -48,6 +48,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Nomor WhatsApp wajib diisi.')));
       return;
     }
+    if (!RegExp(r'^08[0-9]+$').hasMatch(phone)) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Nomor WhatsApp harus diawali dengan 08 dan hanya berisi angka.')));
+      return;
+    }
+    if (phone.length > 30) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Nomor WhatsApp maksimal 30 karakter.')));
+      return;
+    }
     setState(() => _isPhoneLoading = true);
     try {
       await MockDatabase().updatePhone(phone);
@@ -282,8 +290,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               }
 
                               if (!isPhoneEmpty) {
-                                if (!RegExp(r'^08[0-9]+$').hasMatch(v.trim())) {
+                                final phoneVal = v.trim();
+                                if (!RegExp(r'^08[0-9]+$').hasMatch(phoneVal)) {
                                   return 'Nomor WhatsApp harus diawali dengan 08 dan hanya berisi angka';
+                                }
+                                if (phoneVal.length > 30) {
+                                  return 'Nomor WhatsApp maksimal 30 karakter';
                                 }
                               }
                               return null;
@@ -334,7 +346,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
                             ),
                           ),
-                          validator: (v) => v!.isEmpty ? 'Wajib diisi' : null,
+                          validator: (v) {
+                            if (v!.isEmpty) return 'Wajib diisi';
+                            if (v != _newPasswordController.text) {
+                              return 'Konfirmasi password tidak cocok';
+                            }
+                            return null;
+                          },
                         ),
                         const SizedBox(height: 24),
                         ElevatedButton(

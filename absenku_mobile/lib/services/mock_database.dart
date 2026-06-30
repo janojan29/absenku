@@ -719,8 +719,16 @@ class MockDatabase extends ChangeNotifier {
       _isAttendanceActive = isAttendanceActive;
       notifyListeners();
     } on DioException catch (e) {
-      if (e.response?.data != null && e.response?.data['message'] != null) {
-        throw Exception(e.response!.data['message'].toString());
+      if (e.response?.data != null) {
+        final data = e.response!.data;
+        if (data is Map) {
+          if (data['errors'] != null) {
+            final errors = data['errors'] as Map;
+            throw Exception(errors.values.expand((v) => v as List).join('\n'));
+          } else if (data['message'] != null) {
+            throw Exception(data['message'].toString());
+          }
+        }
       }
       throw Exception('Gagal menyimpan pengaturan.');
     }

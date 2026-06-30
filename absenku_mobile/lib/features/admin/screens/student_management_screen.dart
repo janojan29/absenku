@@ -170,6 +170,12 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                       );
                       return;
                     }
+                    if (!RegExp(r"^[a-zA-Z\s.,'\-]+$").hasMatch(name)) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Nama Lengkap hanya boleh berisi huruf, spasi, dan tanda baca nama!')),
+                      );
+                      return;
+                    }
 
                     if (nis.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -183,6 +189,12 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                       );
                       return;
                     }
+                    if (!RegExp(r"^[0-9]+$").hasMatch(nis)) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('NISN harus berupa angka!')),
+                      );
+                      return;
+                    }
 
                     if (_formClassRoomId.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -191,18 +203,34 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                       return;
                     }
 
-                    if (wa.isNotEmpty && wa.length > 30) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Nomor WhatsApp Siswa maksimal 30 karakter!')),
-                      );
-                      return;
+                    if (wa.isNotEmpty) {
+                      if (!RegExp(r'^08[0-9]+$').hasMatch(wa)) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Nomor WhatsApp Siswa harus diawali dengan 08 dan hanya berisi angka!')),
+                        );
+                        return;
+                      }
+                      if (wa.length > 30) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Nomor WhatsApp Siswa maksimal 30 karakter!')),
+                        );
+                        return;
+                      }
                     }
 
-                    if (parentWa.isNotEmpty && parentWa.length > 30) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Nomor WhatsApp Orang Tua maksimal 30 karakter!')),
-                      );
-                      return;
+                    if (parentWa.isNotEmpty) {
+                      if (!RegExp(r'^08[0-9]+$').hasMatch(parentWa)) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Nomor WhatsApp Orang Tua harus diawali dengan 08 dan hanya berisi angka!')),
+                        );
+                        return;
+                      }
+                      if (parentWa.length > 30) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Nomor WhatsApp Orang Tua maksimal 30 karakter!')),
+                        );
+                        return;
+                      }
                     }
 
                     if (!isEdit) {

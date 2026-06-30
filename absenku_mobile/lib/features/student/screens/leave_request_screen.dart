@@ -220,8 +220,15 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                               alignLabelWithHint: true,
                             ),
                             validator: (value) {
-                              if (value == null || value.trim().length < 5) {
-                                  return 'Keterangan minimal 5 karakter';
+                              if (value == null || value.trim().isEmpty) {
+                                return 'Keterangan wajib diisi';
+                              }
+                              final trimmed = value.trim();
+                              if (trimmed.length < 5) {
+                                return 'Keterangan minimal 5 karakter';
+                              }
+                              if (trimmed.length > 2000) {
+                                return 'Keterangan maksimal 2000 karakter';
                               }
                               return null;
                             },
