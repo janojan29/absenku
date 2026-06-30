@@ -299,6 +299,34 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
       return;
     }
 
+    // 1. Get the source classes of the selected students
+    final selectedStudents = db.users.where((u) => _selectedStudentIds.contains(u.id)).toList();
+    if (selectedStudents.isEmpty) return;
+
+    final sourceClassIds = selectedStudents.map((s) => s.classRoomId).whereType<String>().toSet();
+    if (sourceClassIds.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Siswa terpilih tidak memiliki kelas asal.')),
+      );
+      return;
+    }
+    if (sourceClassIds.length > 1) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Siswa terpilih harus berasal dari kelas yang sama.')),
+      );
+      return;
+    }
+
+    final fromClassId = sourceClassIds.first;
+    final fromClass = db.classrooms.firstWhere((c) => c.id == fromClassId, orElse: () => ClassRoom(id: '', name: '', jurusan: ''));
+
+    if (fromClass.id.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Kelas asal tidak ditemukan.')),
+      );
+      return;
+    }
+
     String bulkTargetClassId = db.classrooms.isNotEmpty ? db.classrooms.first.id : '';
 
     showDialog(
@@ -313,7 +341,7 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Pindahkan ${_selectedStudentIds.length} siswa terpilih ke kelas:',
+                    'Pindahkan siswa dari kelas ${fromClass.name} ke kelas:',
                     style: const TextStyle(fontSize: 13, color: AppTheme.textMuted),
                   ),
                   const SizedBox(height: 12),
@@ -338,15 +366,59 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                 ElevatedButton(
                   onPressed: () async {
                     if (bulkTargetClassId.isEmpty) return;
-                    await db.bulkUpdateClass(_selectedStudentIds.toList(), bulkTargetClassId);
-                    setState(() {
-                      _selectedStudentIds.clear();
-                    });
-                    if (context.mounted) {
-                      Navigator.pop(context);
+
+                    final toClassId = bulkTargetClassId;
+
+                    // 2. Classrooms must be different
+                    if (fromClassId == toClassId) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Berhasil memindahkan siswa terpilih!')),
+                        const SnackBar(content: Text('Kelas asal dan kelas tujuan harus berbeda.')),
                       );
+                      return;
+                    }
+
+                    final toClass = db.classrooms.firstWhere((c) => c.id == toClassId, orElse: () => ClassRoom(id: '', name: '', jurusan: ''));
+                    if (toClass.id.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Kelas tujuan tidak valid.')),
+                      );
+                      return;
+                    }
+
+                    // 3. Jurusan (Major) must match
+                    if (fromClass.jurusan.trim().toLowerCase() != toClass.jurusan.trim().toLowerCase()) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Jurusan kelas asal dan kelas tujuan harus sama.')),
+                      );
+                      return;
+                    }
+
+                    // 4. Target class must not have any students (to avoid accumulation/penumpukan)
+                    final targetClassHasStudents = db.users.any((u) => u.role == 'siswa' && u.classRoomId == toClassId);
+                    if (targetClassHasStudents) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Kelas tujuan masih memiliki siswa. Kosongkan kelas tujuan terlebih dahulu untuk menghindari penumpukan.')),
+                      );
+                      return;
+                    }
+
+                    try {
+                      await db.bulkUpdateClass(fromClassId, toClassId);
+                      setState(() {
+                        _selectedStudentIds.clear();
+                      });
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Berhasil memindahkan siswa ke kelas baru!')),
+                        );
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(e.toString().replaceAll('Exception:', ''))),
+                        );
+                      }
                     }
                   },
                   child: const Text('TERAPKAN'),

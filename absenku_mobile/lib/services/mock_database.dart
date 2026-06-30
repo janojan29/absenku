@@ -1068,29 +1068,48 @@ class MockDatabase extends ChangeNotifier {
   }
 
   // Bulk Operations — delegated to admin endpoints
-  Future<void> bulkUpdateClass(List<String> studentIds, String newClassId) async {
-    // The admin API may not have a bulk endpoint, update one by one
-    for (var id in studentIds) {
-      final student = _studentUsers.firstWhere((u) => u.id == id, orElse: () => User(id: '', name: '', email: '', role: 'siswa'));
-      if (student.id.isNotEmpty) {
-        try {
-          await _dio.patch('/admin/students/$id', data: {
-            'class_room_id': newClassId,
-          });
-        } catch (_) {}
+  Future<void> bulkUpdateClass(String fromClassId, String toClassId) async {
+    try {
+      await _dio.post('/admin/students/bulk-class', data: {
+        'from_class_room_id': fromClassId,
+        'to_class_room_id': toClassId,
+      });
+      await fetchStudents();
+    } on DioException catch (e) {
+      if (e.response?.data != null) {
+        final data = e.response!.data;
+        if (data is Map) {
+          if (data['errors'] != null) {
+            final errors = data['errors'] as Map;
+            throw Exception(errors.values.expand((v) => v as List).join('\n'));
+          } else if (data['message'] != null) {
+            throw Exception(data['message'].toString());
+          }
+        }
       }
+      throw Exception('Gagal memindahkan kelas siswa.');
     }
-    await fetchStudents();
   }
 
   Future<void> bulkDeleteByClass(String classId) async {
-    final studentsInClass = _studentUsers.where((u) => u.classRoomId == classId).toList();
-    for (var student in studentsInClass) {
-      try {
-        await _dio.delete('/admin/users/${student.id}');
-      } catch (_) {}
+    try {
+      await _dio.delete('/admin/students/bulk-delete', data: {
+        'class_room_id': classId,
+      });
+      await fetchStudents();
+    } on DioException catch (e) {
+      if (e.response?.data != null) {
+        final data = e.response!.data;
+        if (data is Map) {
+          if (data['errors'] != null) {
+            final errors = data['errors'] as Map;
+            throw Exception(errors.values.expand((v) => v as List).join('\n'));
+          } else if (data['message'] != null) {
+            throw Exception(data['message'].toString());
+          }
+        }
+      }
+      throw Exception('Gagal menghapus siswa kelas.');
     }
-    _studentUsers.removeWhere((u) => u.classRoomId == classId);
-    _mergeUserLists();
   }
 }
