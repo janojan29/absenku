@@ -35,10 +35,10 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   void initState() {
     super.initState();
     
-    // Total 7 seconds duration for a highly elegant, slow-paced cinematic entry
+    // Total 10 seconds duration for a highly elegant, slow-paced cinematic entry
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 7000),
+      duration: const Duration(milliseconds: 10000),
     );
 
     // Blobs slowly drift towards the center over the entire 7 seconds
