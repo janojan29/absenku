@@ -9,6 +9,8 @@ use Illuminate\Support\Str;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Notifications\Messages\MailMessage;
+use Laravel\Sanctum\Sanctum;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -47,6 +49,19 @@ class AppServiceProvider extends ServiceProvider
                 ->line('Silakan klik tombol di bawah ini untuk memverifikasi alamat email Anda.')
                 ->action('Verifikasi Alamat Email', $url)
                 ->line('Jika Anda tidak merasa membuat akun ini, abaikan saja email ini.');
+        });
+
+        Sanctum::authenticateAccessTokensUsing(function (PersonalAccessToken $token, $isValid) {
+            if (! $isValid) {
+                return false;
+            }
+
+            $lastActivity = $token->last_used_at ?? $token->created_at;
+            if ($lastActivity && $lastActivity->diffInMinutes(now()) > 60) {
+                return false;
+            }
+
+            return true;
         });
     }
 }

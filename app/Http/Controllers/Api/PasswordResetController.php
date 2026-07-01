@@ -101,11 +101,11 @@ class PasswordResetController extends Controller
 
         // OTP Valid. Clear it and generate a reset token.
         $resetToken = Str::random(60);
-        $user->update([
+        $user->forceFill([
             'whatsapp_otp' => null,
             'whatsapp_otp_expires_at' => null,
             'remember_token' => hash('sha256', $resetToken), // Store securely
-        ]);
+        ])->save();
 
         return response()->json([
             'message' => 'Verifikasi berhasil.',

@@ -7,9 +7,29 @@ import 'features/student/screens/attendance_screen.dart';
 import 'features/teacher/screens/dashboard_screen.dart';
 import 'features/admin/screens/admin_main_screen.dart';
 import 'features/profile/screens/profile_screen.dart';
+import 'features/splash/screens/splash_screen.dart';
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  bool _showSplash = true;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) {
+        setState(() {
+          _showSplash = false;
+        });
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +40,9 @@ class MyApp extends StatelessWidget {
         final user = db.currentUser;
 
         Widget homeScreen;
-        if (user == null) {
+        if (_showSplash) {
+          homeScreen = const SplashScreen();
+        } else if (user == null) {
           homeScreen = const LoginScreen();
         } else if (db.mustChangePassword) {
           homeScreen = const ProfileScreen(forceChangePassword: true);

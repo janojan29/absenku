@@ -75,6 +75,23 @@ class AuthController extends Controller
             ]);
         }
 
+        // Check if there is an active session (activity within the last 60 minutes)
+        $activeToken = $user->tokens()
+            ->where(function ($query) {
+                $query->where('last_used_at', '>=', now()->subMinutes(60))
+                      ->orWhere(function ($q) {
+                          $q->whereNull('last_used_at')
+                            ->where('created_at', '>=', now()->subMinutes(60));
+                      });
+            })
+            ->first();
+
+        if ($activeToken) {
+            throw ValidationException::withMessages([
+                'login_identifier' => ['Akun sedang login di perangkat lain. Sesi otomatis berakhir jika tidak ada aktivitas selama 1 jam.'],
+            ]);
+        }
+
         $user->load(['roles', 'studentProfile.classRoom', 'teacher']);
         $token = $user->createToken($deviceName)->plainTextToken;
 
