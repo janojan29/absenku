@@ -63,7 +63,21 @@ class _MyAppState extends State<MyApp> {
           title: 'Absenku Mobile',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme,
-          home: homeScreen,
+          home: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 1200),
+            switchInCurve: Curves.easeIn,
+            switchOutCurve: Curves.easeOut,
+            transitionBuilder: (Widget child, Animation<double> animation) {
+              return FadeTransition(
+                opacity: animation,
+                child: child,
+              );
+            },
+            child: KeyedSubtree(
+              key: ValueKey<Type>(homeScreen.runtimeType),
+              child: homeScreen,
+            ),
+          ),
         );
       },
     );
