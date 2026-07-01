@@ -24,6 +24,8 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   String _currentTime = '';
   String _currentDate = '';
   bool _initialLoading = true;
+  bool _isSuspicious = false;
+  final List<Position> _locationSamples = [];
 
   @override
   void initState() {
@@ -49,11 +51,37 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
         const locationSettings = LocationSettings(
           accuracy: LocationAccuracy.best,
-          distanceFilter: 2,
+          distanceFilter: 0,
         );
         _positionStreamSubscription = Geolocator.getPositionStream(locationSettings: locationSettings).listen((Position position) {
           if (mounted) {
             MockDatabase().setDeviceLocation(position.latitude, position.longitude);
+            
+            _locationSamples.add(position);
+            if (_locationSamples.length > 5) {
+              _locationSamples.removeAt(0);
+            }
+            
+            bool suspicious = position.isMocked;
+            if (!suspicious && _locationSamples.length >= 3) {
+              bool identical = true;
+              for (int i = 1; i < _locationSamples.length; i++) {
+                if (_locationSamples[i].latitude != _locationSamples[0].latitude || 
+                    _locationSamples[i].longitude != _locationSamples[0].longitude) {
+                  identical = false;
+                  break;
+                }
+              }
+              if (identical) {
+                suspicious = true;
+              }
+            }
+            
+            if (_isSuspicious != suspicious) {
+              setState(() {
+                _isSuspicious = suspicious;
+              });
+            }
           }
         });
       }
@@ -240,8 +268,14 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                                     Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                                       decoration: BoxDecoration(
-                                        color: isInRange ? const Color(0xFFECFDF5) : const Color(0xFFFEF2F2),
-                                        border: Border.all(color: isInRange ? const Color(0xFFA7F3D0) : const Color(0xFFFECACA)),
+                                        color: _isSuspicious 
+                                            ? Colors.orange.shade50 
+                                            : (isInRange ? const Color(0xFFECFDF5) : const Color(0xFFFEF2F2)),
+                                        border: Border.all(
+                                          color: _isSuspicious 
+                                              ? Colors.orange.shade200 
+                                              : (isInRange ? const Color(0xFFA7F3D0) : const Color(0xFFFECACA)),
+                                        ),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Row(
@@ -249,10 +283,18 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                                           Container(
                                             width: 40, height: 40,
                                             decoration: BoxDecoration(
-                                              color: isInRange ? const Color(0xFFD1FAE5) : const Color(0xFFFEE2E2),
+                                              color: _isSuspicious 
+                                                  ? Colors.orange.shade100 
+                                                  : (isInRange ? const Color(0xFFD1FAE5) : const Color(0xFFFEE2E2)),
                                               shape: BoxShape.circle,
                                             ),
-                                            child: Icon(Icons.location_on, color: isInRange ? AppTheme.statusPresent : AppTheme.statusAbsent, size: 20),
+                                            child: Icon(
+                                              _isSuspicious ? Icons.warning_amber_rounded : Icons.location_on, 
+                                              color: _isSuspicious 
+                                                  ? Colors.orange.shade700 
+                                                  : (isInRange ? AppTheme.statusPresent : AppTheme.statusAbsent), 
+                                              size: 20
+                                            ),
                                           ),
                                           const SizedBox(width: 12),
                                           Expanded(
@@ -260,11 +302,28 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                                               crossAxisAlignment: CrossAxisAlignment.start,
                                               children: [
                                                 Text(
-                                                  isInRange ? 'Anda berada di Area Sekolah' : 'Anda di luar Area Sekolah',
-                                                  style: TextStyle(color: isInRange ? const Color(0xFF065F46) : const Color(0xFF991B1B), fontWeight: FontWeight.w600, fontSize: 13),
+                                                  _isSuspicious 
+                                                      ? '⚠️ Fake GPS Terdeteksi' 
+                                                      : (isInRange ? 'Anda berada di Area Sekolah' : 'Anda di luar Area Sekolah'),
+                                                  style: TextStyle(
+                                                    color: _isSuspicious 
+                                                        ? Colors.orange.shade800 
+                                                        : (isInRange ? const Color(0xFF065F46) : const Color(0xFF991B1B)), 
+                                                    fontWeight: FontWeight.w600, 
+                                                    fontSize: 13
+                                                  ),
                                                 ),
-                                                Text('Jarak: ${distance.toStringAsFixed(1)}m · Radius: ${db.radiusMeters}m',
-                                                    style: TextStyle(color: isInRange ? const Color(0xFF047857) : const Color(0xFFDC2626), fontSize: 11)),
+                                                Text(
+                                                  _isSuspicious
+                                                      ? 'Matikan fake GPS untuk bisa absen.'
+                                                      : 'Jarak: ${distance.toStringAsFixed(1)}m · Radius: ${db.radiusMeters}m',
+                                                  style: TextStyle(
+                                                    color: _isSuspicious 
+                                                        ? Colors.orange.shade700 
+                                                        : (isInRange ? const Color(0xFF047857) : const Color(0xFFDC2626)), 
+                                                    fontSize: 11
+                                                  )
+                                                ),
                                               ],
                                             ),
                                           ),

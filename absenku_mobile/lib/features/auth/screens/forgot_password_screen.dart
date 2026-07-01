@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../core/config/theme.dart';
 import '../../../services/mock_database.dart';
@@ -13,6 +14,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   int _currentStep = 1; // 1: Request, 2: OTP, 3: Reset
   bool _isLoading = false;
   String? _errorMessage;
+
+  Timer? _countdownTimer;
+  int _remainingSeconds = 0;
 
   // Step 1
   final _emailController = TextEditingController();
@@ -32,6 +36,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   @override
   void dispose() {
+    _countdownTimer?.cancel();
     _emailController.dispose();
     _fullNameController.dispose();
     _identifierController.dispose();
@@ -45,6 +50,32 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     setState(() {
       _errorMessage = message.replaceAll('Exception: ', '');
     });
+  }
+
+  void _startCountdown(int seconds) {
+    _countdownTimer?.cancel();
+    setState(() {
+      _remainingSeconds = seconds;
+    });
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      setState(() {
+        if (_remainingSeconds > 0) {
+          _remainingSeconds--;
+        } else {
+          timer.cancel();
+        }
+      });
+    });
+  }
+
+  String _formatTime(int seconds) {
+    final m = (seconds / 60).floor().toString().padLeft(2, '0');
+    final s = (seconds % 60).toString().padLeft(2, '0');
+    return '$m:$s';
   }
 
   Future<void> _submitRequest() async {
@@ -83,6 +114,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         setState(() {
           _userId = res['user_id'];
           _currentStep = 2;
+          _startCountdown(60);
         });
         ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(res['message'] ?? 'OTP dikirim')));
@@ -111,6 +143,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         setState(() {
           _resetToken = res['reset_token'];
           _currentStep = 3;
+          _countdownTimer?.cancel();
         });
         ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(res['message'] ?? 'Verifikasi berhasil')));
@@ -282,6 +315,18 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           letterSpacing: 8,
                           fontWeight: FontWeight.bold),
                     ),
+                    const SizedBox(height: 8),
+                    if (_remainingSeconds > 0)
+                      Text(
+                        'OTP kedaluwarsa dalam: ${_formatTime(_remainingSeconds)}',
+                        style: const TextStyle(fontSize: 13, color: AppTheme.textMuted),
+                        textAlign: TextAlign.center,
+                      )
+                    else
+                      TextButton(
+                        onPressed: _isLoading ? null : _submitRequest,
+                        child: const Text('Kirim ulang OTP', style: TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.bold)),
+                      ),
                     const SizedBox(height: 16),
                     SizedBox(
                       height: 48,

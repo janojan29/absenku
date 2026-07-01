@@ -61,10 +61,10 @@ class PasswordResetController extends Controller
         $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
         $user->update([
             'whatsapp_otp' => $otp,
-            'whatsapp_otp_expires_at' => now()->addMinutes(5), // 5 mins for app
+            'whatsapp_otp_expires_at' => now()->addMinutes(1), // 1 min for app
         ]);
 
-        $message = "Kode OTP untuk verifikasi lupa password: *{$otp}*\n\nKode ini berlaku 5 menit. Jangan bagikan ke siapapun.";
+        $message = "Kode OTP untuk verifikasi lupa password: *{$otp}*\n\nKode ini berlaku 1 menit. Jangan bagikan ke siapapun.";
         SendWhatsAppMessage::dispatch(
             to: $whatsappNumber,
             message: $message,
@@ -129,6 +129,7 @@ class PasswordResetController extends Controller
         $user->forceFill([
             'password' => Hash::make($request->password),
             'remember_token' => Str::random(60), // Invalidate current reset token
+            'whatsapp_otp_expires_at' => null,
         ])->save();
 
         return response()->json(['message' => 'Password berhasil diperbarui. Silakan login kembali.']);
