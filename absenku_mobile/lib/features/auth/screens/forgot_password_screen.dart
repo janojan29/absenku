@@ -1,3 +1,6 @@
+// File ini berisi layar lupa kata sandi.
+// Layar ini membantu pengguna mengatur ulang akses akun melalui alur yang sederhana dan mudah dipahami.
+
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../core/config/theme.dart';

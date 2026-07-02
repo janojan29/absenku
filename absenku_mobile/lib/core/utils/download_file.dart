@@ -1,3 +1,6 @@
+// File ini berisi helper unduhan file lintas platform.
+// Fungsi utamanya adalah menyediakan antarmuka sederhana untuk mengunduh file dari aplikasi di berbagai platform.
+
 import 'package:dio/dio.dart';
 
 import 'download_file_io.dart'

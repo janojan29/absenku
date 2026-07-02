@@ -1,3 +1,6 @@
+// File ini berisi layar antrean izin untuk petugas piket.
+// Petugas piket dapat melihat daftar pengajuan izin yang perlu diproses melalui layar ini.
+
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:intl/intl.dart';

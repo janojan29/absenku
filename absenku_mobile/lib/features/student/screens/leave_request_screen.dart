@@ -1,3 +1,6 @@
+// File ini berisi layar pengajuan izin siswa.
+// Siswa dapat mengirim permintaan izin beserta keterangan dan melihat status pengajuannya di layar ini.
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../core/config/theme.dart';

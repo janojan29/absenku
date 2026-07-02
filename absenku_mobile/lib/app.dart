@@ -1,3 +1,7 @@
+// File ini mengatur alur aplikasi utama.
+// Di sini aplikasi menentukan apakah pengguna melihat splash, layar login, profil, dashboard siswa,
+// dashboard guru, atau panel admin berdasarkan status login dan peran pengguna.
+
 import 'package:device_preview/device_preview.dart';
 import 'package:flutter/material.dart';
 import 'core/config/theme.dart';

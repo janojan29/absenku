@@ -1,3 +1,6 @@
+// File ini berisi data simulasi dan manajemen sesi pengguna.
+// Berguna untuk menjalankan aplikasi secara lokal tanpa backend nyata, termasuk login, logout, dan penyimpanan sesi.
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import '../models/user.dart';

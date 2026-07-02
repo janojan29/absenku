@@ -1,3 +1,6 @@
+// File ini berisi layar absensi untuk siswa.
+// Siswa dapat melihat status hadir, melakukan absensi, dan memantau aktivitas kehadiran mereka di sini.
+
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';

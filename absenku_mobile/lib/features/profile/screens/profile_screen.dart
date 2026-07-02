@@ -1,3 +1,6 @@
+// File ini berisi layar profil pengguna.
+// Layar ini menampilkan data akun, mengatur kata sandi, dan membantu pengguna mengelola profil mereka.
+
 import 'package:flutter/material.dart';
 import '../../../core/config/theme.dart';
 import '../../../services/mock_database.dart';

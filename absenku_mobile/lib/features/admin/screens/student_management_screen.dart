@@ -1,4 +1,6 @@
-// ignore_for_file: deprecated_member_use
+// File ini berisi layar pengelolaan data siswa.
+// Admin dapat melihat, menambah, mengubah, atau menghapus data siswa melalui antarmuka ini.
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../core/config/theme.dart';

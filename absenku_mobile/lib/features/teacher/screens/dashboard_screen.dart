@@ -1,3 +1,6 @@
+// File ini berisi dashboard utama guru.
+// Di layar ini guru bisa melihat ringkasan absensi, informasi kelas, dan akses ke fitur lain yang relevan.
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../core/config/theme.dart';

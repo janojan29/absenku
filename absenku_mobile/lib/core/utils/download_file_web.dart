@@ -1,4 +1,5 @@
-// ignore_for_file: deprecated_member_use, avoid_web_libraries_in_flutter
+// File ini berisi helper unduhan khusus platform web.
+// File ini menyesuaikan proses unduhan agar kompatibel saat aplikasi dijalankan di browser web.
 
 import 'dart:html' as html;
 import 'dart:typed_data';

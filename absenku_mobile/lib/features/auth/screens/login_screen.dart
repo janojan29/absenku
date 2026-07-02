@@ -1,3 +1,6 @@
+// File ini berisi layar login aplikasi.
+// Pengguna dapat memasukkan identitas dan password, lalu proses login diproses di sini sebelum diarahkan ke layar utama.
+
 import 'package:flutter/material.dart';
 import '../../../core/config/theme.dart';
 import '../../../services/mock_database.dart';

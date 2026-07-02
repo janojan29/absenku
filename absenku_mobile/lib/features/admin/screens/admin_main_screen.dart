@@ -1,3 +1,6 @@
+// File ini berisi tampilan utama panel admin.
+// Admin dapat mengakses menu pengelolaan data penting seperti siswa, guru, dan fitur administratif lain lewat layar ini.
+
 import 'package:flutter/material.dart';
 import '../../../core/config/theme.dart';
 import '../../../services/mock_database.dart';

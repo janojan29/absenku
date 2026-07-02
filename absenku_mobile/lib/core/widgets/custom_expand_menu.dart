@@ -1,3 +1,6 @@
+// File ini berisi widget menu ekspansi kustom.
+// Widget ini membantu menyusun menu navigasi yang dapat diperluas dan diperkecil sesuai kebutuhan.
+
 import 'package:flutter/material.dart';
 import '../config/theme.dart';
 

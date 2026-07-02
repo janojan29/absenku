@@ -1,3 +1,6 @@
+// File ini berisi tema visual aplikasi.
+// Di sini didefinisikan warna, style, dan konfigurasi tampilan yang dipakai secara konsisten di seluruh aplikasi.
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 

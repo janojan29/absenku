@@ -1,3 +1,6 @@
+// File ini berisi model data absensi.
+// Model ini merepresentasikan catatan hadir, status kehadiran, tanggal, dan data terkait lainnya.
+
 class Attendance {
   final String id;
   final String userId;

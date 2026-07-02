@@ -1,3 +1,6 @@
+// File ini berisi layanan absensi.
+// Digunakan untuk mengambil data kehadiran, memproses status hadir, dan mempermudah pengelolaan log absensi.
+
 import 'dart:math';
 import 'mock_database.dart';
 import 'package:geolocator/geolocator.dart';

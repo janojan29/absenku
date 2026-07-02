@@ -1,3 +1,6 @@
+// File ini berisi layanan data guru.
+// Digunakan untuk mengolah informasi guru, data kelas, dan data pendukung yang muncul di layar guru.
+
 import 'mock_database.dart';
 import '../models/attendance.dart';
 

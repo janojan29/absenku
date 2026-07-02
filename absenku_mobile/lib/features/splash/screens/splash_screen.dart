@@ -1,3 +1,6 @@
+// File ini berisi layar splash saat aplikasi dimulai.
+// Layar ini memberikan kesan pembuka aplikasi sebelum pengguna diarahkan ke halaman yang sesuai.
+
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';

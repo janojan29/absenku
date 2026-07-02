@@ -1,3 +1,6 @@
+// File ini berisi layanan profil pengguna.
+// Bertugas mengambil data profil, memproses perubahan password, dan menyajikan informasi akun ke layar terkait.
+
 import 'mock_database.dart';
 import '../models/user.dart';
 

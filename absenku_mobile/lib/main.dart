@@ -1,3 +1,7 @@
+// File ini adalah titik masuk aplikasi mobile Absenku.
+// Saat aplikasi dimulai, file ini menginisialisasi binding Flutter, menyiapkan locale Indonesia,
+// mengaktifkan klien API, memuat data simulasi, lalu menjalankan aplikasi dengan layar utama yang sesuai.
+
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'services/api_client.dart';

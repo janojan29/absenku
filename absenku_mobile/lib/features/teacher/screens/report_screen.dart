@@ -1,3 +1,6 @@
+// File ini berisi layar laporan absensi guru.
+// Layar ini menampilkan data laporan yang membantu guru memantau kehadiran siswa secara lebih terstruktur.
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../core/config/theme.dart';

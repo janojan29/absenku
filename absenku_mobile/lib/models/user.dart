@@ -1,3 +1,6 @@
+// File ini berisi model data pengguna.
+// Model ini digunakan untuk merepresentasikan identitas pengguna, role, dan informasi dasar yang dipakai aplikasi.
+
 class ClassRoom {
   final String id;
   final String name;

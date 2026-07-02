@@ -1,3 +1,6 @@
+// File ini berisi widget bottom sheet profil.
+// Widget ini digunakan untuk menampilkan informasi profil secara ringkas dalam panel yang muncul dari bawah layar.
+
 import 'package:flutter/material.dart';
 import '../../services/mock_database.dart';
 import '../config/theme.dart';
