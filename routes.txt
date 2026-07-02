@@ -23,3 +23,142 @@
   22  artisan:16
       Illuminate\Foundation\Application::handleCommand()
 
+Listed directory lib
+Listed directory core
+Listed directory features
+Listed directory models
+Listed directory services
+Listed directory config
+Listed directory utils
+Listed directory widgets
+Listed directory auth
+Viewed main.dart:1-29
+Viewed app.dart:1-88
+
+Tentu! Berdasarkan analisis pada struktur folder dan file di dalam proyek Flutter `absenku_mobile`, berikut adalah penjelasan lengkap mengenai struktur dan isi kodingan dari proyek aplikasi Anda. Proyek ini menggunakan arsitektur berbasis fitur (feature-based architecture), yang berarti kodenya dikelompokkan berdasarkan fungsionalitas (seperti auth, student, dll.), bukan berdasarkan tipe file (seperti semua model dijadikan satu folder, semua view dijadikan satu).
+
+Berikut adalah penjelasan rincinya:
+
+### 1. File Utama (Entry Point)
+*   **`lib/main.dart`**
+    Ini adalah titik awal jalannya aplikasi. File ini bertugas untuk melakukan inisialisasi awal sebelum antarmuka (UI) dirender. Beberapa hal yang dilakukan di sini antara lain:
+    *   Mengatur format tanggal lokal ke bahasa Indonesia (`id_ID`).
+    *   Menginisialisasi `ApiClient` (konfigurasi Dio, interceptor untuk HTTP request).
+    *   Menginisialisasi `MockDatabase` yang menangani status sesi atau token pengguna yang tersimpan di perangkat.
+    *   Menjalankan aplikasi yang dibungkus oleh `DevicePreview` (untuk keperluan pengujian tampilan di berbagai perangkat pada saat mode debug).
+*   **`lib/app.dart`**
+    Di dalam file ini terdapat kelas `MyApp`. File ini berfungsi sebagai pengatur alur navigasi (routing) dan status utama aplikasi. `MyApp` mengecek status pengguna (melalui `MockDatabase`) dan menavigasikan (routing) pengguna ke halaman yang tepat:
+    *   Menampilkan `SplashScreen` selama beberapa saat ketika awal memuat.
+    *   Jika belum login, diarahkan ke `LoginScreen`.
+    *   Jika harus ubah password, diarahkan ke `ProfileScreen`.
+    *   Jika role **siswa**, diarahkan ke `AttendanceScreen`.
+    *   Jika role **guru**, **walikelas**, atau **petugas piket**, diarahkan ke `TeacherDashboardScreen`.
+    *   Jika role **admin**, diarahkan ke `AdminMainScreen`.
+
+### 2. Folder `lib/core/`
+Folder ini berisi kode dasar, pengaturan, dan komponen yang bersifat umum serta dapat digunakan kembali di seluruh bagian aplikasi.
+*   **`config/`**: Berisi file konfigurasi aplikasi seperti `app_config.dart` dan `theme.dart` (mengatur warna, tipografi, dan gaya tampilan aplikasi).
+*   **`utils/`**: Berisi fungsi utilitas dan helper (bantuan). Di sini Anda memiliki logic untuk mengunduh file, dengan implementasi spesifik berdasarkan platform (seperti `download_file_io.dart` untuk mobile dan `download_file_web.dart` untuk web).
+*   **`widgets/`**: Berisi komponen UI (Widget) kustom yang bisa dipakai di mana saja. Contohnya `custom_expand_menu.dart` dan `profile_bottom_sheet.dart`.
+
+### 3. Folder `lib/models/`
+Folder ini berfungsi menyimpan representasi data atau struktur data yang dipakai pada aplikasi. Data yang diterima dari API biasanya dipetakan (di-*mapping*) ke kelas model ini.
+*   **`user.dart`**: Model untuk menyimpan informasi pengguna (seperti nama, role, dll).
+*   **`attendance.dart`**: Model yang mendefinisikan struktur data presensi/absensi.
+
+### 4. Folder `lib/services/`
+Folder ini menangani logika bisnis, komunikasi ke server (API), dan pengelolaan state atau penyimpanan.
+*   **`api_client.dart`**: Implementasi client HTTP (sepertinya memakai Dio) yang memiliki pengaturan URL dasar dan interceptors.
+*   **`mock_database.dart`**: Ini tampaknya bertugas sebagai manajer sesi pengguna dan penyimpanan data lokal secara reaktif (pengganti state management kompleks untuk status login).
+*   **`attendance_service.dart`**, **`profile_service.dart`**, **`teacher_service.dart`**: Berbagai service untuk melakukan request ke backend sesuai dengan kebutuhan masing-masing fitur (seperti mengambil riwayat absensi atau memperbarui profil).
+
+### 5. Folder `lib/features/`
+Ini adalah inti dari aplikasi Anda yang dikelompokkan berdasarkan **fitur**. Masing-masing fitur ini memiliki layarnya tersendiri (di dalam folder `screens/`).
+*   **`splash/`**: Menangani layar splash (halaman pembuka saat aplikasi pertama kali dijalankan).
+*   **`auth/`**: Menangani halaman otentikasi (seperti Login).
+*   **`student/`**: Berisi halaman dan fungsionalitas yang diperuntukkan khusus bagi user dengan *role* Siswa (seperti halaman absensi / `attendance_screen.dart`).
+*   **`teacher/`**: Berisi halaman dan fungsionalitas untuk user Guru / Walikelas (seperti halaman Dashboard Guru).
+*   **`admin/`**: Menyimpan komponen tampilan untuk peran Administrator (`admin_main_screen.dart`).
+*   **`picket/`**: Menangani fitur-fitur yang dikhususkan bagi peran Petugas Piket.
+*   **`profile/`**: Mengatur tampilan profil dan fitur pengaturan akun (ganti password, lihat data diri).
+
+Secara keseluruhan, proyek Absenku Mobile ini dirancang dengan rapi. Pemisahan kode antara fitur (Features), integrasi API (Services), Data (Models), dan inti aplikasi (Core) membuatnya sangat mudah untuk dikelola dan dikembangkan di masa mendatang.
+
+Viewed attendance_service.dart:1-126
+Viewed mock_database.dart:1-800
+
+Tentu! Untuk membantu presentasi Anda, saya akan menjabarkan fungsi-fungsi (fitur utama) yang ada di aplikasi Flutter ini beserta **lokasi file dan nama fungsi (method) kodingannya**. 
+
+Sebagian besar logika utama (seperti mengambil data atau mengirim data ke server/API) terpusat di dalam folder `lib/services/`, khususnya di file `mock_database.dart` (yang bertindak sebagai penghubung ke API backend Laravel) dan `attendance_service.dart`.
+
+Berikut adalah daftar fitur beserta lokasi kodingannya agar Anda mudah menjawab saat ditanya:
+
+### 1. Fungsi Autentikasi (Login, Logout, & Profil)
+Fitur ini menangani proses masuk akun, keluar akun, ganti password, dan update nomor HP.
+*   **Lokasi File Utama**: `lib/services/mock_database.dart`
+*   **Nama Fungsi (Kodingan)**:
+    *   `login()` : Mengirim username (identifier) dan password ke API `/login`. Jika berhasil, akan menyimpan *token* akses.
+    *   `logout()` : Mengakhiri sesi, menghapus token di lokal, dan memberitahu API untuk logout `/logout`.
+    *   `changePassword()` : Mengirim request ubah kata sandi beserta nomor WhatsApp (jika ada).
+    *   `updatePhone()` : Mengupdate data nomor WhatsApp profil pengguna.
+*   **Tampilan (UI)**: Terdapat di `lib/features/auth/screens/login_screen.dart` dan `lib/features/profile/screens/profile_screen.dart`.
+
+### 2. Fungsi Lupa Password (Reset via OTP)
+Menangani proses reset kata sandi menggunakan email dan kode OTP.
+*   **Lokasi File Utama**: `lib/services/mock_database.dart`
+*   **Nama Fungsi (Kodingan)**:
+    *   `requestPasswordReset()` : Meminta kode OTP dengan mengirimkan identitas dan email.
+    *   `verifyPasswordResetOtp()` : Mengirimkan kode OTP yang diinput user untuk diverifikasi oleh server.
+    *   `submitNewPassword()` : Memasukkan kata sandi baru jika OTP sudah benar (valid).
+
+### 3. Fungsi Presensi (Absensi & Pelacakan GPS)
+Ini adalah fitur inti (core) aplikasi, di mana ada pengecekan lokasi, pencegahan Fake GPS, hingga proses menekan tombol Absen Masuk/Pulang.
+*   **Logika Jarak & Fake GPS**: Berada di file **`lib/services/attendance_service.dart`**
+    *   `getCurrentLocation()` : Fungsi untuk meminta izin akses lokasi dan mengambil koordinat GPS (Latitude & Longitude) pengguna dari HP.
+    *   `calculateDistance()` & `isInRange()` : Menghitung jarak antara koordinat HP siswa dengan koordinat pusat sekolah.
+    *   `isUsingFakeGps()` : Mengecek pergerakan posisi (hardware jitter analysis) secara riil. Jika posisinya "statis / terlalu sempurna" selama 3 detik, maka sistem membaca itu sebagai manipulasi Fake GPS.
+    *   `_collectGpsSamples()` : Mengambil beberapa data lokasi selama durasi 3 detik sebagai bukti/sampel pencegahan Fake GPS.
+*   **Logika Mengirim Absen ke Server**: Berada di file **`lib/services/mock_database.dart`**
+    *   `fetchAttendanceData()` : Mengambil status tombol absen dari server (Apakah tombol harus muncul? Apakah masuk terlambat? dll).
+    *   `checkIn()` : Mengirim data koordinat Absen Masuk ke server (`/attendance/check-in`).
+    *   `checkOut()` : Mengirim data koordinat Absen Pulang ke server (`/attendance/check-out`).
+*   **Tampilan (UI)**: Terdapat di `lib/features/student/screens/attendance_screen.dart`.
+
+### 4. Fungsi Pengajuan Izin / Sakit
+Memungkinkan siswa untuk mengajukan ketidakhadiran dengan alasan sakit atau izin lain.
+*   **Lokasi File Utama**: `lib/services/mock_database.dart`
+*   **Nama Fungsi (Kodingan)**:
+    *   `submitLeaveRequest()` : Mengirim formulir izin/sakit (beserta alasan dan keterangan) ke backend untuk diproses.
+
+### 5. Fungsi Persetujuan Izin (Oleh Guru / Petugas Piket)
+Petugas dapat melihat antrean siswa yang meminta izin, lalu menyetujui atau menolaknya.
+*   **Lokasi File Utama**: `lib/services/mock_database.dart`
+*   **Nama Fungsi (Kodingan)**:
+    *   `fetchLeaveQueue()` : Mengambil antrean daftar permohonan izin dari siswa (`/picket/leave-requests`).
+    *   `approveLeaveRequest()` : Menerima/menyetujui permohonan izin yang diajukan.
+    *   `rejectLeaveRequest()` : Menolak permohonan izin.
+
+### 6. Fungsi Dashboard Guru & Laporan (Report)
+Guru atau Wali Kelas melihat rekap absensi anak-anak di kelas yang mereka ampu.
+*   **Lokasi File Utama**: `lib/services/mock_database.dart`
+*   **Nama Fungsi (Kodingan)**:
+    *   `fetchTeacherDashboard()` : Mengambil data ringkasan kelas hari ini (berapa yang hadir, sakit, izin, alpa).
+    *   `fetchTeacherReport()` & `fetchTeacherSummaryReport()` : Mengambil tabel laporan kehadiran secara mendetail pada rentang tanggal tertentu.
+*   **Tampilan (UI)**: Terdapat di dalam folder `lib/features/teacher/screens/`.
+
+### 7. Fungsi Admin & Konfigurasi Sekolah
+Admin dapat mengubah pengaturan pusat koordinat sekolah, radius absen, dan mengelola data master.
+*   **Lokasi File Utama**: `lib/services/mock_database.dart`
+*   **Nama Fungsi (Kodingan)**:
+    *   `fetchAdminSettings()` : Memanggil pengaturan absensi dari server (radius batas sekolah, jam mulai, jam berakhir absen).
+    *   `updateSettings()` : Menyimpan perubahan pengaturan jam kerja dan koordinat lokasi sekolah ke backend.
+    *   `fetchClassrooms()`, `addClassRoom()`, `deleteClassRoom()`: CRUD (Create, Read, Delete) untuk daftar Kelas/Jurusan.
+*   **Tampilan (UI)**: Terdapat di folder `lib/features/admin/screens/`.
+
+---
+
+**Tips Untuk Presentasi**:
+Jika dosen/penguji bertanya: *"Di mana letak kodingan saat menekan tombol Absen Masuk?"*
+**Jawaban Anda**: *"Proses antarmukanya (tombolnya) ada di `attendance_screen.dart`. Tapi saat ditekan, dia akan memanggil fungsi `checkIn()` yang terletak di `attendance_service.dart` (untuk cek Fake GPS) dan `mock_database.dart` (untuk proses HTTP kirim data ke API Laravel)."*
+
+Semoga ini membantu presentasi Anda berjalan dengan sangat lancar! Beritahu saya jika ada fungsi spesifik lain yang ingin Anda lihat langsung isi kode programnya.

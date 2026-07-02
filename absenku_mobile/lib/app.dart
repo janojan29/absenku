@@ -64,7 +64,7 @@ class _MyAppState extends State<MyApp> {
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme,
           home: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 5000),
+            duration: const Duration(milliseconds: 2500),
             switchInCurve: Curves.easeIn,
             switchOutCurve: Curves.easeOut,
             transitionBuilder: (Widget child, Animation<double> animation) {
