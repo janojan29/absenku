@@ -61,6 +61,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Cron Trigger Secret
+    |--------------------------------------------------------------------------
+    |
+    | A secret token used to authenticate HTTP-based cron trigger requests.
+    | This allows external services to ping the attendance scheduler endpoint
+    | without requiring user authentication.
+    |
+    */
+
+    'cron_secret' => env('CRON_SECRET'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

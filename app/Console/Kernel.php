@@ -4,6 +4,7 @@ namespace App\Console;
 
 use App\Console\Commands\MarkAbsentAttendances;
 use App\Console\Commands\MarkMissingCheckoutAttendances;
+use App\Console\Commands\RunScheduledAttendanceTasks;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
@@ -12,47 +13,28 @@ class Kernel extends ConsoleKernel
     protected $commands = [
         MarkAbsentAttendances::class,
         MarkMissingCheckoutAttendances::class,
+        RunScheduledAttendanceTasks::class,
     ];
 
     /**
      * Define the application's command schedule.
+     *
+     * The scheduler runs the unified attendance task checker every minute.
+     * The command itself uses Cache::add() to ensure each sub-task only
+     * runs once per day, so running every minute has no negative impact
+     * but guarantees near-instant execution once the deadline passes.
      */
     protected function schedule(Schedule $schedule): void
     {
-        $time = env('ATTENDANCE_ABSENT_MARK_TIME', '08:30');
-        $missingCheckoutTime = env('ATTENDANCE_MISSING_CHECKOUT_TIME', '17:00');
-
-        try {
-            if (\Illuminate\Support\Facades\Schema::hasTable('school_settings')) {
-                $setting = \App\Models\SchoolSetting::first();
-                if ($setting && $setting->check_in_end_time) {
-                    // Jadwalkan 5 menit setelah batas waktu absen tutup
-                    $time = \Illuminate\Support\Carbon::parse($setting->check_in_end_time)
-                        ->addMinutes(5)
-                        ->format('H:i');
-                }
-
-                if ($setting && $setting->check_out_end_time) {
-                    $missingCheckoutTime = \Illuminate\Support\Carbon::parse($setting->check_out_end_time)
-                        ->addMinutes(5)
-                        ->format('H:i');
-                }
-            }
-        } catch (\Throwable $e) {
-            // Jika database belum siap (misal saat migrate), gunakan nilai default dari env
-        }
-
+        // ── Primary: run the unified task every minute ───────────────────
+        // This checks the current time against school settings and fires
+        // mark-absent / mark-missing-checkout exactly once per day when
+        // the respective deadline has passed. No user login required.
         $schedule
-            ->command('attendance:mark-absent')
-            ->dailyAt($time)
-            ->onOneServer()
-            ->withoutOverlapping();
-
-        $schedule
-            ->command('attendance:mark-missing-checkout')
-            ->dailyAt($missingCheckoutTime)
-            ->onOneServer()
-            ->withoutOverlapping();
+            ->command('attendance:run-scheduled')
+            ->everyMinute()
+            ->withoutOverlapping()
+            ->runInBackground();
     }
 
     /**

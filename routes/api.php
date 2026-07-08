@@ -33,6 +33,9 @@ Route::post('/forgot-password', [PasswordResetController::class, 'requestReset']
 Route::post('/forgot-password/verify-otp', [PasswordResetController::class, 'verifyOtp']);
 Route::post('/forgot-password/reset', [PasswordResetController::class, 'resetPassword']);
 
+// ── Cron trigger (no auth required, protected by CRON_SECRET token) ─────
+Route::get('/cron/trigger', \App\Http\Controllers\Api\CronTriggerController::class);
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'me']);

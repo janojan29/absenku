@@ -1,7 +1,7 @@
 // File ini berisi layar splash saat aplikasi dimulai.
 // Layar ini memberikan kesan pembuka aplikasi sebelum pengguna diarahkan ke halaman yang sesuai.
 
-import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/config/theme.dart';
@@ -157,7 +157,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                       left: size.width * _blob1Position.value.dx,
                       top: size.height * _blob1Position.value.dy,
                       child: _buildBlurredBlob(
-                        color: AppTheme.primaryBlue.withOpacity(0.15),
+                        color: AppTheme.primaryBlue.withValues(alpha: 0.15),
                         size: 300,
                       ),
                     ),
@@ -166,7 +166,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                       left: size.width * _blob2Position.value.dx,
                       top: size.height * _blob2Position.value.dy,
                       child: _buildBlurredBlob(
-                        color: const Color(0xFF64B5F6).withOpacity(0.12),
+                        color: const Color(0xFF64B5F6).withValues(alpha: 0.12),
                         size: 350,
                       ),
                     ),
@@ -192,14 +192,14 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                             boxShadow: [
                               // Fixed soft shadow
                               BoxShadow(
-                                color: AppTheme.primaryBlue.withOpacity(0.08),
+                                color: AppTheme.primaryBlue.withValues(alpha: 0.08),
                                 blurRadius: 20,
                                 spreadRadius: 5,
                                 offset: const Offset(0, 10),
                               ),
                               // Animated majestic glow
                               BoxShadow(
-                                color: AppTheme.primaryBlue.withOpacity(0.15),
+                                color: AppTheme.primaryBlue.withValues(alpha: 0.15),
                                 blurRadius: _logoGlow.value,
                                 spreadRadius: _logoGlow.value / 2,
                               ),

@@ -63,7 +63,10 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
                     backgroundColor: Colors.white.withValues(alpha: 0.2),
                     child: Text(
                       (db.currentUser?.name ?? 'U')[0].toUpperCase(),
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14),
                     ),
                   ),
                 ),
@@ -164,34 +167,41 @@ class _ClassRoomTabState extends State<_ClassRoomTab> {
             children: [
               TextField(
                 controller: _classNameController,
-                decoration: const InputDecoration(labelText: 'Nama Kelas', hintText: 'Contoh: XI RPL 1'),
+                decoration: const InputDecoration(
+                    labelText: 'Nama Kelas', hintText: 'Contoh: XI RPL 1'),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: _classJurusanController,
-                decoration: const InputDecoration(labelText: 'Jurusan / Kompetensi Keahlian', hintText: 'Contoh: Rekayasa Perangkat Lunak'),
+                decoration: const InputDecoration(
+                    labelText: 'Jurusan / Kompetensi Keahlian',
+                    hintText: 'Contoh: Rekayasa Perangkat Lunak'),
               ),
             ],
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('BATAL', style: TextStyle(color: AppTheme.textMuted)),
+              child: const Text('BATAL',
+                  style: TextStyle(color: AppTheme.textMuted)),
             ),
             ElevatedButton(
               onPressed: () async {
-                if (_classNameController.text.trim().isEmpty || _classJurusanController.text.trim().isEmpty) {
+                if (_classNameController.text.trim().isEmpty ||
+                    _classJurusanController.text.trim().isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Semua field wajib diisi!')),
                   );
                   return;
                 }
 
-                await db.addClassRoom(_classNameController.text, _classJurusanController.text);
+                await db.addClassRoom(
+                    _classNameController.text, _classJurusanController.text);
                 if (context.mounted) {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Kelas berhasil ditambahkan!')),
+                    const SnackBar(
+                        content: Text('Kelas berhasil ditambahkan!')),
                   );
                 }
               },
@@ -246,7 +256,8 @@ class _ClassRoomTabState extends State<_ClassRoomTab> {
                     icon: const Icon(Icons.add, size: 16),
                     label: const Text('Tambah', style: TextStyle(fontSize: 12)),
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 10),
                     ),
                   ),
                 ],
@@ -258,74 +269,95 @@ class _ClassRoomTabState extends State<_ClassRoomTab> {
           // Classroom List
           Expanded(
             child: filteredClassrooms.isEmpty
-                ? const Center(child: Text('Kelas tidak ditemukan.', style: TextStyle(color: AppTheme.textMuted)))
+                ? const Center(
+                    child: Text('Kelas tidak ditemukan.',
+                        style: TextStyle(color: AppTheme.textMuted)))
                 : Builder(
                     builder: (context) {
                       final startIndex = (_currentPage - 1) * _itemsPerPage;
                       int endIndex = startIndex + _itemsPerPage;
-                      if (endIndex > filteredClassrooms.length) endIndex = filteredClassrooms.length;
-                      final paginatedClassrooms = startIndex < filteredClassrooms.length
-                          ? filteredClassrooms.sublist(startIndex, endIndex)
-                          : <ClassRoom>[];
+                      if (endIndex > filteredClassrooms.length) {
+                        endIndex = filteredClassrooms.length;
+                      }
+                      final paginatedClassrooms =
+                          startIndex < filteredClassrooms.length
+                              ? filteredClassrooms.sublist(startIndex, endIndex)
+                              : <ClassRoom>[];
 
                       return ListView.builder(
                         itemCount: paginatedClassrooms.length,
                         itemBuilder: (context, index) {
                           final classroom = paginatedClassrooms[index];
 
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 10),
-                        child: ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: AppTheme.primaryBlue.withValues(alpha: 0.1),
-                            child: const Icon(Icons.meeting_room, color: AppTheme.primaryBlue),
-                          ),
-                          title: Text(classroom.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                          subtitle: Text(
-                            classroom.jurusan,
-                            style: const TextStyle(fontSize: 11),
-                          ),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.delete_outline, color: AppTheme.statusAbsent, size: 20),
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder: (context) {
-                                  return AlertDialog(
-                                    title: const Text('Hapus Kelas'),
-                                    content: Text('Apakah Anda yakin ingin menghapus kelas ${classroom.name}? (Ini akan menghapus seluruh data siswa di dalamnya).'),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () => Navigator.pop(context),
-                                        child: const Text('BATAL', style: TextStyle(color: AppTheme.textMuted)),
-                                      ),
-                                      ElevatedButton(
-                                        onPressed: () async {
-                                          await db.deleteClassRoom(classroom.id);
-                                          if (context.mounted) {
-                                            Navigator.pop(context);
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              const SnackBar(content: Text('Kelas terhapus!')),
-                                            );
-                                          }
-                                        },
-                                        style: ElevatedButton.styleFrom(backgroundColor: AppTheme.statusAbsent),
-                                        child: const Text('HAPUS'),
-                                      ),
-                                    ],
+                          return Card(
+                            margin: const EdgeInsets.only(bottom: 10),
+                            child: ListTile(
+                              leading: CircleAvatar(
+                                backgroundColor:
+                                    AppTheme.primaryBlue.withValues(alpha: 0.1),
+                                child: const Icon(Icons.meeting_room,
+                                    color: AppTheme.primaryBlue),
+                              ),
+                              title: Text(classroom.name,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14)),
+                              subtitle: Text(
+                                classroom.jurusan,
+                                style: const TextStyle(fontSize: 11),
+                              ),
+                              trailing: IconButton(
+                                icon: const Icon(Icons.delete_outline,
+                                    color: AppTheme.statusAbsent, size: 20),
+                                onPressed: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) {
+                                      return AlertDialog(
+                                        title: const Text('Hapus Kelas'),
+                                        content: Text(
+                                            'Apakah Anda yakin ingin menghapus kelas ${classroom.name}? (Ini akan menghapus seluruh data siswa di dalamnya).'),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(context),
+                                            child: const Text('BATAL',
+                                                style: TextStyle(
+                                                    color: AppTheme.textMuted)),
+                                          ),
+                                          ElevatedButton(
+                                            onPressed: () async {
+                                              await db.deleteClassRoom(
+                                                  classroom.id);
+                                              if (context.mounted) {
+                                                Navigator.pop(context);
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(
+                                                  const SnackBar(
+                                                      content: Text(
+                                                          'Kelas terhapus!')),
+                                                );
+                                              }
+                                            },
+                                            style: ElevatedButton.styleFrom(
+                                                backgroundColor:
+                                                    AppTheme.statusAbsent),
+                                            child: const Text('HAPUS'),
+                                          ),
+                                        ],
+                                      );
+                                    },
                                   );
                                 },
-                              );
-                            },
-                          ),
-                        ),
+                              ),
+                            ),
+                          );
+                        },
                       );
                     },
-                  );
-                },
-              ),
+                  ),
           ),
-          
+
           // Pagination Controls
           if (filteredClassrooms.length > _itemsPerPage)
             Padding(
@@ -345,7 +377,8 @@ class _ClassRoomTabState extends State<_ClassRoomTab> {
                   ),
                   IconButton(
                     icon: const Icon(Icons.chevron_right),
-                    onPressed: _currentPage < (filteredClassrooms.length / _itemsPerPage).ceil()
+                    onPressed: _currentPage <
+                            (filteredClassrooms.length / _itemsPerPage).ceil()
                         ? () => setState(() => _currentPage++)
                         : null,
                   ),
@@ -422,7 +455,8 @@ class _SettingsTabState extends State<_SettingsTab> {
     final checkOutEnd = _checkOutEndController.text.trim();
     if (checkOutEnd.compareTo(checkOutStart) <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Batas check-out harus setelah jam buka check-out.')),
+        const SnackBar(
+            content: Text('Batas check-out harus setelah jam buka check-out.')),
       );
       return;
     }
@@ -442,7 +476,8 @@ class _SettingsTabState extends State<_SettingsTab> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Pengaturan sekolah berhasil diperbarui!')),
+          const SnackBar(
+              content: Text('Pengaturan sekolah berhasil diperbarui!')),
         );
       }
     } catch (e) {
@@ -466,27 +501,34 @@ class _SettingsTabState extends State<_SettingsTab> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Lokasi & Radius Geofence', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                    const Text('Lokasi & Radius Geofence',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 14)),
                     const SizedBox(height: 16),
                     Row(
                       children: [
                         Expanded(
                           child: TextFormField(
                             controller: _latController,
-                            decoration: const InputDecoration(labelText: 'Latitude'),
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            decoration:
+                                const InputDecoration(labelText: 'Latitude'),
+                            keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true),
                             validator: (val) {
-                              if (val == null || val.trim().isEmpty) return 'Wajib diisi';
+                              if (val == null || val.trim().isEmpty) {
+                                return 'Wajib diisi';
+                              }
                               final d = double.tryParse(val.trim());
                               if (d == null) return 'Nilai tidak valid';
-                              if (d < -90 || d > 90) return 'Latitude antara -90 dan 90';
+                              if (d < -90 || d > 90) {
+                                return 'Latitude antara -90 dan 90';
+                              }
                               return null;
                             },
                           ),
@@ -495,13 +537,19 @@ class _SettingsTabState extends State<_SettingsTab> {
                         Expanded(
                           child: TextFormField(
                             controller: _lngController,
-                            decoration: const InputDecoration(labelText: 'Longitude'),
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            decoration:
+                                const InputDecoration(labelText: 'Longitude'),
+                            keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true),
                             validator: (val) {
-                              if (val == null || val.trim().isEmpty) return 'Wajib diisi';
+                              if (val == null || val.trim().isEmpty) {
+                                return 'Wajib diisi';
+                              }
                               final d = double.tryParse(val.trim());
                               if (d == null) return 'Nilai tidak valid';
-                              if (d < -180 || d > 180) return 'Longitude antara -180 dan 180';
+                              if (d < -180 || d > 180) {
+                                return 'Longitude antara -180 dan 180';
+                              }
                               return null;
                             },
                           ),
@@ -511,13 +559,18 @@ class _SettingsTabState extends State<_SettingsTab> {
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _radiusController,
-                      decoration: const InputDecoration(labelText: 'Radius Sekolah (meter)'),
+                      decoration: const InputDecoration(
+                          labelText: 'Radius Sekolah (meter)'),
                       keyboardType: TextInputType.number,
                       validator: (val) {
-                        if (val == null || val.trim().isEmpty) return 'Wajib diisi';
+                        if (val == null || val.trim().isEmpty) {
+                          return 'Wajib diisi';
+                        }
                         final d = int.tryParse(val.trim());
                         if (d == null) return 'Nilai tidak valid';
-                        if (d < 10 || d > 5000) return 'Radius antara 10 dan 5000 m';
+                        if (d < 10 || d > 5000) {
+                          return 'Radius antara 10 dan 5000 m';
+                        }
                         return null;
                       },
                     ),
@@ -543,19 +596,30 @@ class _SettingsTabState extends State<_SettingsTab> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Jadwal Kehadiran (Format 24 Jam)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                    const Text('Jadwal Kehadiran (Format 24 Jam)',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 14)),
                     const SizedBox(height: 16),
-                    const Text('Waktu Absen Masuk', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.textMuted)),
+                    const Text('Waktu Absen Masuk',
+                        style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.textMuted)),
                     const SizedBox(height: 6),
                     Row(
                       children: [
                         Expanded(
                           child: TextFormField(
                             controller: _checkInStartController,
-                            decoration: const InputDecoration(labelText: 'Mulai', hintText: '06:00'),
+                            decoration: const InputDecoration(
+                                labelText: 'Mulai', hintText: '06:00'),
                             validator: (val) {
-                              if (val == null || val.trim().isEmpty) return 'Wajib diisi';
-                              if (!RegExp(r'^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$').hasMatch(val.trim())) {
+                              if (val == null || val.trim().isEmpty) {
+                                return 'Wajib diisi';
+                              }
+                              if (!RegExp(
+                                      r'^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$')
+                                  .hasMatch(val.trim())) {
                                 return 'Format H:i salah (cth: 06:00)';
                               }
                               return null;
@@ -566,10 +630,15 @@ class _SettingsTabState extends State<_SettingsTab> {
                         Expanded(
                           child: TextFormField(
                             controller: _checkInEndController,
-                            decoration: const InputDecoration(labelText: 'Batas Akhir', hintText: '08:00'),
+                            decoration: const InputDecoration(
+                                labelText: 'Batas Akhir', hintText: '08:00'),
                             validator: (val) {
-                              if (val == null || val.trim().isEmpty) return 'Wajib diisi';
-                              if (!RegExp(r'^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$').hasMatch(val.trim())) {
+                              if (val == null || val.trim().isEmpty) {
+                                return 'Wajib diisi';
+                              }
+                              if (!RegExp(
+                                      r'^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$')
+                                  .hasMatch(val.trim())) {
                                 return 'Format H:i salah (cth: 08:00)';
                               }
                               return null;
@@ -579,17 +648,26 @@ class _SettingsTabState extends State<_SettingsTab> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    const Text('Waktu Absen Pulang', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.textMuted)),
+                    const Text('Waktu Absen Pulang',
+                        style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.textMuted)),
                     const SizedBox(height: 6),
                     Row(
                       children: [
                         Expanded(
                           child: TextFormField(
                             controller: _checkOutStartController,
-                            decoration: const InputDecoration(labelText: 'Mulai', hintText: '15:00'),
+                            decoration: const InputDecoration(
+                                labelText: 'Mulai', hintText: '15:00'),
                             validator: (val) {
-                              if (val == null || val.trim().isEmpty) return 'Wajib diisi';
-                              if (!RegExp(r'^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$').hasMatch(val.trim())) {
+                              if (val == null || val.trim().isEmpty) {
+                                return 'Wajib diisi';
+                              }
+                              if (!RegExp(
+                                      r'^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$')
+                                  .hasMatch(val.trim())) {
                                 return 'Format H:i salah (cth: 15:00)';
                               }
                               return null;
@@ -600,10 +678,15 @@ class _SettingsTabState extends State<_SettingsTab> {
                         Expanded(
                           child: TextFormField(
                             controller: _checkOutEndController,
-                            decoration: const InputDecoration(labelText: 'Batas Akhir', hintText: '17:00'),
+                            decoration: const InputDecoration(
+                                labelText: 'Batas Akhir', hintText: '17:00'),
                             validator: (val) {
-                              if (val == null || val.trim().isEmpty) return 'Wajib diisi';
-                              if (!RegExp(r'^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$').hasMatch(val.trim())) {
+                              if (val == null || val.trim().isEmpty) {
+                                return 'Wajib diisi';
+                              }
+                              if (!RegExp(
+                                      r'^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$')
+                                  .hasMatch(val.trim())) {
                                 return 'Format H:i salah (cth: 17:00)';
                               }
                               return null;
@@ -615,13 +698,19 @@ class _SettingsTabState extends State<_SettingsTab> {
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _lateToleranceController,
-                      decoration: const InputDecoration(labelText: 'Toleransi Keterlambatan (Menit)', hintText: 'Contoh: 15'),
+                      decoration: const InputDecoration(
+                          labelText: 'Toleransi Keterlambatan (Menit)',
+                          hintText: 'Contoh: 15'),
                       keyboardType: TextInputType.number,
                       validator: (val) {
-                        if (val == null || val.trim().isEmpty) return 'Wajib diisi';
+                        if (val == null || val.trim().isEmpty) {
+                          return 'Wajib diisi';
+                        }
                         final d = int.tryParse(val.trim());
                         if (d == null) return 'Nilai tidak valid';
-                        if (d < 0 || d > 180) return 'Toleransi antara 0 dan 180 menit';
+                        if (d < 0 || d > 180) {
+                          return 'Toleransi antara 0 dan 180 menit';
+                        }
                         return null;
                       },
                     ),
@@ -635,26 +724,32 @@ class _SettingsTabState extends State<_SettingsTab> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
                 side: BorderSide(
-                  color: _isAttendanceActive ? AppTheme.accentBlue.withValues(alpha: 0.3) : Colors.grey.shade300, 
+                  color: _isAttendanceActive
+                      ? AppTheme.accentBlue.withValues(alpha: 0.3)
+                      : Colors.grey.shade300,
                   width: 1.5,
                 ),
               ),
               elevation: 0,
               child: SwitchListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 title: Text(
                   'Aktifkan Absensi Harian',
                   style: TextStyle(
-                    fontWeight: FontWeight.bold, 
+                    fontWeight: FontWeight.bold,
                     fontSize: 16,
-                    color: _isAttendanceActive ? AppTheme.primaryNavy : Colors.black87,
+                    color: _isAttendanceActive
+                        ? AppTheme.primaryNavy
+                        : Colors.black87,
                   ),
                 ),
                 subtitle: const Padding(
                   padding: EdgeInsets.only(top: 8.0),
                   child: Text(
-                    'Matikan sistem adsensi saat sedang libur semester atau hari libur nasional.',
-                    style: TextStyle(fontSize: 13, height: 1.4, color: Colors.black54),
+                    'Matikan sistem absensi saat sedang libur semester atau hari libur nasional.',
+                    style: TextStyle(
+                        fontSize: 13, height: 1.4, color: Colors.black54),
                   ),
                 ),
                 value: _isAttendanceActive,

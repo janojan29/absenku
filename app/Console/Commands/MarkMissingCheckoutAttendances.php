@@ -32,17 +32,18 @@ class MarkMissingCheckoutAttendances extends Command
 
         $updated = 0;
 
+        // Hanya proses siswa yang BENAR-BENAR absen masuk (check_in_at terisi)
+        // tapi TIDAK absen pulang. Siswa yang sudah berstatus 'absent'
+        // (dari mark-absent karena tidak absen masuk) di-skip agar tidak
+        // mendapat notifikasi ganda.
         Attendance::query()
             ->with(['user.studentProfile'])
             ->whereDate('date', $date)
             ->whereNotNull('check_in_at')
             ->whereNull('check_out_at')
+            ->where('status', '!=', 'absent')  // Skip siswa yang sudah alfa (tidak absen masuk)
             ->chunkById(200, function ($attendances) use ($date, &$updated) {
                 foreach ($attendances as $attendance) {
-                    if ($attendance->status === 'absent') {
-                        continue;
-                    }
-
                     $hasApprovedLeave = LeaveRequest::query()
                         ->where('user_id', $attendance->user_id)
                         ->whereDate('date', $date)
@@ -68,7 +69,7 @@ class MarkMissingCheckoutAttendances extends Command
                         event(new AttendanceUpdated($attendance->fresh(), $classRoomId));
                     }
 
-                    $message = 'Informasi: ' . $user->name . ' belum melakukan absensi pulang pada ' . $date->format('d/m/Y') . '. (Status: ALFA)';
+                    $message = 'Informasi: ' . $user->name . ' sudah absen masuk namun tidak melakukan absen pulang pada ' . $date->format('d/m/Y') . '. (Status: ALFA)';
 
                     $parentWa = $user->studentProfile?->parent_phone_wa ?: $user->studentProfile?->parent_whatsapp_number;
                     if (! empty($parentWa)) {
@@ -89,3 +90,4 @@ class MarkMissingCheckoutAttendances extends Command
         return self::SUCCESS;
     }
 }
+

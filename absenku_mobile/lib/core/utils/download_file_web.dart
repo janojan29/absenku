@@ -1,10 +1,11 @@
 // File ini berisi helper unduhan khusus platform web.
 // File ini menyesuaikan proses unduhan agar kompatibel saat aplikasi dijalankan di browser web.
 
-import 'dart:html' as html;
+import 'dart:js_interop';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
+import 'package:web/web.dart' as web;
 
 Future<void> downloadAndOpenFileImpl({
   required Dio dio,
@@ -17,16 +18,20 @@ Future<void> downloadAndOpenFileImpl({
   );
 
   final bytes = Uint8List.fromList(response.data ?? <int>[]);
-  final blob = html.Blob([bytes], _mimeTypeForFileName(fileName));
-  final objectUrl = html.Url.createObjectUrlFromBlob(blob);
-  final anchor = html.AnchorElement(href: objectUrl)
+  final blob = web.Blob(
+    [bytes.toJS].toJS,
+    web.BlobPropertyBag(type: _mimeTypeForFileName(fileName)),
+  );
+  final objectUrl = web.URL.createObjectURL(blob);
+  final anchor = web.HTMLAnchorElement()
+    ..href = objectUrl
     ..download = fileName
     ..style.display = 'none';
 
-  html.document.body?.children.add(anchor);
+  web.document.body?.children.add(anchor);
   anchor.click();
   anchor.remove();
-  html.Url.revokeObjectUrl(objectUrl);
+  web.URL.revokeObjectURL(objectUrl);
 }
 
 String _mimeTypeForFileName(String fileName) {

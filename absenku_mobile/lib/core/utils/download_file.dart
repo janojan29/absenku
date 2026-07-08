@@ -4,7 +4,7 @@
 import 'package:dio/dio.dart';
 
 import 'download_file_io.dart'
-    if (dart.library.html) 'download_file_web.dart';
+    if (dart.library.js_interop) 'download_file_web.dart';
 
 Future<void> downloadAndOpenFile({
   required Dio dio,
