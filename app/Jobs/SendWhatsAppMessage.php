@@ -45,7 +45,13 @@ class SendWhatsAppMessage implements ShouldQueue
                 'error' => $e->getMessage(),
             ]);
 
-            throw $e;
+            // Log the error but do NOT re-throw when running synchronously,
+            // otherwise the caller (e.g. attendance check-in) will get a 500 error
+            // even though the attendance was saved successfully.
+            \Illuminate\Support\Facades\Log::error('WhatsApp send failed', [
+                'to' => $this->to,
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 }
