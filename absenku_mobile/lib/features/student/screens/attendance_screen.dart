@@ -395,10 +395,10 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                                           Row(
                                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                             children: [
-                                              Row(children: [
-                                                const Icon(Icons.schedule, size: 14, color: Color(0xFF60A5FA)),
-                                                const SizedBox(width: 6),
-                                                const Text('Waktu Absen Masuk', style: TextStyle(fontSize: 12, color: Color(0xFF475569))),
+                                              const Row(children: [
+                                                Icon(Icons.schedule, size: 14, color: Color(0xFF60A5FA)),
+                                                SizedBox(width: 6),
+                                                Text('Waktu Absen Masuk', style: TextStyle(fontSize: 12, color: Color(0xFF475569))),
                                               ]),
                                               Text('${db.checkInStart.length >= 5 ? db.checkInStart.substring(0, 5) : db.checkInStart} - ${db.checkInEnd.length >= 5 ? db.checkInEnd.substring(0, 5) : db.checkInEnd}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
                                             ],
@@ -407,10 +407,10 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                                           Row(
                                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                             children: [
-                                              Row(children: [
-                                                const Icon(Icons.timer_outlined, size: 14, color: Color(0xFF60A5FA)),
-                                                const SizedBox(width: 6),
-                                                const Text('Toleransi Terlambat', style: TextStyle(fontSize: 12, color: Color(0xFF475569))),
+                                              const Row(children: [
+                                                Icon(Icons.timer_outlined, size: 14, color: Color(0xFF60A5FA)),
+                                                SizedBox(width: 6),
+                                                Text('Toleransi Terlambat', style: TextStyle(fontSize: 12, color: Color(0xFF475569))),
                                               ]),
                                               Text('${db.lateToleranceMinutes} Menit', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
                                             ],
@@ -419,10 +419,10 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                                           Row(
                                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                             children: [
-                                              Row(children: [
-                                                const Icon(Icons.schedule, size: 14, color: Color(0xFF60A5FA)),
-                                                const SizedBox(width: 6),
-                                                const Text('Waktu Absen Pulang', style: TextStyle(fontSize: 12, color: Color(0xFF475569))),
+                                              const Row(children: [
+                                                Icon(Icons.schedule, size: 14, color: Color(0xFF60A5FA)),
+                                                SizedBox(width: 6),
+                                                Text('Waktu Absen Pulang', style: TextStyle(fontSize: 12, color: Color(0xFF475569))),
                                               ]),
                                               Text('${db.checkOutStart.length >= 5 ? db.checkOutStart.substring(0, 5) : db.checkOutStart} - ${db.checkOutEnd.length >= 5 ? db.checkOutEnd.substring(0, 5) : db.checkOutEnd}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
                                             ],
