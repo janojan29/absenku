@@ -131,26 +131,20 @@ export default function geolocationComponent(schoolLat = 0, schoolLng = 0, maxRa
             const samples = this._samples;
             if (samples.length < 3) return;
 
-            // Calculate standard deviation of latitude and longitude
-            const lats = samples.map(s => s.lat);
-            const lngs = samples.map(s => s.lng);
-
-            const latStdDev = this._stdDev(lats);
-            const lngStdDev = this._stdDev(lngs);
-
-            // Check 1: Zero variance = coordinates are exactly the same (very suspicious)
+            // Check: Zero variance = coordinates are exactly the same (very suspicious)
             // Real GPS always has micro-fluctuations (even indoors).
-            // Threshold: stddev < 0.0000001 degrees ≈ ~0.01mm — practically impossible for real GPS
-            if (latStdDev < 0.0000001 && lngStdDev < 0.0000001) {
-                this.isSuspicious = true;
-                this.suspiciousReason = 'fake GPS terdeteksi.';
+            // This matches the exact logic in Flutter and Backend.
+            let identical = true;
+            for (let i = 1; i < samples.length; i++) {
+                if (samples[i].lat !== samples[0].lat || samples[i].lng !== samples[0].lng) {
+                    identical = false;
+                    break;
+                }
             }
 
-            // Check 2: Accuracy too perfect (< 3m consistently)
-            const avgAccuracy = samples.reduce((sum, s) => sum + s.accuracy, 0) / samples.length;
-            if (avgAccuracy < 3) {
+            if (identical) {
                 this.isSuspicious = true;
-                this.suspiciousReason = 'fake GPS terdeteksi.';
+                this.suspiciousReason = 'Sistem mendeteksi penggunaan Fake GPS (Lokasi tidak natural/statis).';
             }
 
             this._stabilityChecked = true;

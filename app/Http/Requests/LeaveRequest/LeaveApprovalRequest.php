@@ -14,7 +14,7 @@ class LeaveApprovalRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'decision_note' => ['required', 'string', 'max:2000'],
+            'decision_note' => ['nullable', 'string', 'max:2000'],
         ];
     }
 }

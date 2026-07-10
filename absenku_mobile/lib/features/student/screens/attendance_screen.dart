@@ -185,7 +185,23 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                     ],
                   ),
                   actions: [
-                    IconButton(icon: const Icon(Icons.refresh), tooltip: 'Muat Ulang', onPressed: () => _loadData()),
+                    if (db.isLoading)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16),
+                        child: Center(
+                          child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                          ),
+                        ),
+                      )
+                    else
+                      IconButton(
+                        icon: const Icon(Icons.refresh, color: Colors.white),
+                        tooltip: 'Muat Ulang',
+                        onPressed: () => _loadData(),
+                      ),
                     InkWell(
                       onTap: () => ProfileBottomSheet.show(context, db),
                       child: Padding(
@@ -364,6 +380,56 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                                         ],
                                       ),
                                     ),
+                                    const SizedBox(height: 16),
+
+                                    // Schedule Info
+                                    Container(
+                                      padding: const EdgeInsets.all(14),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFEFF6FF), // blue-50
+                                        border: Border.all(color: const Color(0xFFDBEAFE)), // blue-100
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Column(
+                                        children: [
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Row(children: [
+                                                const Icon(Icons.schedule, size: 14, color: Color(0xFF60A5FA)),
+                                                const SizedBox(width: 6),
+                                                const Text('Waktu Absen Masuk', style: TextStyle(fontSize: 12, color: Color(0xFF475569))),
+                                              ]),
+                                              Text('${db.checkInStart.length >= 5 ? db.checkInStart.substring(0, 5) : db.checkInStart} - ${db.checkInEnd.length >= 5 ? db.checkInEnd.substring(0, 5) : db.checkInEnd}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Row(children: [
+                                                const Icon(Icons.timer_outlined, size: 14, color: Color(0xFF60A5FA)),
+                                                const SizedBox(width: 6),
+                                                const Text('Toleransi Terlambat', style: TextStyle(fontSize: 12, color: Color(0xFF475569))),
+                                              ]),
+                                              Text('${db.lateToleranceMinutes} Menit', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Row(children: [
+                                                const Icon(Icons.schedule, size: 14, color: Color(0xFF60A5FA)),
+                                                const SizedBox(width: 6),
+                                                const Text('Waktu Absen Pulang', style: TextStyle(fontSize: 12, color: Color(0xFF475569))),
+                                              ]),
+                                              Text('${db.checkOutStart.length >= 5 ? db.checkOutStart.substring(0, 5) : db.checkOutStart} - ${db.checkOutEnd.length >= 5 ? db.checkOutEnd.substring(0, 5) : db.checkOutEnd}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ),
@@ -409,6 +475,9 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     }
     if (db.hasApprovedAbsentLeaveToday) {
       return _buildInfoBox(Icons.check_circle_outline, 'Izin Tidak Masuk Disetujui', 'Absensi hari ini dikunci otomatis sebagai izin.', AppTheme.statusLeave, const Color(0xFFE0F2FE));
+    }
+    if (db.hasApprovedEarlyLeaveToday) {
+      return _buildInfoBox(Icons.verified, 'Izin Pulang Disetujui', 'Anda sudah diizinkan pulang lebih awal.', AppTheme.statusLeave, const Color(0xFFE0F2FE));
     }
     if (todayAttendance.checkInAt == null) {
       return SizedBox(
@@ -537,7 +606,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
               width: double.infinity, padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(color: const Color(0xFFF1F5F9), border: Border.all(color: const Color(0xFFE2E8F0)), borderRadius: BorderRadius.circular(8)),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(row.leaveRequest!.type == 'early_leave' ? 'Izin Pulang Mendahului' : 'Izin Tidak Masuk',
+                Text(row.leaveRequest!.type == 'early_leave' ? 'Izin Pulang Lebih Awal' : 'Izin Tidak Masuk',
                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: AppTheme.textDark)),
                 if (row.leaveRequest!.keterangan.isNotEmpty)
                   Text('"${row.leaveRequest!.keterangan}"', style: const TextStyle(fontSize: 11, fontStyle: FontStyle.italic, color: AppTheme.textMuted)),

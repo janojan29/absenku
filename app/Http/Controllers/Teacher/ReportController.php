@@ -258,22 +258,29 @@ class ReportController extends Controller
             $attendance = $attendances->get($sp->user_id);
             $leave = $leaveRequests->get($sp->user_id);
             $hasApprovedAbsentLeave = $leave && $leave->status === 'approved' && $leave->type === 'absent';
+            $hasApprovedEarlyLeave = $leave && $leave->status === 'approved' && $leave->type === 'early_leave';
             $attendanceStatus = null;
 
             if ($attendance && $attendance->check_in_at !== null) {
-                $checkOutEnd = Carbon::parse($date->toDateString() . ' ' . $setting->check_out_end_time);
-                $isMissingCheckout = $attendance->check_out_at === null;
-                $isPastOrEnded = $date->lt(Carbon::today()) || (now()->greaterThan($checkOutEnd));
-
-                if ($isMissingCheckout && $isPastOrEnded) {
-                    $attendanceStatus = 'absent';
-                } else {
+                // If attendance status is already explicitly 'leave' or 'sick', keep it
+                if (in_array($attendance->status, ['leave', 'sick'])) {
                     $attendanceStatus = $attendance->status;
-                    if (empty($attendanceStatus)) {
-                        $endCheckIn = Carbon::parse($date->toDateString() . ' ' . $setting->check_in_end_time);
-                        $lateAt = (clone $endCheckIn)->subMinutes((int) $setting->late_tolerance_minutes);
-                        $checkInAt = Carbon::parse($attendance->check_in_at);
-                        $attendanceStatus = $checkInAt->greaterThan($lateAt) ? 'late' : 'present';
+                } else {
+                    $checkOutEnd = Carbon::parse($date->toDateString() . ' ' . $setting->check_out_end_time);
+                    $isMissingCheckout = $attendance->check_out_at === null;
+                    $isPastOrEnded = $date->lt(Carbon::today()) || (now()->greaterThan($checkOutEnd));
+
+                    if ($isMissingCheckout && $isPastOrEnded) {
+                        // If there's an approved early_leave, mark as 'leave' instead of 'absent'
+                        $attendanceStatus = $hasApprovedEarlyLeave ? 'leave' : 'absent';
+                    } else {
+                        $attendanceStatus = $attendance->status;
+                        if (empty($attendanceStatus)) {
+                            $endCheckIn = Carbon::parse($date->toDateString() . ' ' . $setting->check_in_end_time);
+                            $lateAt = (clone $endCheckIn)->subMinutes((int) $setting->late_tolerance_minutes);
+                            $checkInAt = Carbon::parse($attendance->check_in_at);
+                            $attendanceStatus = $checkInAt->greaterThan($lateAt) ? 'late' : 'present';
+                        }
                     }
                 }
             } elseif ($attendance) {
@@ -439,19 +446,24 @@ class ReportController extends Controller
             $status = null;
 
             if ($attendance->check_in_at !== null) {
-                $checkOutEnd = Carbon::parse($dateKey . ' ' . $setting->check_out_end_time);
-                $isMissingCheckout = $attendance->check_out_at === null;
-                $isPastOrEnded = Carbon::parse($dateKey)->lt(Carbon::today()) || (now()->greaterThan($checkOutEnd));
-
-                if ($isMissingCheckout && $isPastOrEnded) {
-                    $status = 'absent';
-                } else {
+                // If attendance status is already explicitly 'leave' or 'sick', keep it
+                if (in_array($attendance->status, ['leave', 'sick'])) {
                     $status = $attendance->status;
-                    if (empty($status)) {
-                        $endCheckIn = Carbon::parse($dateKey . ' ' . $setting->check_in_end_time);
-                        $lateAt = (clone $endCheckIn)->subMinutes((int) $setting->late_tolerance_minutes);
-                        $checkInAt = Carbon::parse($attendance->check_in_at);
-                        $status = $checkInAt->greaterThan($lateAt) ? 'late' : 'present';
+                } else {
+                    $checkOutEnd = Carbon::parse($dateKey . ' ' . $setting->check_out_end_time);
+                    $isMissingCheckout = $attendance->check_out_at === null;
+                    $isPastOrEnded = Carbon::parse($dateKey)->lt(Carbon::today()) || (now()->greaterThan($checkOutEnd));
+
+                    if ($isMissingCheckout && $isPastOrEnded) {
+                        $status = 'absent';
+                    } else {
+                        $status = $attendance->status;
+                        if (empty($status)) {
+                            $endCheckIn = Carbon::parse($dateKey . ' ' . $setting->check_in_end_time);
+                            $lateAt = (clone $endCheckIn)->subMinutes((int) $setting->late_tolerance_minutes);
+                            $checkInAt = Carbon::parse($attendance->check_in_at);
+                            $status = $checkInAt->greaterThan($lateAt) ? 'late' : 'present';
+                        }
                     }
                 }
             }
@@ -486,7 +498,7 @@ class ReportController extends Controller
                     $hadir++;
                 } elseif ($status === 'late') {
                     $telat++;
-                } elseif ($status === 'leave' || $hasLeave) {
+                } elseif ($status === 'leave' || $status === 'sick' || $hasLeave) {
                     $izin++;
                 } else {
                     $alfa++;

@@ -57,6 +57,7 @@ class MockDatabase extends ChangeNotifier {
   LeaveRequest? _todayLeaveSubmission;
   List<String> _absentBlockedDates = [];
   bool _earlyLeaveBlockedToday = false;
+  bool _hasApprovedEarlyLeaveToday = false;
 
   // Teacher dashboard data
   Map<String, int> _dashboardCounts = {};
@@ -101,6 +102,7 @@ class MockDatabase extends ChangeNotifier {
   LeaveRequest? get todayLeaveSubmission => _todayLeaveSubmission;
   List<String> get absentBlockedDates => _absentBlockedDates;
   bool get earlyLeaveBlockedToday => _earlyLeaveBlockedToday;
+  bool get hasApprovedEarlyLeaveToday => _hasApprovedEarlyLeaveToday;
   bool get mustChangePassword => _mustChangePassword;
   void clearMustChangePassword() {
     _mustChangePassword = false;
@@ -210,6 +212,7 @@ class MockDatabase extends ChangeNotifier {
     _todayLeaveSubmission = null;
     _absentBlockedDates = [];
     _earlyLeaveBlockedToday = false;
+    _hasApprovedEarlyLeaveToday = false;
     notifyListeners();
   }
 
@@ -366,6 +369,7 @@ class MockDatabase extends ChangeNotifier {
           _checkInEnd = setting['check_in_end_time'] as String? ?? _checkInEnd;
           _checkOutStart = setting['check_out_start_time'] as String? ?? _checkOutStart;
           _checkOutEnd = setting['check_out_end_time'] as String? ?? _checkOutEnd;
+          _lateToleranceMinutes = (setting['late_tolerance_minutes'] as num?)?.toInt() ?? _lateToleranceMinutes;
         }
 
         // Parse boolean flags from server
@@ -380,6 +384,7 @@ class MockDatabase extends ChangeNotifier {
         _isAttendanceActive = data['is_attendance_active'] as bool? ?? true;
         _absentBlockedDates = (data['absent_blocked_dates'] as List?)?.map((e) => e.toString()).toList() ?? [];
         _earlyLeaveBlockedToday = data['early_leave_blocked_today'] as bool? ?? false;
+        _hasApprovedEarlyLeaveToday = data['has_approved_early_leave_today'] as bool? ?? false;
 
         // Parse today's leave submission
         if (data['today_leave_submission'] != null) {

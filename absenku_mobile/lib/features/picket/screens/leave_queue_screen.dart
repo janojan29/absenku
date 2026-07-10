@@ -324,19 +324,31 @@ class _LeaveQueueScreenState extends State<LeaveQueueScreen> {
                           style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 8), side: const BorderSide(color: AppTheme.borderLight))),
                       const SizedBox(height: 12),
                       Row(children: [
-                        Expanded(child: ElevatedButton.icon(
+                        Expanded(child: SizedBox(height: 44, child: ElevatedButton(
                           onPressed: () => _downloadReport('excel'),
-                          icon: const Icon(Icons.table_chart, size: 18),
-                          label: const Text('Ekspor Excel'),
-                          style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                        )),
+                          style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white, padding: EdgeInsets.zero),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.table_chart, size: 16),
+                              SizedBox(width: 6),
+                              Text('Ekspor Excel', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis),
+                            ],
+                          ),
+                        ))),
                         const SizedBox(width: 12),
-                        Expanded(child: ElevatedButton.icon(
+                        Expanded(child: SizedBox(height: 44, child: ElevatedButton(
                           onPressed: () => _downloadReport('pdf'),
-                          icon: const Icon(Icons.picture_as_pdf, size: 18),
-                          label: const Text('Ekspor PDF'),
-                          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                        )),
+                          style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white, padding: EdgeInsets.zero),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.picture_as_pdf, size: 16),
+                              SizedBox(width: 6),
+                              Text('Ekspor PDF', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis),
+                            ],
+                          ),
+                        ))),
                       ]),
                     ],
                   ),

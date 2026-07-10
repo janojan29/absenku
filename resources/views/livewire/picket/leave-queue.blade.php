@@ -202,12 +202,12 @@
         </div>
 
         {{-- Export Buttons --}}
-        <div class="flex flex-wrap gap-2 mb-5">
-            <button wire:click="exportExcel" type="button" class="btn-secondary gap-2 text-sm" style="height:38px; min-height:38px; border-radius:10px; padding:0 14px; white-space:nowrap;">
+        <div class="flex gap-3 mb-5">
+            <button wire:click="exportExcel" type="button" class="btn-secondary gap-2 text-sm flex-1 justify-center text-emerald-700 bg-emerald-50 border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300" style="height:38px; min-height:38px; border-radius:10px; padding:0 14px; white-space:nowrap;">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
                 Ekspor Excel
             </button>
-            <button wire:click="exportPdf" type="button" class="btn-secondary gap-2 text-sm" style="height:38px; min-height:38px; border-radius:10px; padding:0 14px; white-space:nowrap;">
+            <button wire:click="exportPdf" type="button" class="btn-secondary gap-2 text-sm flex-1 justify-center text-red-700 bg-red-50 border-red-200 hover:bg-red-100 hover:border-red-300" style="height:38px; min-height:38px; border-radius:10px; padding:0 14px; white-space:nowrap;">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>
                 Ekspor PDF
             </button>

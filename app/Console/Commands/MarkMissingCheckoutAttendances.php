@@ -52,6 +52,13 @@ class MarkMissingCheckoutAttendances extends Command
                         ->exists();
 
                     if ($hasApprovedLeave) {
+                        // For approved early_leave with missing checkout, auto-fill
+                        // (fixes legacy data from before auto-checkout was implemented)
+                        if ($attendance->status !== 'leave' && $attendance->status !== 'sick') {
+                            $attendance->update([
+                                'status' => 'leave',
+                            ]);
+                        }
                         continue;
                     }
 

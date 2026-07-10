@@ -207,19 +207,31 @@ class _ReportScreenState extends State<ReportScreen> with SingleTickerProviderSt
             )),
             const SizedBox(height: 12),
             Row(children: [
-              Expanded(child: ElevatedButton.icon(
+              Expanded(child: SizedBox(height: 44, child: ElevatedButton(
                 onPressed: () => _downloadReport('excel', false),
-                icon: const Icon(Icons.table_chart, size: 18),
-                label: const Text('Ekspor Excel'),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-              )),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white, padding: EdgeInsets.zero),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.table_chart, size: 16),
+                    SizedBox(width: 6),
+                    Text('Ekspor Excel', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  ],
+                ),
+              ))),
               const SizedBox(width: 12),
-              Expanded(child: ElevatedButton.icon(
+              Expanded(child: SizedBox(height: 44, child: ElevatedButton(
                 onPressed: () => _downloadReport('pdf', false),
-                icon: const Icon(Icons.picture_as_pdf, size: 18),
-                label: const Text('Ekspor PDF'),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              )),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white, padding: EdgeInsets.zero),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.picture_as_pdf, size: 16),
+                    SizedBox(width: 6),
+                    Text('Ekspor PDF', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  ],
+                ),
+              ))),
             ]),
           ]),
         ),
@@ -327,19 +339,31 @@ class _ReportScreenState extends State<ReportScreen> with SingleTickerProviderSt
             )),
             const SizedBox(height: 12),
             Row(children: [
-              Expanded(child: ElevatedButton.icon(
+              Expanded(child: SizedBox(height: 44, child: ElevatedButton(
                 onPressed: () => _downloadReport('excel', true),
-                icon: const Icon(Icons.table_chart, size: 18),
-                label: const Text('Ekspor Excel'),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-              )),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white, padding: EdgeInsets.zero),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.table_chart, size: 16),
+                    SizedBox(width: 6),
+                    Text('Ekspor Excel', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  ],
+                ),
+              ))),
               const SizedBox(width: 12),
-              Expanded(child: ElevatedButton.icon(
+              Expanded(child: SizedBox(height: 44, child: ElevatedButton(
                 onPressed: () => _downloadReport('pdf', true),
-                icon: const Icon(Icons.picture_as_pdf, size: 18),
-                label: const Text('Ekspor PDF'),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              )),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white, padding: EdgeInsets.zero),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.picture_as_pdf, size: 16),
+                    SizedBox(width: 6),
+                    Text('Ekspor PDF', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  ],
+                ),
+              ))),
             ]),
           ]),
         ),

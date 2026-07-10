@@ -2,6 +2,7 @@
 
 namespace App\Services\Leave;
 
+use App\Events\AttendanceUpdated;
 use App\Events\LeaveRequestUpdated;
 use App\Jobs\SendWhatsAppMessage;
 use App\Models\Attendance;
@@ -28,12 +29,35 @@ class LeaveApprovalService
                 'decision_note' => $decisionNote,
             ]);
 
-            if ($leaveRequest->type === 'absent' && !\App\Helpers\HolidayHelper::isHoliday($leaveRequest->date)) {
-                $statusToSet = $leaveRequest->reason === 'sick' ? 'sick' : 'leave';
-                Attendance::query()->updateOrCreate(
-                    ['user_id' => $leaveRequest->user_id, 'date' => $leaveRequest->date->toDateString()],
-                    ['status' => $statusToSet],
-                );
+            if (!\App\Helpers\HolidayHelper::isHoliday($leaveRequest->date)) {
+                if ($leaveRequest->type === 'absent') {
+                    $statusToSet = $leaveRequest->reason === 'sick' ? 'sick' : 'leave';
+                    Attendance::query()->updateOrCreate(
+                        ['user_id' => $leaveRequest->user_id, 'date' => $leaveRequest->date->toDateString()],
+                        ['status' => $statusToSet],
+                    );
+                } elseif ($leaveRequest->type === 'early_leave') {
+                    // Auto-fill checkout when early leave is approved
+                    // so the student doesn't need to (and can't) do manual checkout
+                    $attendance = Attendance::query()
+                        ->where('user_id', $leaveRequest->user_id)
+                        ->whereDate('date', $leaveRequest->date)
+                        ->first();
+
+                    if ($attendance && $attendance->check_in_at !== null && $attendance->check_out_at === null) {
+                        $attendance->update([
+                            'check_out_at' => now(),
+                            'status' => 'leave',
+                        ]);
+
+                        // Broadcast attendance update so Teacher Dashboard refreshes
+                        $student = User::find($leaveRequest->user_id);
+                        $classRoomId = (int) ($student?->studentProfile?->class_room_id ?? 0);
+                        if ($classRoomId > 0) {
+                            event(new AttendanceUpdated($attendance->fresh(), $classRoomId));
+                        }
+                    }
+                }
             }
 
             event(new LeaveRequestUpdated($leaveRequest));

@@ -47,7 +47,7 @@ class Dashboard extends Component
         $setting = SchoolSetting::singleton();
 
         $today = Carbon::today();
-        \Log::info('Dashboard classRoomId: ' . json_encode($this->classRoomId));
+
 
         $studentUserIds = StudentProfile::query()
             ->when($this->classRoomId, fn($q) => $q->where('class_room_id', $this->classRoomId))
@@ -85,17 +85,24 @@ class Dashboard extends Component
             $leave = $approvedLeaves->get($userId);
 
             if ($attendance && $attendance->check_in_at !== null) {
-                $checkInAt = Carbon::parse($attendance->check_in_at);
-                if ($checkInAt->greaterThan($lateAt)) {
-                    $effectiveStatuses[$userId] = 'late';
-                    $lateMinutes = $attendance->late_minutes;
-                    if (empty($lateMinutes)) {
-                        $lateMinutes = (int) $checkInAt->diffInMinutes($lateAt);
-                    }
-                    $statusLabels[$userId] = $lateMinutes > 0 ? "Terlambat ({$lateMinutes} Menit)" : "Terlambat";
+                // Cek dulu apakah status 'leave' atau 'sick' (izin pulang duluan yang di-ACC)
+                if (in_array($attendance->status, ['leave', 'sick'])) {
+                    $isSick = $attendance->status === 'sick' || ($leave && $leave->reason === 'sick');
+                    $effectiveStatuses[$userId] = $isSick ? 'sick' : 'leave';
+                    $statusLabels[$userId] = $isSick ? 'Sakit' : 'Izin';
                 } else {
-                    $effectiveStatuses[$userId] = 'present';
-                    $statusLabels[$userId] = 'Hadir';
+                    $checkInAt = Carbon::parse($attendance->check_in_at);
+                    if ($checkInAt->greaterThan($lateAt)) {
+                        $effectiveStatuses[$userId] = 'late';
+                        $lateMinutes = $attendance->late_minutes;
+                        if (empty($lateMinutes)) {
+                            $lateMinutes = (int) $checkInAt->diffInMinutes($lateAt);
+                        }
+                        $statusLabels[$userId] = $lateMinutes > 0 ? "Terlambat ({$lateMinutes} Menit)" : "Terlambat";
+                    } else {
+                        $effectiveStatuses[$userId] = 'present';
+                        $statusLabels[$userId] = 'Hadir';
+                    }
                 }
             } elseif ($attendance && $attendance->status === 'leave') {
                 $isSick = ($leave && $leave->reason === 'sick');

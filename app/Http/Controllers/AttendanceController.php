@@ -27,6 +27,7 @@ class AttendanceController extends Controller
         $recent = Attendance::query()
             ->where('user_id', $user->id)
             ->orderByDesc('date')
+            ->limit(30)
             ->get()
             ->filter(fn ($item) => !\App\Helpers\HolidayHelper::isHoliday($item->date))
             ->take(7)
@@ -93,8 +94,19 @@ class AttendanceController extends Controller
         $isAfterCheckOutEnd = $now->greaterThan($checkOutEnd);
         $canCheckOutNow = $hasReachedCheckOutStart && ! $isAfterCheckOutEnd && !$isHolidayToday && $isAttendanceActive;
 
+        $hasApprovedEarlyLeaveToday = LeaveRequest::query()
+            ->where('user_id', $user->id)
+            ->whereDate('date', $today)
+            ->where('type', 'early_leave')
+            ->where('status', 'approved')
+            ->exists();
+
         if ($hasApprovedAbsentLeaveToday) {
             $canCheckInNow = false;
+            $canCheckOutNow = false;
+        }
+
+        if ($hasApprovedEarlyLeaveToday) {
             $canCheckOutNow = false;
         }
 

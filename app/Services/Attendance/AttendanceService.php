@@ -15,9 +15,6 @@ use Illuminate\Validation\ValidationException;
 
 class AttendanceService
 {
-    /** GPS accuracy below this value (meters) is suspiciously perfect → likely fake GPS */
-    private const MIN_ACCURACY_METERS = 5.0;
-
     /** GPS accuracy above this value (meters) is too imprecise to trust */
     private const MAX_ACCURACY_METERS = 100.0;
 
@@ -167,6 +164,19 @@ class AttendanceService
             ]);
         }
 
+        $hasApprovedEarlyLeave = LeaveRequest::query()
+            ->where('user_id', $user->id)
+            ->whereDate('date', $today)
+            ->where('type', 'early_leave')
+            ->where('status', 'approved')
+            ->exists();
+
+        if ($hasApprovedEarlyLeave) {
+            throw ValidationException::withMessages([
+                'check_out' => 'Izin pulang lebih awal kamu sudah disetujui. Absen pulang otomatis tercatat saat izin di-ACC.',
+            ]);
+        }
+
         $attendance = Attendance::query()
             ->where('user_id', $user->id)
             ->whereDate('date', $today)
@@ -273,11 +283,6 @@ class AttendanceService
             }
         }
 
-        if ($accuracy < self::MIN_ACCURACY_METERS) {
-            throw ValidationException::withMessages([
-                'geo' => 'Akurasi GPS mencurigakan (' . round($accuracy, 1) . 'm). Pastikan kamu tidak menggunakan fake GPS.',
-            ]);
-        }
 
         if ($accuracy > self::MAX_ACCURACY_METERS) {
             throw ValidationException::withMessages([
