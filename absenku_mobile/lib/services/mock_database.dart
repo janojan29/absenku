@@ -567,7 +567,7 @@ class MockDatabase extends ChangeNotifier {
 
     try {
       final queryParams = <String, dynamic>{'page': page};
-      if (classRoomId != null && classRoomId != 'all') {
+      if (classRoomId != null) {
         queryParams['class_room_id'] = classRoomId;
       }
       if (search != null && search.isNotEmpty) {

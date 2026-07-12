@@ -28,6 +28,7 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  // Fungsi yang dieksekusi ketika pengguna menekan tombol "MASUK" untuk melakukan autentikasi
   void _login(String identifier) async {
     setState(() {
       _isLoading = true;
@@ -53,6 +54,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  // Fungsi utama untuk merender (membangun) tampilan antarmuka form Login
   @override
   Widget build(BuildContext context) {
     return Scaffold(

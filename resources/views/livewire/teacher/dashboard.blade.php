@@ -70,7 +70,7 @@
                             $label = $statusLabels[$student->user_id] ?? null;
                             $attendance = $attendances->get($student->user_id);
                         @endphp
-                        <tr class="table-row group hover:bg-navy-50/50 transition-colors duration-200 relative">
+                        <tr class="table-row group hover:bg-navy-50/50 transition-colors duration-200 relative" wire:key="student-{{ $student->id }}">
                             <td class="py-3 px-4">
                                 <div class="flex items-center gap-3">
                                     <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-navy-500/20 to-navy-600/20 flex items-center justify-center shrink-0">

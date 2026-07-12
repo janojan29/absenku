@@ -448,6 +448,8 @@ class _SettingsTabState extends State<_SettingsTab> {
     super.dispose();
   }
 
+  // Fungsi yang dieksekusi saat Admin menekan tombol "SIMPAN SEMUA PENGATURAN"
+  // Fungsi ini memvalidasi form dan mengirim data koordinat GPS, jadwal, serta toleransi absen ke server.
   void _save(MockDatabase db) async {
     if (!_formKey.currentState!.validate()) return;
 

@@ -45,6 +45,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  // Fungsi untuk menyimpan perubahan/update Nomor WhatsApp ke database
   Future<void> _submitUpdatePhone() async {
     final phone = _phoneController.text.trim();
     if (phone.isEmpty) {
@@ -76,6 +77,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  // Fungsi untuk menyimpan password baru dan memvalidasi password lama
   Future<void> _submitChangePassword() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -111,6 +113,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  // Fungsi utama untuk merender (membangun) tampilan antarmuka form Profil dan Ganti Password
   @override
   Widget build(BuildContext context) {
     final db = MockDatabase();
@@ -390,6 +393,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  // Fungsi pembantu untuk merender baris informasi profil secara rapi (seperti NISN, Email, Kelas)
   Widget _buildInfoRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),

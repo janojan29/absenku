@@ -22,6 +22,7 @@ class TeacherDashboardScreen extends StatefulWidget {
 class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
   int _currentIndex = 0;
 
+  // Fungsi untuk merender kerangka utama halaman (AppBar & Bottom Navigation) dan berpindah antar tab
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
@@ -137,6 +138,7 @@ class _TodaySummaryTabState extends State<_TodaySummaryTab> {
     _loadData();
   }
 
+  // Fungsi untuk mengambil data statistik absensi dan daftar siswa dari database/server
   Future<void> _loadData({String? classRoomId, String? search, int page = 1}) async {
     await MockDatabase().fetchTeacherDashboard(classRoomId: classRoomId, search: search, page: page);
     if (mounted) {
@@ -154,6 +156,7 @@ class _TodaySummaryTabState extends State<_TodaySummaryTab> {
     super.dispose();
   }
 
+  // Fungsi utama untuk merender (membangun) tampilan Tab Ringkasan Hari Ini
   @override
   Widget build(BuildContext context) {
     if (_initialLoading) return const Center(child: CircularProgressIndicator());
@@ -361,6 +364,7 @@ class _TodaySummaryTabState extends State<_TodaySummaryTab> {
     );
   }
 
+  // Fungsi pembantu untuk membuat kotak kartu statistik (seperti jumlah Hadir, Terlambat, dll)
   Widget _buildStatCard(String title, int count, Color color, IconData icon) {
     return Container(
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppTheme.borderLight)),
@@ -381,6 +385,7 @@ class _TodaySummaryTabState extends State<_TodaySummaryTab> {
     );
   }
 
+  // Fungsi untuk memunculkan modal/dialog "Laporkan Keluar" ketika nama siswa diklik
   void _showReportDialog(BuildContext context, String studentProfileId, String studentName) {
     final subjectController = TextEditingController();
     final descriptionController = TextEditingController();

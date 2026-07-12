@@ -76,7 +76,12 @@ class MarkMissingCheckoutAttendances extends Command
                         event(new AttendanceUpdated($attendance->fresh(), $classRoomId));
                     }
 
-                    $message = 'Informasi: ' . $user->name . ' sudah absen masuk namun tidak melakukan absen pulang pada ' . $date->format('d/m/Y') . '. (Status: ALFA)';
+                    $checkInTime = $attendance->check_in_at ? Carbon::parse($attendance->check_in_at)->format('H:i') : '-';
+                    $message = "Yth. Bapak/Ibu Orang Tua/Wali dari *{$user->name}*.\n\n"
+                             . "Menginformasikan bahwa pada hari ini, tanggal *{$date->format('d/m/Y')}*, ananda tercatat *hadir di sekolah* pada pukul *{$checkInTime} WIB*.\n"
+                             . "Namun hingga jam pulang sekolah berakhir, ananda *tidak melakukan absensi pulang (Status: ALFA)* tanpa izin/keterangan yang jelas.\n\n"
+                             . "Mohon bantuan Bapak/Ibu untuk mengkonfirmasi keberadaan ananda saat ini demi keamanan, keselamatan, dan kedisiplinan siswa.\n\n"
+                             . "Terima kasih atas perhatian dan kerjasamanya.";
 
                     $parentWa = $user->studentProfile?->parent_phone_wa ?: $user->studentProfile?->parent_whatsapp_number;
                     if (! empty($parentWa)) {

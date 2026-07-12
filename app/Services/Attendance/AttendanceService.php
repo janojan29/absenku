@@ -118,7 +118,12 @@ class AttendanceService
             }
 
             if ($status === 'late' && ! $hasApprovedLeaveToday) {
-                $message = 'Informasi: ' . $user->name . ' terlambat absen masuk pada ' . now()->format('d/m/Y H:i') . '. (Status: TERLAMBAT)';
+                $lateTime = now()->format('H:i');
+                $message = "Yth. Bapak/Ibu Orang Tua/Wali dari *{$user->name}*.\n\n"
+                         . "Menginformasikan bahwa pada hari ini, tanggal *" . now()->format('d/m/Y') . "*, ananda tercatat *hadir di sekolah* pada pukul *{$lateTime} WIB*.\n"
+                         . "Namun, jam kehadiran ananda melebihi batas waktu masuk sekolah *(Status: TERLAMBAT)*.\n\n"
+                         . "Mohon bantuan Bapak/Ibu untuk memberikan pembinaan terkait kedisiplinan waktu ananda.\n\n"
+                         . "Terima kasih atas perhatian dan kerjasamanya.";
                 $parentWa = $user->studentProfile?->parent_phone_wa ?: $user->studentProfile?->parent_whatsapp_number;
                 if (! empty($parentWa)) {
                     SendWhatsAppMessage::dispatch(

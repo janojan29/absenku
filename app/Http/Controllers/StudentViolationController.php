@@ -41,7 +41,8 @@ class StudentViolationController extends Controller
         ]);
 
         // 3. Susun isi pesan Bahasa Indonesia
-        $pesan = "Yth. Bapak/Ibu Orang Tua/Wali dari *{$siswa->user->name}*.\n\n"
+        $namaSiswa = $siswa->user ? $siswa->user->name : 'Siswa';
+        $pesan = "Yth. Bapak/Ibu Orang Tua/Wali dari *{$namaSiswa}*.\n\n"
                . "Menginformasikan bahwa ananda tercatat telah *hadir di sekolah* pada pukul *{$waktuHadir} WIB*. "
                . "Namun, pada pukul *{$waktuKejadian->format('H:i')} WIB* (saat Mata Pelajaran {$request->subject}), "
                . "ananda didapati *tidak berada di dalam ruang kelas* tanpa keterangan yang jelas.\n\n"
@@ -49,7 +50,7 @@ class StudentViolationController extends Controller
                . "Terima kasih atas perhatian dan kerjasamanya.";
 
         // 4. Kirim notifikasi WhatsApp ke orang tua
-        $nomorTujuan = $siswa->parent_phone_wa ?? $siswa->parent_whatsapp_number;
+        $nomorTujuan = $siswa->parent_phone_wa ?: $siswa->parent_whatsapp_number;
         
         if (empty($nomorTujuan)) {
             return response()->json(['message' => 'Laporan dicatat, namun WA tidak terkirim karena nomor HP orang tua kosong di database.']);

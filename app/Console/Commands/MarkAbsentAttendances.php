@@ -71,7 +71,10 @@ class MarkAbsentAttendances extends Command
 
                     event(new AttendanceUpdated($attendance, (int) $sp->class_room_id));
 
-                    $message = 'Informasi: ' . $sp->user->name . ' tidak melakukan absensi masuk pada ' . $date->format('d/m/Y') . '. (Status: ALFA)';
+                    $message = "Yth. Bapak/Ibu Orang Tua/Wali dari *{$sp->user->name}*.\n\n"
+                             . "Menginformasikan bahwa pada hari ini, tanggal *{$date->format('d/m/Y')}*, ananda tercatat *tidak melakukan absensi masuk (Status: ALFA)* tanpa keterangan yang jelas.\n\n"
+                             . "Mohon bantuan Bapak/Ibu untuk turut mengkonfirmasi alasan ketidakhadiran ananda demi kelancaran proses belajar dan kedisiplinan siswa.\n\n"
+                             . "Terima kasih atas perhatian dan kerjasamanya.";
 
                     $parentWa = $sp->parent_phone_wa ?: $sp->parent_whatsapp_number;
                     if (! empty($parentWa)) {

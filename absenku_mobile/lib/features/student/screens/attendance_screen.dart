@@ -41,6 +41,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     _startLocationUpdates();
   }
 
+  // Fungsi untuk memulai pemantauan lokasi GPS secara real-time dan mendeteksi Fake GPS
   Future<void> _startLocationUpdates() async {
     try {
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -93,6 +94,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     }
   }
 
+  // Fungsi untuk mengambil/memuat data absensi terbaru siswa dari server/database
   Future<void> _loadData() async {
     await MockDatabase().fetchAttendanceData();
     if (mounted) {
@@ -109,6 +111,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     super.dispose();
   }
 
+  // Fungsi untuk memperbarui jam dan tanggal yang tampil di layar setiap detiknya
   void _updateTime() {
     if (!mounted) return;
     final now = DateTime.now();
@@ -118,6 +121,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     });
   }
 
+  // Fungsi utama untuk merender (membangun) tampilan layar absensi secara keseluruhan
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
@@ -466,6 +470,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     );
   }
 
+  // Fungsi untuk merender tombol aksi utama (Misal: Tombol Absen Masuk, Tombol Absen Pulang, atau Info Absensi Ditutup)
   Widget _buildActionButton(MockDatabase db, Attendance todayAttendance, bool isInRange, bool canCheckInNow, bool canCheckOutNow, bool isAfterCheckInEnd, bool isAfterCheckOutEnd) {
     if (!db.isAttendanceActive) {
       return _buildInfoBox(Icons.block, 'Absensi Dinonaktifkan', 'Akses absensi saat ini sedang ditutup oleh Admin.', const Color(0xFFDC2626), const Color(0xFFFEF2F2));
@@ -510,6 +515,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     return _buildInfoBox(Icons.verified, 'Absensi Selesai', 'Sudah absen masuk & absen pulang hari ini', AppTheme.statusPresent, const Color(0xFFECFDF5));
   }
 
+  // Fungsi pembantu untuk membuat kotak informasi (digunakan saat absensi ditutup, libur, atau selesai absen)
   Widget _buildInfoBox(IconData icon, String title, String subtitle, Color color, Color bg) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -524,6 +530,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     );
   }
 
+  // Fungsi yang dieksekusi ketika siswa menekan "Tombol Absen Masuk"
   Future<void> _doCheckIn(MockDatabase db) async {
     try {
       final msg = await _attendanceService.checkIn(db.deviceLatitude, db.deviceLongitude);
@@ -535,6 +542,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     }
   }
 
+  // Fungsi yang dieksekusi ketika siswa menekan "Tombol Absen Pulang"
   Future<void> _doCheckOut(MockDatabase db) async {
     try {
       final msg = await _attendanceService.checkOut(db.deviceLatitude, db.deviceLongitude);
@@ -546,6 +554,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     }
   }
 
+  // Fungsi untuk merender bagian "Riwayat 7 Hari" absensi siswa di bagian bawah layar
   Widget _buildHistorySection(List<Attendance> recentHistory) {
     return Container(
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppTheme.borderLight)),
@@ -568,6 +577,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     );
   }
 
+  // Fungsi pembantu untuk merender setiap satu baris data di daftar riwayat absensi
   Widget _buildHistoryItem(Attendance row) {
     final dateStr = DateFormat('dd/MM/yyyy').format(row.date);
     final checkInStr = row.checkInAt != null ? DateFormat('HH:mm').format(row.checkInAt!) : '—';
@@ -618,6 +628,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     );
   }
 
+  // Fungsi untuk merender kotak pemberitahuan (banner) status pengajuan izin saat ini
   Widget _buildLeaveStatusBanner(LeaveRequest leave) {
     Color color;
     String statusLabel;

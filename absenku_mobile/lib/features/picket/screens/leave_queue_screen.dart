@@ -66,6 +66,7 @@ class _LeaveQueueScreenState extends State<LeaveQueueScreen> {
     });
   }
 
+  // Fungsi untuk mengekspor (mendownload) laporan riwayat izin ke dalam format PDF atau Excel
   void _downloadReport(String type) async {
     try {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Mengunduh riwayat izin...')));
@@ -99,6 +100,7 @@ class _LeaveQueueScreenState extends State<LeaveQueueScreen> {
     }
   }
 
+  // Fungsi yang dipanggil ketika tombol "TERIMA" atau "TOLAK" diklik pada pengajuan izin yang pending
   void _processLeave(String id, bool approve) {
     _noteController.clear();
     showDialog(
@@ -149,6 +151,7 @@ class _LeaveQueueScreenState extends State<LeaveQueueScreen> {
     );
   }
 
+  // Fungsi utama untuk merender (membangun) keseluruhan antarmuka layar Antrean Izin
   @override
   Widget build(BuildContext context) {
     if (_initialLoading) return const Center(child: CircularProgressIndicator());
@@ -393,6 +396,7 @@ class _LeaveQueueScreenState extends State<LeaveQueueScreen> {
     );
   }
 
+  // Fungsi pembantu untuk merender satu kotak (card) pengajuan izin yang sedang pending/menunggu
   Widget _buildPendingCard(dynamic leave) {
     final studentName = leave.userName ?? 'Unknown';
     final className = leave.userClassName ?? '-';
@@ -446,6 +450,7 @@ class _LeaveQueueScreenState extends State<LeaveQueueScreen> {
     );
   }
 
+  // Fungsi pembantu untuk merender satu kotak (card) pada bagian riwayat izin yang sudah diproses
   Widget _buildHistoryCard(dynamic leave) {
     final studentName = leave.userName ?? 'Unknown';
     final className = leave.userClassName ?? '-';

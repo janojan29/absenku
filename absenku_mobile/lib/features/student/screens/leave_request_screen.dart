@@ -30,6 +30,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
     super.dispose();
   }
 
+  // Fungsi yang dijalankan ketika siswa menekan tombol "KIRIM PENGAJUAN"
   void _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -66,6 +67,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
     }
   }
 
+  // Fungsi utama untuk merender (membangun) tampilan antarmuka form pengajuan izin
   @override
   Widget build(BuildContext context) {
     final today = DateTime.now();

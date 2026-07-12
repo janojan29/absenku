@@ -71,14 +71,15 @@ class Dashboard extends Component
             'description' => $this->reportDescription,
         ]);
 
-        $pesan = "Yth. Bapak/Ibu Orang Tua/Wali dari *{$siswa->user->name}*.\n\n"
+        $namaSiswa = $siswa->user ? $siswa->user->name : 'Siswa';
+        $pesan = "Yth. Bapak/Ibu Orang Tua/Wali dari *{$namaSiswa}*.\n\n"
                . "Menginformasikan bahwa ananda tercatat telah *hadir di sekolah* pada pukul *{$waktuHadir} WIB*. "
                . "Namun, pada pukul *{$waktuKejadian->format('H:i')} WIB* (saat Mata Pelajaran {$this->reportSubject}), "
                . "ananda didapati *tidak berada di dalam ruang kelas* tanpa keterangan yang jelas.\n\n"
                . "Mohon bantuan Bapak/Ibu untuk turut mengkonfirmasi keberadaan ananda saat ini demi keamanan, keselamatan, dan kedisiplinan siswa.\n\n"
                . "Terima kasih atas perhatian dan kerjasamanya.";
 
-        $nomorTujuan = $siswa->parent_phone_wa ?? $siswa->parent_whatsapp_number;
+        $nomorTujuan = $siswa->parent_phone_wa ?: $siswa->parent_whatsapp_number;
         
         if (empty($nomorTujuan)) {
             $this->closeReportModal();
