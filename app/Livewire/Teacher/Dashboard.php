@@ -22,6 +22,80 @@ class Dashboard extends Component
     }
 
     public $classRoomId = null;
+    public $search = '';
+
+    public $reportStudentId = null;
+    public $reportStudentName = '';
+    public $reportSubject = '';
+    public $reportDescription = '';
+    public $showReportModal = false;
+
+    public function openReportModal($studentId, $studentName)
+    {
+        $this->reportStudentId = $studentId;
+        $this->reportStudentName = $studentName;
+        $this->reportSubject = '';
+        $this->reportDescription = '';
+        $this->showReportModal = true;
+    }
+
+    public function closeReportModal()
+    {
+        $this->showReportModal = false;
+        $this->reportStudentId = null;
+    }
+
+    public function submitReport()
+    {
+        $this->validate([
+            'reportStudentId' => 'required|exists:student_profiles,id',
+            'reportSubject' => 'required|string',
+            'reportDescription' => 'nullable|string',
+        ]);
+
+        $siswa = StudentProfile::with('user')->findOrFail($this->reportStudentId);
+        $waktuKejadian = Carbon::now('Asia/Jakarta');
+
+        $absenHariIni = Attendance::where('user_id', $siswa->user_id)
+            ->whereDate('date', $waktuKejadian->toDateString())
+            ->whereNotNull('check_in_at')
+            ->first();
+
+        $waktuHadir = $absenHariIni ? Carbon::parse($absenHariIni->check_in_at)->format('H:i') : 'pagi ini';
+
+        $violation = \App\Models\StudentViolation::create([
+            'student_profile_id' => $siswa->id,
+            'reported_by' => auth()->id(),
+            'subject' => $this->reportSubject,
+            'incident_time' => $waktuKejadian->format('H:i:s'),
+            'description' => $this->reportDescription,
+        ]);
+
+        $pesan = "Yth. Bapak/Ibu Orang Tua/Wali dari *{$siswa->user->name}*.\n\n"
+               . "Menginformasikan bahwa ananda tercatat telah *hadir di sekolah* pada pukul *{$waktuHadir} WIB*. "
+               . "Namun, pada pukul *{$waktuKejadian->format('H:i')} WIB* (saat Mata Pelajaran {$this->reportSubject}), "
+               . "ananda didapati *tidak berada di dalam ruang kelas* tanpa keterangan yang jelas.\n\n"
+               . "Mohon bantuan Bapak/Ibu untuk turut mengkonfirmasi keberadaan ananda saat ini demi keamanan, keselamatan, dan kedisiplinan siswa.\n\n"
+               . "Terima kasih atas perhatian dan kerjasamanya.";
+
+        $nomorTujuan = $siswa->parent_phone_wa ?? $siswa->parent_whatsapp_number;
+        
+        if (empty($nomorTujuan)) {
+            $this->closeReportModal();
+            session()->flash('message', 'Laporan berhasil dicatat, namun WA tidak terkirim karena nomor HP orang tua kosong di data sistem.');
+            return;
+        }
+
+        \App\Jobs\SendWhatsAppMessage::dispatch(
+            $nomorTujuan,
+            $pesan,
+            \App\Models\StudentViolation::class,
+            $violation->id
+        );
+
+        $this->closeReportModal();
+        session()->flash('message', 'Laporan berhasil dicatat dan dikirim ke WhatsApp Orang Tua!');
+    }
 
     #[On('teacher-dashboard.refresh')]
     public function refresh(): void
@@ -30,6 +104,11 @@ class Dashboard extends Component
     }
 
     public function updatingClassRoomId()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingSearch()
     {
         $this->resetPage();
     }
@@ -69,12 +148,19 @@ class Dashboard extends Component
         $students = StudentProfile::query()
             ->with(['user', 'classRoom'])
             ->when($this->classRoomId, fn($q) => $q->where('class_room_id', $this->classRoomId))
+            ->when($this->search, function ($q) {
+                $q->whereHas('user', function ($query) {
+                    $query->where('name', 'like', '%' . $this->search . '%');
+                });
+            })
             ->orderBy('class_room_id')
             ->orderBy('id')
             ->paginate(15);
 
         $endCheckIn = Carbon::parse($today->toDateString() . ' ' . $setting->check_in_end_time);
         $lateAt = (clone $endCheckIn)->subMinutes((int) $setting->late_tolerance_minutes);
+
+        $isCheckInClosed = Carbon::now('Asia/Jakarta')->greaterThan($endCheckIn);
 
         $effectiveStatuses = [];
         $statusLabels = [];
@@ -119,6 +205,9 @@ class Dashboard extends Component
                 if ($isHoliday) {
                     $effectiveStatuses[$userId] = 'holiday';
                     $statusLabels[$userId] = 'Libur';
+                } elseif ($isCheckInClosed) {
+                    $effectiveStatuses[$userId] = 'absent';
+                    $statusLabels[$userId] = 'Alfa';
                 } else {
                     $effectiveStatuses[$userId] = 'unknown';
                     $statusLabels[$userId] = 'Belum Absen';
@@ -130,7 +219,7 @@ class Dashboard extends Component
             'present' => collect($effectiveStatuses)->where(fn($value) => $value === 'present')->count(),
             'late' => collect($effectiveStatuses)->where(fn($value) => $value === 'late')->count(),
             'leave' => collect($effectiveStatuses)->where(fn($value) => in_array($value, ['leave', 'sick']))->count(),
-            'unknown' => collect($effectiveStatuses)->where(fn($value) => $value === 'unknown')->count(),
+            'unknown' => collect($effectiveStatuses)->where(fn($value) => in_array($value, ['unknown', 'absent']))->count(),
         ];
 
         return view('livewire.teacher.dashboard', [
@@ -142,6 +231,7 @@ class Dashboard extends Component
             'statusLabels' => $statusLabels,
             'counts' => $counts,
             'today' => $today,
+            'isCheckInClosed' => $isCheckInClosed,
         ]);
     }
 }

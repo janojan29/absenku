@@ -10,7 +10,7 @@ import '../../picket/screens/leave_queue_screen.dart';
 import '../../../core/widgets/profile_bottom_sheet.dart';
 import 'report_screen.dart';
 import '../../../core/widgets/custom_expand_menu.dart';
-
+import 'dart:async';
 
 class TeacherDashboardScreen extends StatefulWidget {
   const TeacherDashboardScreen({super.key});
@@ -129,6 +129,7 @@ class _TodaySummaryTabState extends State<_TodaySummaryTab> {
   String _searchQuery = '';
   final _searchController = TextEditingController();
   bool _initialLoading = true;
+  Timer? _debounce;
 
   @override
   void initState() {
@@ -136,8 +137,8 @@ class _TodaySummaryTabState extends State<_TodaySummaryTab> {
     _loadData();
   }
 
-  Future<void> _loadData({String? classRoomId, int page = 1}) async {
-    await MockDatabase().fetchTeacherDashboard(classRoomId: classRoomId, page: page);
+  Future<void> _loadData({String? classRoomId, String? search, int page = 1}) async {
+    await MockDatabase().fetchTeacherDashboard(classRoomId: classRoomId, search: search, page: page);
     if (mounted) {
       setState(() {
         _initialLoading = false;
@@ -148,6 +149,7 @@ class _TodaySummaryTabState extends State<_TodaySummaryTab> {
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -164,13 +166,10 @@ class _TodaySummaryTabState extends State<_TodaySummaryTab> {
     final unknown = db.dashboardCounts['unknown'] ?? 0;
 
     final allStudents = db.dashboardStudents;
-    final filteredStudents = allStudents.where((s) {
-      final name = s['name'] as String? ?? '';
-      return name.toLowerCase().contains(_searchQuery.toLowerCase());
-    }).toList();
+    final filteredStudents = allStudents.toList();
 
     return RefreshIndicator(
-      onRefresh: () => _loadData(classRoomId: _selectedClassRoomId.isEmpty ? 'all' : _selectedClassRoomId),
+      onRefresh: () => _loadData(classRoomId: _selectedClassRoomId.isEmpty ? 'all' : _selectedClassRoomId, search: _searchQuery),
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(16.0),
@@ -208,7 +207,7 @@ class _TodaySummaryTabState extends State<_TodaySummaryTab> {
                     selectedValue: _selectedClassRoomId,
                     onChanged: (value) {
                       setState(() => _selectedClassRoomId = value);
-                      _loadData(classRoomId: value.isEmpty ? 'all' : value);
+                      _loadData(classRoomId: value.isEmpty ? 'all' : value, search: _searchQuery);
                     },
                   ),
                 ],
@@ -228,7 +227,12 @@ class _TodaySummaryTabState extends State<_TodaySummaryTab> {
                 _buildStatCard('Hadir', present, AppTheme.statusPresent, Icons.check_circle_outline),
                 _buildStatCard('Terlambat', late, AppTheme.statusLate, Icons.access_time),
                 _buildStatCard('Izin', leave, AppTheme.statusLeave, Icons.description_outlined),
-                _buildStatCard('Belum Absen', unknown, AppTheme.statusAbsent, Icons.help_outline),
+                _buildStatCard(
+                  db.dashboardIsCheckInClosed ? 'Alfa' : 'Belum Absen', 
+                  unknown, 
+                  db.dashboardIsCheckInClosed ? Colors.red : AppTheme.statusAbsent, 
+                  db.dashboardIsCheckInClosed ? Icons.cancel_outlined : Icons.help_outline
+                ),
               ],
             ),
             const SizedBox(height: 20),
@@ -236,8 +240,24 @@ class _TodaySummaryTabState extends State<_TodaySummaryTab> {
             // Search
             TextField(
               controller: _searchController,
-              onChanged: (val) => setState(() => _searchQuery = val),
-              decoration: const InputDecoration(hintText: 'Cari nama siswa...', prefixIcon: Icon(Icons.search), contentPadding: EdgeInsets.zero),
+              style: const TextStyle(fontSize: 14, color: AppTheme.textDark),
+              onChanged: (val) {
+                setState(() => _searchQuery = val);
+                if (_debounce?.isActive ?? false) _debounce!.cancel();
+                _debounce = Timer(const Duration(milliseconds: 500), () {
+                  _loadData(classRoomId: _selectedClassRoomId.isEmpty ? 'all' : _selectedClassRoomId, search: val);
+                });
+              },
+              decoration: InputDecoration(
+                hintText: 'Cari nama siswa...', 
+                hintStyle: const TextStyle(color: AppTheme.textMuted, fontSize: 14),
+                prefixIcon: const Icon(Icons.search, color: AppTheme.textMuted), 
+                filled: true,
+                fillColor: Colors.white,
+                contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppTheme.borderLight)),
+                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppTheme.primaryNavy, width: 2)),
+              ),
             ),
             const SizedBox(height: 16),
 
@@ -254,6 +274,7 @@ class _TodaySummaryTabState extends State<_TodaySummaryTab> {
               )
             else
               ...filteredStudents.map((student) {
+                final id = student['id'];
                 final name = student['name'] as String? ?? '-';
                 final className = student['class_room'] as String? ?? '-';
                 final status = student['status'] as String? ?? 'unknown';
@@ -270,38 +291,45 @@ class _TodaySummaryTabState extends State<_TodaySummaryTab> {
                   default: statusColor = Colors.grey;
                 }
 
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppTheme.borderLight)),
-                  padding: const EdgeInsets.all(12),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 18,
-                        backgroundColor: AppTheme.primaryNavy.withValues(alpha: 0.08),
-                        child: Text(name.isNotEmpty ? name.substring(0, 1).toUpperCase() : '?',
-                            style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryNavy, fontSize: 13)),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                          Text(className, style: const TextStyle(fontSize: 11, color: AppTheme.textMuted)),
-                          if (checkIn != null || checkOut != null)
-                            Text('Masuk: ${checkIn ?? "-"} · Pulang: ${checkOut ?? "-"}',
-                                style: const TextStyle(fontSize: 10, color: AppTheme.textMuted)),
-                        ]),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: statusColor.withValues(alpha: 0.1),
-                          border: Border.all(color: statusColor.withValues(alpha: 0.3)),
-                          borderRadius: BorderRadius.circular(12),
+                return InkWell(
+                  onTap: () {
+                    if (id != null) {
+                      _showReportDialog(context, id.toString(), name);
+                    }
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppTheme.borderLight)),
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 18,
+                          backgroundColor: AppTheme.primaryNavy.withValues(alpha: 0.08),
+                          child: Text(name.isNotEmpty ? name.substring(0, 1).toUpperCase() : '?',
+                              style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryNavy, fontSize: 13)),
                         ),
-                        child: Text(statusLabel, style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 10)),
-                      ),
-                    ],
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                            Text(className, style: const TextStyle(fontSize: 11, color: AppTheme.textMuted)),
+                            if (checkIn != null || checkOut != null)
+                              Text('Masuk: ${checkIn ?? "-"} · Pulang: ${checkOut ?? "-"}',
+                                  style: const TextStyle(fontSize: 10, color: AppTheme.textMuted)),
+                          ]),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: statusColor.withValues(alpha: 0.1),
+                            border: Border.all(color: statusColor.withValues(alpha: 0.3)),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(statusLabel, style: TextStyle(color: statusColor, fontWeight: FontWeight.bold, fontSize: 10)),
+                        ),
+                      ],
+                    ),
                   ),
                 );
               }),
@@ -314,14 +342,14 @@ class _TodaySummaryTabState extends State<_TodaySummaryTab> {
                     IconButton(
                       icon: const Icon(Icons.chevron_left),
                       onPressed: db.dashboardCurrentPage > 1 
-                          ? () => _loadData(classRoomId: _selectedClassRoomId, page: db.dashboardCurrentPage - 1) 
+                          ? () => _loadData(classRoomId: _selectedClassRoomId.isEmpty ? 'all' : _selectedClassRoomId, search: _searchQuery, page: db.dashboardCurrentPage - 1) 
                           : null,
                     ),
                     Text('Halaman ${db.dashboardCurrentPage} dari ${db.dashboardLastPage}', style: const TextStyle(fontWeight: FontWeight.bold)),
                     IconButton(
                       icon: const Icon(Icons.chevron_right),
                       onPressed: db.dashboardCurrentPage < db.dashboardLastPage 
-                          ? () => _loadData(classRoomId: _selectedClassRoomId, page: db.dashboardCurrentPage + 1) 
+                          ? () => _loadData(classRoomId: _selectedClassRoomId.isEmpty ? 'all' : _selectedClassRoomId, search: _searchQuery, page: db.dashboardCurrentPage + 1) 
                           : null,
                     ),
                   ],
@@ -350,6 +378,339 @@ class _TodaySummaryTabState extends State<_TodaySummaryTab> {
           Text('$count', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: color)),
         ],
       ),
+    );
+  }
+
+  void _showReportDialog(BuildContext context, String studentProfileId, String studentName) {
+    final subjectController = TextEditingController();
+    final descriptionController = TextEditingController();
+    bool isSubmitting = false;
+
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Dismiss',
+      barrierColor: Colors.transparent,
+      transitionDuration: const Duration(milliseconds: 300),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Stack(
+              children: [
+                // Animated Backdrop with Blur
+                FadeTransition(
+                  opacity: animation,
+                  child: GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      color: const Color(0xFF070D1A).withValues(alpha: 0.7),
+                      // BackdropFilter is omitted for performance on some mobile devices, 
+                      // dark semi-transparent color is usually enough.
+                    ),
+                  ),
+                ),
+                // Modal Content
+                FadeTransition(
+                  opacity: animation,
+                  child: ScaleTransition(
+                    scale: Tween<double>(begin: 0.95, end: 1.0).animate(
+                      CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
+                    ),
+                    child: Center(
+                      child: SingleChildScrollView(
+                        child: Dialog(
+                          backgroundColor: Colors.transparent,
+                          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                          elevation: 0,
+                          child: Container(
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(24),
+                              boxShadow: [
+                                BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 40, offset: const Offset(0, 10)),
+                                BoxShadow(color: Colors.red.withValues(alpha: 0.1), blurRadius: 20, offset: const Offset(0, 0)),
+                              ],
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(24),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  // Top Gradient Accent
+                                  Container(
+                                    height: 4,
+                                    width: double.infinity,
+                                    decoration: const BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [Color(0xFFEF4444), Color(0xFFF87171), Color(0xFFFB923C)],
+                                        begin: Alignment.centerLeft,
+                                        end: Alignment.centerRight,
+                                      ),
+                                    ),
+                                  ),
+                                  
+                                  // Header
+                                  Padding(
+                                    padding: const EdgeInsets.all(24),
+                                    child: Row(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        // Icon
+                                        Container(
+                                          width: 48,
+                                          height: 48,
+                                          decoration: BoxDecoration(
+                                            gradient: const LinearGradient(
+                                              colors: [Color(0xFFEF4444), Color(0xFFDC2626)],
+                                              begin: Alignment.topLeft,
+                                              end: Alignment.bottomRight,
+                                            ),
+                                            borderRadius: BorderRadius.circular(16),
+                                            boxShadow: [
+                                              BoxShadow(color: Colors.red.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 4)),
+                                            ],
+                                          ),
+                                          child: const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 28),
+                                        ),
+                                        const SizedBox(width: 16),
+                                        // Title & Subtitle
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              const Text('Laporkan Keluar', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF0F172A), height: 1.2)),
+                                              const SizedBox(height: 4),
+                                              Row(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  const Padding(
+                                                    padding: EdgeInsets.only(top: 2),
+                                                    child: Icon(Icons.chat_bubble_rounded, size: 12, color: Color(0xFF10B981)),
+                                                  ),
+                                                  const SizedBox(width: 4),
+                                                  Expanded(
+                                                    child: Text('Notifikasi WA Ortu', style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        // Close Button
+                                        GestureDetector(
+                                          onTap: () => Navigator.pop(context),
+                                          child: Container(
+                                            padding: const EdgeInsets.all(6),
+                                            decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(10)),
+                                            child: Icon(Icons.close, size: 18, color: Colors.grey.shade500),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                                  Divider(height: 1, thickness: 1, color: Colors.grey.shade100),
+
+                                  // Body
+                                  Padding(
+                                    padding: const EdgeInsets.all(24),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        // Student Info
+                                        Text('SISWA TERPILIH', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.2, color: Colors.grey.shade500)),
+                                        const SizedBox(height: 8),
+                                        Container(
+                                          padding: const EdgeInsets.all(16),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFF8FAFC),
+                                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                                            borderRadius: BorderRadius.circular(16),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Container(
+                                                width: 44,
+                                                height: 44,
+                                                decoration: const BoxDecoration(
+                                                  gradient: LinearGradient(colors: [Color(0xFF3B82F6), Color(0xFF1D4ED8)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                alignment: Alignment.center,
+                                                child: Text(studentName.isNotEmpty ? studentName[0].toUpperCase() : '?', style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                                              ),
+                                              const SizedBox(width: 12),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(studentName, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                                    const SizedBox(height: 2),
+                                                    Text('Klik nama lain untuk mengganti', style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        const SizedBox(height: 20),
+
+                                        // Subject Field
+                                        Row(
+                                          children: [
+                                            const Text('MATA PELAJARAN', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF334155))),
+                                            const SizedBox(width: 4),
+                                            Text('*wajib', style: TextStyle(fontSize: 10, color: Colors.red.shade500)),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 8),
+                                        TextField(
+                                          controller: subjectController,
+                                          style: const TextStyle(fontSize: 14, color: Color(0xFF0F172A)),
+                                          decoration: InputDecoration(
+                                            hintText: 'Contoh: Matematika',
+                                            hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+                                            prefixIcon: Icon(Icons.book_outlined, color: Colors.grey.shade400, size: 20),
+                                            filled: true,
+                                            fillColor: Colors.white,
+                                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
+                                            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF3B82F6), width: 2)),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 16),
+
+                                        // Description Field
+                                        Row(
+                                          children: [
+                                            const Text('KETERANGAN', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF334155))),
+                                            const SizedBox(width: 4),
+                                            Text('opsional', style: TextStyle(fontSize: 10, color: Colors.grey.shade400)),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 8),
+                                        TextField(
+                                          controller: descriptionController,
+                                          maxLines: 3,
+                                          style: const TextStyle(fontSize: 14, color: Color(0xFF0F172A)),
+                                          decoration: InputDecoration(
+                                            hintText: 'Siswa izin ke toilet tapi tidak kembali...',
+                                            hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+                                            filled: true,
+                                            fillColor: Colors.white,
+                                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
+                                            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF3B82F6), width: 2)),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  
+                                  Divider(height: 1, thickness: 1, color: Colors.grey.shade100),
+
+                                  // Actions
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          child: TextButton(
+                                            onPressed: isSubmitting ? null : () => Navigator.pop(context),
+                                            style: TextButton.styleFrom(
+                                              padding: const EdgeInsets.symmetric(vertical: 14),
+                                              backgroundColor: Colors.grey.shade100,
+                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                            ),
+                                            child: Text('Batal', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey.shade700)),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          flex: 2,
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              gradient: const LinearGradient(colors: [Color(0xFFEF4444), Color(0xFFDC2626)]),
+                                              borderRadius: BorderRadius.circular(12),
+                                              boxShadow: [BoxShadow(color: Colors.red.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 4))],
+                                            ),
+                                            child: ElevatedButton(
+                                              onPressed: isSubmitting
+                                                  ? null
+                                                  : () async {
+                                                      if (subjectController.text.trim().isEmpty) {
+                                                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Mata Pelajaran wajib diisi')));
+                                                        return;
+                                                      }
+                                                      setState(() => isSubmitting = true);
+                                                      try {
+                                                        final successMsg = await MockDatabase().reportMissingStudent(
+                                                          studentProfileId,
+                                                          subjectController.text.trim(),
+                                                          description: descriptionController.text.trim(),
+                                                        );
+                                                        if (context.mounted) {
+                                                          Navigator.pop(context);
+                                                          ScaffoldMessenger.of(context).showSnackBar(
+                                                            SnackBar(
+                                                              content: Row(
+                                                                children: [
+                                                                  const Icon(Icons.info_outline, color: Colors.white),
+                                                                  const SizedBox(width: 8),
+                                                                  Expanded(child: Text(successMsg)),
+                                                                ],
+                                                              ),
+                                                              backgroundColor: const Color(0xFF10B981),
+                                                              behavior: SnackBarBehavior.floating,
+                                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                                              margin: const EdgeInsets.all(16),
+                                                            ),
+                                                          );
+                                                        }
+                                                      } catch (e) {
+                                                        setState(() => isSubmitting = false);
+                                                        if (context.mounted) {
+                                                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: Colors.red));
+                                                        }
+                                                      }
+                                                    },
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: Colors.transparent,
+                                                shadowColor: Colors.transparent,
+                                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                              ),
+                                              child: isSubmitting 
+                                                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                                                : const Row(
+                                                    mainAxisAlignment: MainAxisAlignment.center,
+                                                    children: [
+                                                      Icon(Icons.send_rounded, color: Colors.white, size: 16),
+                                                      SizedBox(width: 6),
+                                                      Text('Kirim Laporan', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+                                                    ],
+                                                  ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          }
+        );
+      },
     );
   }
 }

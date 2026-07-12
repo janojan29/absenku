@@ -18,6 +18,7 @@ class DashboardController extends Controller
     {
         $data = $request->validate([
             'class_room_id' => ['nullable', 'string'],
+            'search' => ['nullable', 'string'],
         ]);
 
         $classRoomId = $request->input('class_room_id');
@@ -56,6 +57,8 @@ class DashboardController extends Controller
 
         $endCheckIn = Carbon::parse($today->toDateString() . ' ' . $setting->check_in_end_time);
         $lateAt = (clone $endCheckIn)->subMinutes((int) $setting->late_tolerance_minutes);
+
+        $isCheckInClosed = Carbon::now('Asia/Jakarta')->greaterThan($endCheckIn);
 
         $effectiveStatuses = [];
         $statusLabels = [];
@@ -97,6 +100,9 @@ class DashboardController extends Controller
                 if ($isHoliday) {
                     $effectiveStatuses[$sp->user_id] = 'holiday';
                     $statusLabels[$sp->user_id] = 'Libur';
+                } elseif ($isCheckInClosed) {
+                    $effectiveStatuses[$sp->user_id] = 'absent';
+                    $statusLabels[$sp->user_id] = 'Alfa';
                 } else {
                     $effectiveStatuses[$sp->user_id] = 'unknown';
                     $statusLabels[$sp->user_id] = 'Belum Absen';
@@ -108,12 +114,13 @@ class DashboardController extends Controller
             'present' => collect($effectiveStatuses)->where(fn ($value) => $value === 'present')->count(),
             'late' => collect($effectiveStatuses)->where(fn ($value) => $value === 'late')->count(),
             'leave' => collect($effectiveStatuses)->where(fn ($value) => in_array($value, ['leave', 'sick']))->count(),
-            'unknown' => collect($effectiveStatuses)->where(fn ($value) => $value === 'unknown')->count(),
+            'unknown' => collect($effectiveStatuses)->where(fn ($value) => in_array($value, ['unknown', 'absent']))->count(),
         ];
 
         $rows = $students->map(function ($sp) use ($attendances, $effectiveStatuses, $statusLabels, $keteranganMap) {
             $attendance = $attendances->get($sp->user_id);
             return [
+                'id' => $sp->id,
                 'name' => $sp->user?->name ?? '-',
                 'class_room' => $sp->classRoom?->name ?? '-',
                 'jurusan' => $sp->jurusan ?? $sp->classRoom?->jurusan ?? '-',
@@ -124,6 +131,14 @@ class DashboardController extends Controller
                 'check_out_at' => $attendance?->check_out_at ? Carbon::parse($attendance->check_out_at)->format('H:i') : null,
             ];
         })->values();
+
+        $search = $request->input('search');
+        if (!empty($search)) {
+            $search = strtolower($search);
+            $rows = $rows->filter(function ($item) use ($search) {
+                return str_contains(strtolower($item['name']), $search);
+            })->values();
+        }
 
         $page = max(1, (int) $request->query('page', 1));
         $perPage = 20;
@@ -142,6 +157,7 @@ class DashboardController extends Controller
                         'total' => $total,
                     ],
                 ],
+                'is_check_in_closed' => $isCheckInClosed,
                 'class_room_id' => $classRoomId,
                 'classrooms' => ClassRoom::query()->orderBy('name')->get()->map(fn($c) => [
                     'id' => $c->id,

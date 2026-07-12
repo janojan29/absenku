@@ -58,6 +58,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::prefix('teacher')->middleware('role:guru|guru_walikelas|petugas_piket')->group(function () {
+        Route::post('/report-missing-student', [\App\Http\Controllers\StudentViolationController::class, 'reportMissingStudent']);
         Route::get('/dashboard', [ApiTeacherDashboardController::class, 'index']);
         Route::get('/reports/attendance', [ApiTeacherReportController::class, 'index']);
         Route::get('/reports/attendance/excel', [ApiTeacherReportController::class, 'exportExcel']);

@@ -63,6 +63,7 @@ class MockDatabase extends ChangeNotifier {
   Map<String, int> _dashboardCounts = {};
   List<Map<String, dynamic>> _dashboardStudents = [];
   String? _dashboardClassRoomId;
+  bool _dashboardIsCheckInClosed = false;
   int _dashboardCurrentPage = 1;
   int _dashboardLastPage = 1;
 
@@ -112,6 +113,7 @@ class MockDatabase extends ChangeNotifier {
   Map<String, int> get dashboardCounts => _dashboardCounts;
   List<Map<String, dynamic>> get dashboardStudents => _dashboardStudents;
   String? get dashboardClassRoomId => _dashboardClassRoomId;
+  bool get dashboardIsCheckInClosed => _dashboardIsCheckInClosed;
   int get dashboardCurrentPage => _dashboardCurrentPage;
   int get dashboardLastPage => _dashboardLastPage;
 
@@ -540,17 +542,36 @@ class MockDatabase extends ChangeNotifier {
   }
 
   // ──────────────────────────────────────────────
-  // Teacher Dashboard
+  // Teacher Dashboard & Reports
   // ──────────────────────────────────────────────
 
-  Future<void> fetchTeacherDashboard({String? classRoomId, int page = 1}) async {
+  Future<String> reportMissingStudent(String studentProfileId, String subject, {String? description}) async {
+    try {
+      final response = await _dio.post('/teacher/report-missing-student', data: {
+        'student_profile_id': studentProfileId,
+        'subject': subject,
+        'description': description,
+      });
+      return response.data['message']?.toString() ?? 'Laporan berhasil dicatat.';
+    } on DioException catch (e) {
+      if (e.response?.data != null && e.response?.data['message'] != null) {
+        throw Exception(e.response!.data['message'].toString());
+      }
+      throw Exception('Gagal mengirim laporan. Periksa koneksi.');
+    }
+  }
+
+  Future<void> fetchTeacherDashboard({String? classRoomId, String? search, int page = 1}) async {
     _isLoading = true;
     notifyListeners();
 
     try {
       final queryParams = <String, dynamic>{'page': page};
-      if (classRoomId != null) {
+      if (classRoomId != null && classRoomId != 'all') {
         queryParams['class_room_id'] = classRoomId;
+      }
+      if (search != null && search.isNotEmpty) {
+        queryParams['search'] = search;
       }
 
       final response = await _dio.get('/teacher/dashboard', queryParameters: queryParams);
@@ -573,6 +594,7 @@ class MockDatabase extends ChangeNotifier {
         _dashboardLastPage = meta['last_page'] as int? ?? 1;
 
         _dashboardClassRoomId = data['class_room_id']?.toString();
+        _dashboardIsCheckInClosed = data['is_check_in_closed'] == true;
 
         // Parse classrooms list
         final classroomsList = data['classrooms'] as List? ?? [];
