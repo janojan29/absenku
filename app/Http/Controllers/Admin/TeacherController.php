@@ -47,7 +47,7 @@ class TeacherController extends Controller
             'nip' => ['required', 'string', 'regex:/^[0-9]+$/', 'max:50', 'unique:teachers,nip'],
             'subject' => ['nullable', 'string', 'max:150'],
             'wali_kelas' => ['nullable', 'string', 'max:100'],
-            'whatsapp_number' => ['nullable', 'string', 'regex:/^08[0-9]+$/', 'max:30'],
+            'whatsapp_number' => ['nullable', 'string', 'regex:/^(08|\+62|62)[0-9]+$/', 'max:30'],
         ], [
             'name.regex' => 'Nama guru hanya boleh berisi huruf, spasi, dan tanda baca nama.',
             'nip.regex' => 'NIP harus berupa angka.',
@@ -103,7 +103,7 @@ class TeacherController extends Controller
             ],
             'subject' => ['nullable', 'string', 'max:150'],
             'wali_kelas' => ['nullable', 'string', 'max:100'],
-            'whatsapp_number' => ['nullable', 'string', 'regex:/^08[0-9]+$/', 'max:30'],
+            'whatsapp_number' => ['nullable', 'string', 'regex:/^(08|\+62|62)[0-9]+$/', 'max:30'],
         ], [
             'name.regex' => 'Nama guru hanya boleh berisi huruf, spasi, dan tanda baca nama.',
             'nip.regex' => 'NIP harus berupa angka.',

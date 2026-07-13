@@ -52,8 +52,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Nomor WhatsApp wajib diisi.')));
       return;
     }
-    if (!RegExp(r'^08[0-9]+$').hasMatch(phone)) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Nomor WhatsApp harus diawali dengan 08 dan hanya berisi angka.')));
+    if (!RegExp(r'^(08|\+62|62)[0-9]+$').hasMatch(phone)) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Nomor WhatsApp harus diawali dengan 08, 62, atau +62 dan hanya berisi angka.')));
       return;
     }
     if (phone.length > 30) {
@@ -297,8 +297,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                               if (!isPhoneEmpty) {
                                 final phoneVal = v.trim();
-                                if (!RegExp(r'^08[0-9]+$').hasMatch(phoneVal)) {
-                                  return 'Nomor WhatsApp harus diawali dengan 08 dan hanya berisi angka';
+                                if (!RegExp(r'^(08|\+62|62)[0-9]+$').hasMatch(phoneVal)) {
+                                  return 'Nomor WhatsApp harus diawali dengan 08, 62, atau +62 dan hanya berisi angka';
                                 }
                                 if (phoneVal.length > 30) {
                                   return 'Nomor WhatsApp maksimal 30 karakter';

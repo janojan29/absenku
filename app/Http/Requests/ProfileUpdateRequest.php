@@ -14,7 +14,7 @@ class ProfileUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'whatsapp_number' => ['nullable', 'string', 'regex:/^08[0-9]+$/', 'max:30'],
+            'whatsapp_number' => ['nullable', 'string', 'regex:/^(08|\+62|62)[0-9]+$/', 'max:30'],
         ];
     }
 

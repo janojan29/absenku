@@ -233,9 +233,9 @@ class _TeacherManagementScreenState extends State<TeacherManagementScreen> {
                     }
 
                     if (wa.isNotEmpty) {
-                      if (!RegExp(r'^08[0-9]+$').hasMatch(wa)) {
+                      if (!RegExp(r'^(08|\+62|62)[0-9]+$').hasMatch(wa)) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Nomor WhatsApp harus diawali dengan 08 dan hanya berisi angka!')),
+                          const SnackBar(content: Text('Nomor WhatsApp harus diawali dengan 08, 62, atau +62 dan hanya berisi angka!')),
                         );
                         return;
                       }

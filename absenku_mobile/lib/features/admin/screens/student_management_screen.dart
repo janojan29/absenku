@@ -223,7 +223,7 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                     }
 
                     if (wa.isNotEmpty) {
-                      if (!RegExp(r'^08[0-9]+$').hasMatch(wa)) {
+                      if (!RegExp(r'^(08|\+62|62)[0-9]+$').hasMatch(wa)) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Nomor WhatsApp Siswa harus diawali dengan 08 dan hanya berisi angka!')),
                         );
@@ -238,7 +238,7 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                     }
 
                     if (parentWa.isNotEmpty) {
-                      if (!RegExp(r'^08[0-9]+$').hasMatch(parentWa)) {
+                      if (!RegExp(r'^(08|\+62|62)[0-9]+$').hasMatch(parentWa)) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Nomor WhatsApp Orang Tua harus diawali dengan 08 dan hanya berisi angka!')),
                         );

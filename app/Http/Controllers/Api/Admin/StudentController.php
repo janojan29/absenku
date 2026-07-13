@@ -220,13 +220,13 @@ class StudentController extends Controller
                 continue;
             }
 
-            if ($parentPhone !== '' && !preg_match('/^08[0-9]+$/', $parentPhone)) {
-                $errors[] = "Baris {$rowNumber}: Nomor HP orang tua harus diawali dengan 08.";
+            if ($parentPhone !== '' && !preg_match('/^(08|\+62|62)[0-9]+$/', $parentPhone)) {
+                $errors[] = "Baris {$rowNumber}: Nomor HP orang tua harus diawali dengan 08, 62, atau +62.";
                 continue;
             }
 
-            if ($studentPhone !== '' && !preg_match('/^08[0-9]+$/', $studentPhone)) {
-                $errors[] = "Baris {$rowNumber}: Nomor HP siswa harus diawali dengan 08.";
+            if ($studentPhone !== '' && !preg_match('/^(08|\+62|62)[0-9]+$/', $studentPhone)) {
+                $errors[] = "Baris {$rowNumber}: Nomor HP siswa harus diawali dengan 08, 62, atau +62.";
                 continue;
             }
 

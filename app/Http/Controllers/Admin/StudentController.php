@@ -89,8 +89,8 @@ class StudentController extends Controller
             'jurusan' => ['required', 'string', 'max:100'],
             'class_room_id' => ['required', 'integer', 'exists:class_rooms,id'],
             'nis' => ['required', 'string', 'regex:/^[0-9]+$/', 'max:50', 'unique:student_profiles,nis'],
-            'parent_phone_wa' => ['nullable', 'string', 'regex:/^08[0-9]+$/', 'max:30'],
-            'whatsapp_number' => ['nullable', 'string', 'regex:/^08[0-9]+$/', 'max:30'],
+            'parent_phone_wa' => ['nullable', 'string', 'regex:/^(08|\+62|62)[0-9]+$/', 'max:30'],
+            'whatsapp_number' => ['nullable', 'string', 'regex:/^(08|\+62|62)[0-9]+$/', 'max:30'],
         ], [
             'name.regex' => 'Nama siswa hanya boleh berisi huruf, spasi, dan tanda baca nama.',
             'nis.regex' => 'NISN harus berupa angka.',
@@ -181,13 +181,13 @@ class StudentController extends Controller
                 continue;
             }
 
-            if ($parentPhone !== '' && !preg_match('/^08[0-9]+$/', $parentPhone)) {
-                $errors[] = "Baris {$rowNumber}: Nomor HP orang tua harus diawali dengan 08.";
+            if ($parentPhone !== '' && !preg_match('/^(08|\+62|62)[0-9]+$/', $parentPhone)) {
+                $errors[] = "Baris {$rowNumber}: Nomor HP orang tua harus diawali dengan 08, 62, atau +62.";
                 continue;
             }
 
-            if ($studentPhone !== '' && !preg_match('/^08[0-9]+$/', $studentPhone)) {
-                $errors[] = "Baris {$rowNumber}: Nomor HP siswa harus diawali dengan 08.";
+            if ($studentPhone !== '' && !preg_match('/^(08|\+62|62)[0-9]+$/', $studentPhone)) {
+                $errors[] = "Baris {$rowNumber}: Nomor HP siswa harus diawali dengan 08, 62, atau +62.";
                 continue;
             }
 
@@ -262,7 +262,7 @@ class StudentController extends Controller
 
         $data = $request->validate([
             'name' => ['required', 'string', 'regex:/^[a-zA-Z\s.,\'\-]+$/', 'max:255'],
-            'whatsapp_number' => ['nullable', 'string', 'regex:/^08[0-9]+$/', 'max:30'],
+            'whatsapp_number' => ['nullable', 'string', 'regex:/^(08|\+62|62)[0-9]+$/', 'max:30'],
             'jurusan' => ['required', 'string', 'max:100'],
             'class_room_id' => ['required', 'integer', 'exists:class_rooms,id'],
             'nis' => [
@@ -272,7 +272,7 @@ class StudentController extends Controller
                 'max:50',
                 \Illuminate\Validation\Rule::unique('student_profiles', 'nis')->ignore($user->studentProfile?->id),
             ],
-            'parent_phone_wa' => ['nullable', 'string', 'regex:/^08[0-9]+$/', 'max:30'],
+            'parent_phone_wa' => ['nullable', 'string', 'regex:/^(08|\+62|62)[0-9]+$/', 'max:30'],
         ], [
             'name.regex' => 'Nama siswa hanya boleh berisi huruf, spasi, dan tanda baca nama.',
             'nis.regex' => 'NISN harus berupa angka.',

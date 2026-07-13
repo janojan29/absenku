@@ -26,6 +26,7 @@ class FonnteWhatsAppClient implements WhatsAppClient
             ->post('/send', [
                 'target' => $to,
                 'message' => $message,
+                'countryCode' => '0', // Disable Fonnte's auto-formatting to give us full control
             ])
             ->throw();
 

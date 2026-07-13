@@ -151,9 +151,9 @@ class AuthController extends Controller
         ];
 
         if (empty($user->whatsapp_number)) {
-            $rules['whatsapp_number'] = ['required', 'string', 'regex:/^08[0-9]+$/', 'max:30'];
+            $rules['whatsapp_number'] = ['required', 'string', 'regex:/^(08|\+62|62)[0-9]+$/', 'max:30'];
         } else {
-            $rules['whatsapp_number'] = ['nullable', 'string', 'regex:/^08[0-9]+$/', 'max:30'];
+            $rules['whatsapp_number'] = ['nullable', 'string', 'regex:/^(08|\+62|62)[0-9]+$/', 'max:30'];
         }
 
         $messages = [
@@ -204,7 +204,7 @@ class AuthController extends Controller
         }
 
         $data = $request->validate([
-            'whatsapp_number' => ['required', 'string', 'regex:/^08[0-9]+$/', 'max:30'],
+            'whatsapp_number' => ['required', 'string', 'regex:/^(08|\+62|62)[0-9]+$/', 'max:30'],
         ], [
             'whatsapp_number.regex' => 'Nomor WhatsApp harus diawali dengan 08 dan hanya berisi angka.',
             'whatsapp_number.required' => 'Nomor WhatsApp wajib diisi.',

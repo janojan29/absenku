@@ -44,7 +44,7 @@ class AdminValidationTest extends TestCase
             'class_room_id' => $this->classRoom->id,
             'nis' => 'abc12345', // invalid: has letters
             'parent_phone_wa' => '081234567890',
-            'whatsapp_number' => '6281234567890', // invalid: does not start with 08
+            'whatsapp_number' => '6281234567890', // invalid: does not start with 08 or 62 or +62
         ]);
 
         $response->assertSessionHasErrors(['nis', 'whatsapp_number']);
@@ -76,7 +76,7 @@ class AdminValidationTest extends TestCase
             'password_confirmation' => 'guru1234',
             'nip' => '1990-123-456', // invalid: has hyphens
             'subject' => 'Matematika',
-            'whatsapp_number' => '1234567890', // invalid: does not start with 08
+            'whatsapp_number' => '1234567890', // invalid: does not start with 08 or 62 or +62
         ]);
 
         $response->assertSessionHasErrors(['nip', 'whatsapp_number']);

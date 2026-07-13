@@ -14,12 +14,23 @@ class SendWhatsAppMessage implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    public readonly string $to;
+
     public function __construct(
-        public readonly string $to,
+        string $to,
         public readonly string $message,
         public readonly ?string $relatedType = null,
         public readonly ?int $relatedId = null,
     ) {
+        // Hapus semua karakter non-angka
+        $cleaned = preg_replace('/[^0-9]/', '', $to);
+        
+        // Ubah awalan 0 menjadi 62 untuk standar internasional (karena kita mematikan auto-formatting Fonnte)
+        if (str_starts_with($cleaned, '0')) {
+            $cleaned = '62' . substr($cleaned, 1);
+        }
+
+        $this->to = $cleaned;
     }
 
     public function handle(WhatsAppClient $client): void

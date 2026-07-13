@@ -86,7 +86,7 @@ class UserManagementController extends Controller
         // If you need full parity with the Blade forms, extend this handler.
 
         $data = $request->validate([
-            'whatsapp_number' => ['nullable', 'string', 'regex:/^08[0-9]+$/', 'max:30'],
+            'whatsapp_number' => ['nullable', 'string', 'regex:/^(08|\+62|62)[0-9]+$/', 'max:30'],
         ], [
             'whatsapp_number.regex' => 'Nomor WhatsApp harus diawali dengan 08 dan hanya berisi angka.',
         ]);

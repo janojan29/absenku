@@ -104,7 +104,7 @@ class UserManagementController extends Controller
         // Base validation rules for all users
         $validationRules = [
             'name' => ['required', 'string', 'regex:/^[a-zA-Z\s.,\'\-]+$/', 'max:255'],
-            'whatsapp_number' => ['nullable', 'string', 'regex:/^08[0-9]+$/', 'max:30'],
+            'whatsapp_number' => ['nullable', 'string', 'regex:/^(08|\+62|62)[0-9]+$/', 'max:30'],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
         ];
 
@@ -113,7 +113,7 @@ class UserManagementController extends Controller
             $validationRules = array_merge($validationRules, [
                 'nis' => ['required', 'string', 'regex:/^[0-9]+$/', 'max:50', 'unique:student_profiles,nis,' . ($user->studentProfile?->id ?? 'NULL')],
                 'class_room_id' => ['required', 'integer', 'exists:class_rooms,id'],
-                'parent_phone_wa' => ['nullable', 'string', 'regex:/^08[0-9]+$/', 'max:30'],
+                'parent_phone_wa' => ['nullable', 'string', 'regex:/^(08|\+62|62)[0-9]+$/', 'max:30'],
             ]);
         } elseif (in_array($role, ['guru', 'guru_walikelas'], true)) {
             $validationRules = array_merge($validationRules, [
