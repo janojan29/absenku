@@ -2,7 +2,7 @@
 // Fungsinya mengelola koneksi Dio, menambahkan token autentikasi, dan menangani respons error seperti 401.
 
 import 'package:dio/dio.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../core/config/app_config.dart';
 
 // Kelas ini berfungsi sebagai pusat request API untuk seluruh aplikasi.
@@ -15,6 +15,9 @@ class ApiClient {
 
   // Objek Dio yang digunakan untuk mengirim request ke server.
   late final Dio _dio;
+  
+  // Storage terenkripsi untuk menyimpan token (Keystore di Android, Keychain di iOS).
+  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
   // Penanda apakah klien sudah selesai diinisialisasi.
   bool _initialized = false;
@@ -43,9 +46,8 @@ class ApiClient {
     // Menambahkan interceptor agar token autentikasi otomatis disisipkan sebelum setiap request dikirim.
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
-        // Membaca token dari penyimpanan lokal agar request bisa terotentikasi.
-        final prefs = await SharedPreferences.getInstance();
-        final token = prefs.getString('auth_token');
+        // Membaca token dari penyimpanan terenkripsi agar request bisa terotentikasi.
+        final token = await _secureStorage.read(key: 'auth_token');
         if (token != null && token.isNotEmpty) {
           options.headers['Authorization'] = 'Bearer $token';
         }
@@ -54,9 +56,7 @@ class ApiClient {
       onError: (error, handler) {
         // Jika server mengembalikan respon 401, token dianggap kadaluarsa dan dihapus.
         if (error.response?.statusCode == 401) {
-          SharedPreferences.getInstance().then((prefs) {
-            prefs.remove('auth_token');
-          });
+          _secureStorage.delete(key: 'auth_token');
         }
         return handler.next(error);
       },
@@ -66,27 +66,24 @@ class ApiClient {
     _initialized = true;
   }
 
-  // Menyimpan token autentikasi ke local storage setelah login berhasil.
+  // Menyimpan token autentikasi ke secure storage setelah login berhasil.
   Future<void> saveToken(String token) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('auth_token', token);
+    await _secureStorage.write(key: 'auth_token', value: token);
   }
 
   // Menghapus token saat pengguna logout atau sesi berakhir.
   Future<void> clearToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('auth_token');
+    await _secureStorage.delete(key: 'auth_token');
   }
 
   // Mengecek apakah token autentikasi sudah tersimpan.
   Future<bool> hasToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('auth_token') != null;
+    final token = await _secureStorage.read(key: 'auth_token');
+    return token != null && token.isNotEmpty;
   }
 
   // Mengambil token yang sedang tersimpan untuk dipakai ke kebutuhan lain.
   Future<String?> getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('auth_token');
+    return await _secureStorage.read(key: 'auth_token');
   }
 }

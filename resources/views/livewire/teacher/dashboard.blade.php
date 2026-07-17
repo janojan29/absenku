@@ -287,21 +287,4 @@
     @endteleport
     @endif
 
-    {{-- Success Toast --}}
-    @if(session()->has('message'))
-        <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 4000)"
-             x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="opacity-0 translate-y-4"
-             x-transition:enter-end="opacity-100 translate-y-0"
-             x-transition:leave="transition ease-in duration-200"
-             x-transition:leave-start="opacity-100 translate-y-0"
-             x-transition:leave-end="opacity-0 translate-y-4"
-             class="fixed bottom-6 right-6 z-[10000] px-5 py-3.5 bg-emerald-600 text-white rounded-xl shadow-lg flex items-center gap-3"
-             style="box-shadow: 0 8px 30px rgba(16,185,129,0.35);">
-            <div class="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center shrink-0">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>
-            </div>
-            <span class="text-sm font-semibold">{{ session('message') }}</span>
-        </div>
-    @endif
 </div>

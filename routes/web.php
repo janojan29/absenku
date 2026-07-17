@@ -66,10 +66,10 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:siswa')->group(function () {
         Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
         Route::post('/attendance/check-in', [AttendanceController::class, 'checkIn'])
-            ->middleware('throttle:5,1')
+            ->middleware('throttle:10,1')
             ->name('attendance.check-in');
         Route::post('/attendance/check-out', [AttendanceController::class, 'checkOut'])
-            ->middleware('throttle:5,1')
+            ->middleware('throttle:10,1')
             ->name('attendance.check-out');
 
         Route::post('/leave-requests', [LeaveRequestController::class, 'store'])->name('leave-requests.store');

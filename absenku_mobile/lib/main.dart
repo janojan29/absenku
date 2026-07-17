@@ -8,6 +8,7 @@ import 'services/api_client.dart';
 import 'services/mock_database.dart';
 import 'package:device_preview/device_preview.dart';
 import 'package:flutter/foundation.dart';
+import 'services/notification_service.dart';
 import 'app.dart';
 
 void main() async {
@@ -22,6 +23,9 @@ void main() async {
   // Initialize database (restore session if token exists)
   final db = MockDatabase();
   await db.init();
+  
+  // Initialize notification service
+  await NotificationService().init();
 
   runApp(
     DevicePreview(

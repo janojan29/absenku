@@ -576,17 +576,7 @@ class _SettingsTabState extends State<_SettingsTab> {
                         return null;
                       },
                     ),
-                    const SizedBox(height: 8),
-                    TextButton.icon(
-                      onPressed: () {
-                        setState(() {
-                          _latController.text = '-6.2088';
-                          _lngController.text = '106.8456';
-                        });
-                      },
-                      icon: const Icon(Icons.gps_fixed, size: 16),
-                      label: const Text('Gunakan Koordinat Default'),
-                    ),
+
                   ],
                 ),
               ),

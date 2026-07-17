@@ -46,6 +46,8 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'whatsapp_otp',
+        'whatsapp_otp_expires_at',
     ];
 
     /**

@@ -3,9 +3,11 @@
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'dart:async';
 import '../models/user.dart';
 import '../models/attendance.dart';
 import 'api_client.dart';
+import 'notification_service.dart';
 
 /// API-backed database that replaces the mock database.
 /// Maintains the same ChangeNotifier interface so all screens keep working
@@ -18,6 +20,11 @@ class MockDatabase extends ChangeNotifier {
 
   bool _initialized = false;
   bool _isLoading = false;
+  
+  // Polling properties
+  Timer? _pollingTimer;
+  int _leavePendingTotal = 0;
+  String? _lastLeaveStatus;
 
   // State
   List<ClassRoom> _classrooms = [];
@@ -121,6 +128,7 @@ class MockDatabase extends ChangeNotifier {
   int get leavePendingLastPage => _leavePendingLastPage;
   int get leaveHistoryCurrentPage => _leaveHistoryCurrentPage;
   int get leaveHistoryLastPage => _leaveHistoryLastPage;
+  int get leavePendingTotal => _leavePendingTotal;
 
   Dio get _dio => ApiClient().dio;
 
@@ -152,6 +160,9 @@ class MockDatabase extends ChangeNotifier {
     }
 
     _initialized = true;
+    if (_currentUser != null) {
+      _startPolling();
+    }
     notifyListeners();
   }
 
@@ -176,6 +187,7 @@ class MockDatabase extends ChangeNotifier {
         
         _mustChangePassword = _currentUser?.hasDefaultPassword ?? false;
         
+        _startPolling();
         notifyListeners();
         return _currentUser;
       }
@@ -215,6 +227,7 @@ class MockDatabase extends ChangeNotifier {
     _absentBlockedDates = [];
     _earlyLeaveBlockedToday = false;
     _hasApprovedEarlyLeaveToday = false;
+    _stopPolling();
     notifyListeners();
   }
 
@@ -393,8 +406,10 @@ class MockDatabase extends ChangeNotifier {
           _todayLeaveSubmission = LeaveRequest.fromApiJson(
             data['today_leave_submission'] as Map<String, dynamic>,
           );
+          _lastLeaveStatus = _todayLeaveSubmission?.status;
         } else {
           _todayLeaveSubmission = null;
+          _lastLeaveStatus = null;
         }
       }
     } catch (e) {
@@ -414,6 +429,13 @@ class MockDatabase extends ChangeNotifier {
         'location_samples': samples ?? [],
       });
       await fetchAttendanceData(); // Refresh data
+      
+      await NotificationService().showNotification(
+        id: 1,
+        title: 'Berhasil Absen Masuk',
+        body: response.data['message'] as String? ?? 'Berhasil Absen Masuk!',
+      );
+      
       return response.data['message'] as String? ?? 'Berhasil Absen Masuk!';
     } on DioException catch (e) {
       if (e.response?.data != null && e.response?.data['message'] != null) {
@@ -455,6 +477,12 @@ class MockDatabase extends ChangeNotifier {
       });
       // Refresh attendance data to update leave status
       await fetchAttendanceData();
+      
+      await NotificationService().showNotification(
+        id: 2,
+        title: 'Pengajuan Izin Terkirim',
+        body: 'Pengajuan izin kamu sedang menunggu persetujuan.',
+      );
     } on DioException catch (e) {
       if (e.response?.statusCode == 422) {
         final errors = e.response?.data;
@@ -496,6 +524,7 @@ class MockDatabase extends ChangeNotifier {
 
         _leavePendingCurrentPage = pendingMeta['current_page'] as int? ?? 1;
         _leavePendingLastPage = pendingMeta['last_page'] as int? ?? 1;
+        _leavePendingTotal = pendingMeta['total'] as int? ?? 0;
 
         _leaveHistoryCurrentPage = historyMeta['current_page'] as int? ?? 1;
         _leaveHistoryLastPage = historyMeta['last_page'] as int? ?? 1;
@@ -511,6 +540,73 @@ class MockDatabase extends ChangeNotifier {
 
     _isLoading = false;
     notifyListeners();
+  }
+  
+  void _startPolling() {
+    _stopPolling(); // Ensure no duplicate timers
+    _pollingTimer = Timer.periodic(const Duration(seconds: 15), (timer) {
+      _pollData();
+    });
+    // initial fetch
+    _pollData();
+  }
+
+  void _stopPolling() {
+    _pollingTimer?.cancel();
+    _pollingTimer = null;
+  }
+
+  Future<void> _pollData() async {
+    if (_currentUser == null) return;
+    
+    try {
+      if (_currentUser!.role == 'petugas_piket') {
+        final response = await _dio.get('/picket/leave-requests', queryParameters: {
+          'pendingPage': 1,
+          'historyPage': 1,
+        });
+        if (response.statusCode == 200) {
+          final pendingMeta = response.data['pending']['meta']?['pagination'] as Map<String, dynamic>? ?? {};
+          final currentPendingTotal = pendingMeta['total'] as int? ?? 0;
+          
+          if (currentPendingTotal > _leavePendingTotal) {
+            final diff = currentPendingTotal - _leavePendingTotal;
+            await NotificationService().showNotification(
+              id: 3,
+              title: 'Ada Pengajuan Izin Baru!',
+              body: 'Terdapat $diff pengajuan izin baru yang perlu persetujuan.',
+            );
+            // Instead of overwriting user's page state, just update the total so badge updates
+            _leavePendingTotal = currentPendingTotal;
+            notifyListeners();
+          } else if (currentPendingTotal < _leavePendingTotal) {
+            _leavePendingTotal = currentPendingTotal;
+            notifyListeners();
+          }
+        }
+      } else if (_currentUser!.role == 'siswa') {
+        final response = await _dio.get('/attendance');
+        if (response.statusCode == 200) {
+          final data = response.data['data'] as Map<String, dynamic>;
+          if (data['today_leave_submission'] != null) {
+            final leave = LeaveRequest.fromApiJson(data['today_leave_submission'] as Map<String, dynamic>);
+            if (_lastLeaveStatus == 'pending' && leave.status != 'pending') {
+              final statusStr = leave.status == 'approved' ? 'disetujui' : 'ditolak';
+              await NotificationService().showNotification(
+                id: 4,
+                title: 'Status Pengajuan Izin',
+                body: 'Pengajuan izin kamu telah $statusStr.',
+              );
+              // Refresh attendance data to update UI
+              await fetchAttendanceData();
+            }
+            _lastLeaveStatus = leave.status;
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Polling error: $e');
+    }
   }
 
   Future<void> approveLeaveRequest(String id, String decidedById, String note) async {

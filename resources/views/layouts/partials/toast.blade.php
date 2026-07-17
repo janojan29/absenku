@@ -16,17 +16,17 @@
     x-init="
         $nextTick(() => {
             @if ($statusMessage)
-                add('{{ $statusMessage }}', 'success', 2000);
+                add('{{ $statusMessage }}', 'success', 4000);
             @endif
             @if (session('error'))
-                add('{{ session('error') }}', 'error', 3000);
+                add('{{ session('error') }}', 'error', 5000);
             @endif
             @if ($errors->any())
-                add('{{ $errors->first() }}', 'error', 3000);
+                add('{{ $errors->first() }}', 'error', 5000);
             @endif
         });
     "
-    x-on:toast.window="add($event.detail.message, $event.detail.type || 'success', 2000)"
+    x-on:toast.window="add($event.detail.message, $event.detail.type || 'success', $event.detail.timeout || 4000)"
     class="fixed inset-0 z-50 flex items-center justify-center pointer-events-none"
     id="toast-container"
 >

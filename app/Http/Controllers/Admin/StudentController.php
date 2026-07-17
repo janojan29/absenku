@@ -144,6 +144,7 @@ class StudentController extends Controller
 
         $errors = [];
         $created = 0;
+        $updated = 0;
 
         $classRooms = ClassRoom::query()
             ->select(['id', 'name', 'jurusan'])
@@ -191,10 +192,7 @@ class StudentController extends Controller
                 continue;
             }
 
-            if (StudentProfile::query()->where('nis', $nis)->exists()) {
-                $errors[] = "Baris {$rowNumber}: NISN {$nis} sudah terdaftar.";
-                continue;
-            }
+            $existingProfile = StudentProfile::query()->where('nis', $nis)->first();
 
             $classRoom = $classRooms->first(function ($classRoom) use ($kelas, $jurusan, $normalize) {
                 return $normalize($classRoom->name) === $normalize($kelas)
@@ -215,38 +213,58 @@ class StudentController extends Controller
             $generatedEmailLocalPart = preg_replace('/[^A-Za-z0-9]/', '', $nis);
             $generatedEmail = strtolower($generatedEmailLocalPart) . '@sekolah.local';
 
-            DB::transaction(function () use ($name, $generatedEmail, $nis, $classRoom, $parentPhone, $studentPhone, &$created) {
-                $user = User::create([
-                    'name' => $name,
-                    'email' => $generatedEmail,
-                    'password' => Hash::make('siswa123'),
-                    'whatsapp_number' => $studentPhone !== '' ? $studentPhone : null,
-                ]);
+            DB::transaction(function () use ($name, $generatedEmail, $nis, $classRoom, $parentPhone, $studentPhone, $existingProfile, &$created, &$updated) {
+                if ($existingProfile) {
+                    $user = clone $existingProfile->user; // Avoid caching issues
+                    if ($user) {
+                        $user->update([
+                            'name' => $name,
+                            'whatsapp_number' => $studentPhone !== '' ? $studentPhone : null,
+                        ]);
+                    }
+                    
+                    $existingProfile->update([
+                        'class_room_id' => $classRoom->id,
+                        'jurusan' => $classRoom->jurusan,
+                        'parent_phone_wa' => $parentPhone !== '' ? $parentPhone : null,
+                    ]);
+                    
+                    $updated++;
+                } else {
+                    $user = User::create([
+                        'name' => $name,
+                        'email' => $generatedEmail,
+                        'password' => Hash::make('siswa123'),
+                        'whatsapp_number' => $studentPhone !== '' ? $studentPhone : null,
+                    ]);
 
-                $user->assignRole('siswa');
+                    $user->assignRole('siswa');
 
-                StudentProfile::create([
-                    'user_id' => $user->id,
-                    'class_room_id' => $classRoom->id,
-                    'nis' => $nis,
-                    'jurusan' => $classRoom->jurusan,
-                    'parent_phone_wa' => $parentPhone !== '' ? $parentPhone : null,
-                ]);
+                    StudentProfile::create([
+                        'user_id' => $user->id,
+                        'class_room_id' => $classRoom->id,
+                        'nis' => $nis,
+                        'jurusan' => $classRoom->jurusan,
+                        'parent_phone_wa' => $parentPhone !== '' ? $parentPhone : null,
+                    ]);
 
-                $created++;
+                    $created++;
+                }
             });
         }
 
+        $statusMsg = "Import selesai: {$created} siswa baru ditambahkan, {$updated} diperbarui.";
         if (! empty($errors)) {
+            $statusMsg .= ' (' . count($errors) . ' gagal).';
             return redirect()
                 ->route('admin.students.import')
                 ->with('import_errors', $errors)
-                ->with('status', "Import selesai: {$created} siswa berhasil ditambahkan, " . count($errors) . ' gagal.');
+                ->with('status', $statusMsg);
         }
 
         return redirect()
             ->route('admin.students.import')
-            ->with('status', "Import selesai: {$created} siswa berhasil ditambahkan.");
+            ->with('status', $statusMsg);
     }
 
     public function downloadTemplate()

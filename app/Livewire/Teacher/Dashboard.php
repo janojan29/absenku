@@ -83,7 +83,7 @@ class Dashboard extends Component
         
         if (empty($nomorTujuan)) {
             $this->closeReportModal();
-            session()->flash('message', 'Laporan berhasil dicatat, namun WA tidak terkirim karena nomor HP orang tua kosong di data sistem.');
+            $this->dispatch('toast', message: 'Laporan berhasil dicatat, namun WA tidak terkirim karena nomor HP orang tua kosong di data sistem.', type: 'warning', timeout: 7000);
             return;
         }
 
@@ -95,7 +95,7 @@ class Dashboard extends Component
         );
 
         $this->closeReportModal();
-        session()->flash('message', 'Laporan berhasil dicatat dan dikirim ke WhatsApp Orang Tua!');
+        $this->dispatch('toast', message: 'Laporan berhasil dicatat dan dikirim ke WhatsApp Orang Tua!', type: 'success', timeout: 4000);
     }
 
     #[On('teacher-dashboard.refresh')]

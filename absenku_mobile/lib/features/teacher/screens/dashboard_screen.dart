@@ -45,9 +45,17 @@ class _TeacherDashboardScreenState extends State<TeacherDashboardScreen> {
 
         if (user.role == 'petugas_piket') {
           tabs.add(const LeaveQueueScreen());
-          navItems.add(const BottomNavigationBarItem(
-            icon: Icon(Icons.assignment_outlined),
-            activeIcon: Icon(Icons.assignment),
+          navItems.add(BottomNavigationBarItem(
+            icon: Badge(
+              label: Text('${db.leavePendingTotal}'),
+              isLabelVisible: db.leavePendingTotal > 0,
+              child: const Icon(Icons.assignment_outlined),
+            ),
+            activeIcon: Badge(
+              label: Text('${db.leavePendingTotal}'),
+              isLabelVisible: db.leavePendingTotal > 0,
+              child: const Icon(Icons.assignment),
+            ),
             label: 'Antrian Izin',
           ));
         }
